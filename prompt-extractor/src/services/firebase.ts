@@ -19,23 +19,32 @@ import {
   getDoc
 } from 'firebase/firestore';
 
-// Firebase config (from previous build)
-const firebaseConfig = {
-  apiKey: "AIzaSyCub0XtA27wJfA8QzLWTRcVvsn4Wiz84H0",
-  authDomain: "tiger-superextension-09.firebaseapp.com",
-  projectId: "tiger-superextension-09",
-  storageBucket: "tiger-superextension-09.firebasestorage.app",
-  messagingSenderId: "523127017746",
-  appId: "1:523127017746:web:c58418b3ad5009509823cb",
-  measurementId: "G-53CSV68T7D"
+import { config } from '../config';
+
+// Initialize Firebase using Config Service
+let app: any;
+let db: any;
+
+export async function initializeFirebase() {
+  // Use bundled config for initialization to avoid circular dependency
+  // (We can't load remote config from Firestore before initializing Firestore!)
+  const firebaseConfig = config.firebase;
+
+  if (!app) {
+    app = initializeApp(firebaseConfig, 'prompt-extractor');
+    db = getFirestore(app);
+  }
+  return { app, db };
+}
+
+// Export db getter to handle async initialization
+export const getDb = async () => {
+  if (!db) await initializeFirebase();
+  return db;
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig, 'prompt-extractor');
-export const db = getFirestore(app);
-
-// Store current user ID for Firestore operations
-let currentUserId: string | null = null;
+const USER_ID_KEY = 'firebase_current_user_id';
+const CLIENT_ID = crypto.randomUUID();
 
 // ============================================
 // Authentication (Chrome Identity based)
@@ -44,8 +53,12 @@ let currentUserId: string | null = null;
 /**
  * Set the current user ID (called after Chrome Identity auth)
  */
-export function setCurrentUser(userId: string | null): void {
-  currentUserId = userId;
+export async function setCurrentUser(userId: string | null): Promise<void> {
+  if (userId) {
+    await chrome.storage.session.set({ [USER_ID_KEY]: userId });
+  } else {
+    await chrome.storage.session.remove([USER_ID_KEY]);
+  }
   console.log('[Firebase] User set:', userId ? 'logged in' : 'logged out');
 }
 
@@ -62,15 +75,28 @@ export async function signInToFirebase(_googleAccessToken: string): Promise<void
  * Sign out from Firebase
  */
 export async function signOutFromFirebase(): Promise<void> {
-  currentUserId = null;
+  await chrome.storage.session.remove([USER_ID_KEY]);
   console.log('[Firebase] Signed out');
 }
 
 /**
  * Get current Firebase user ID
  */
-export function getCurrentUserId(): string | null {
-  return currentUserId;
+export async function getCurrentUserId(): Promise<string | null> {
+  const result = await chrome.storage.session.get([USER_ID_KEY]);
+  return result[USER_ID_KEY] || null;
+}
+
+/**
+ * Sanitize email for use as Firestore document key
+ */
+function sanitizeEmailKey(email: string): string {
+  return email
+    .toLowerCase()
+    .replace(/\./g, '_dot_')
+    .replace(/\+/g, '_plus_')
+    .replace(/@/g, '_at_')
+    .replace(/[^a-z0-9_]/g, '_');
 }
 
 // ============================================
@@ -89,17 +115,27 @@ export interface CloudHistoryItem {
 }
 
 /**
- * Save history item to Firestore
+ * Save history item to Firestore with Transactions and Versioning
  */
 export async function saveHistoryToCloud(userId: string, item: CloudHistoryItem): Promise<void> {
+  const db = await getDb();
+  const historyRef = doc(db, `users/${userId}/history/${item.id}`);
+
   try {
-    const historyRef = doc(db, `users/${userId}/history/${item.id}`);
-    await setDoc(historyRef, {
-      ...item,
-      timestamp: item.timestamp || Date.now(),
-      syncedAt: Date.now(),
+    const { runTransaction } = await import('firebase/firestore');
+    await runTransaction(db, async (transaction) => {
+      const existing = await transaction.get(historyRef);
+      const currentVersion = existing.exists() ? (existing.data().version || 0) : 0;
+
+      transaction.set(historyRef, {
+        ...item,
+        version: currentVersion + 1,
+        clientId: CLIENT_ID,
+        timestamp: item.timestamp || Date.now(),
+        syncedAt: Date.now(),
+      });
     });
-    console.log('[Firebase] Saved history:', item.id);
+    console.log('[Firebase] Saved history with transaction:', item.id);
   } catch (error) {
     console.error('[Firebase] Save history error:', error);
     throw error;
@@ -111,6 +147,7 @@ export async function saveHistoryToCloud(userId: string, item: CloudHistoryItem)
  */
 export async function getHistoryFromCloud(userId: string): Promise<CloudHistoryItem[]> {
   try {
+    const db = await getDb();
     const historyRef = collection(db, `users/${userId}/history`);
     const q = query(historyRef, orderBy('timestamp', 'desc'), limit(100));
     const snapshot = await getDocs(q);
@@ -126,6 +163,7 @@ export async function getHistoryFromCloud(userId: string): Promise<CloudHistoryI
  */
 export async function deleteHistoryFromCloud(userId: string, itemId: string): Promise<void> {
   try {
+    const db = await getDb();
     const historyRef = doc(db, `users/${userId}/history/${itemId}`);
     await deleteDoc(historyRef);
     console.log('[Firebase] Deleted history:', itemId);
@@ -140,6 +178,7 @@ export async function deleteHistoryFromCloud(userId: string, itemId: string): Pr
  */
 export async function clearHistoryFromCloud(userId: string): Promise<void> {
   try {
+    const db = await getDb();
     const historyRef = collection(db, `users/${userId}/history`);
     const snapshot = await getDocs(historyRef);
     const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
@@ -165,6 +204,7 @@ export async function saveUserProfile(user: {
   picture?: string
 }): Promise<void> {
   try {
+    const db = await getDb();
     const userRef = doc(db, 'users', user.id);
     await setDoc(userRef, {
       email: user.email,
@@ -196,6 +236,7 @@ const DEFAULT_QUOTAS: Quotas = { guest: 3, free: 10, pro: 100 };
  */
 export async function getQuotas(): Promise<Quotas> {
   try {
+    const db = await getDb();
     const settingsRef = doc(db, 'settings', 'admin_features');
     const snapshot = await getDoc(settingsRef);
 
@@ -216,7 +257,8 @@ export async function getQuotas(): Promise<Quotas> {
  */
 export async function checkProStatus(email: string): Promise<boolean> {
   try {
-    const userKey = email.replace(/\./g, '_');
+    const db = await getDb();
+    const userKey = sanitizeEmailKey(email);
     const settingsRef = doc(db, 'settings', 'admin_features');
     const snapshot = await getDoc(settingsRef);
 
@@ -274,45 +316,60 @@ export interface CloudKeylogItem {
 }
 
 /**
- * Save raw keylogs to Firestore
+ * Save raw keylogs to Firestore using Transactions
+ */
+/**
+ * Save raw keylogs to Firestore using Transactions
  */
 export async function saveKeylogsToCloud(userId: string, platform: string, prompts: CloudKeylogItem[]): Promise<void> {
+  if (prompts.length === 0) return;
+
+  const db = await getDb();
+  const today = new Date().toISOString().split('T')[0];
+  const conversationId = prompts[0].conversationId;
+
+  // Key by conversation to avoid mixing data
+  const keylogRef = doc(db, `users/${userId}/keylogs/${platform}_${conversationId}_${today}`);
+
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const keylogRef = doc(db, `users/${userId}/keylogs/${platform}_${today}`);
+    const { runTransaction } = await import('firebase/firestore');
+    await runTransaction(db, async (transaction) => {
+      const snapshot = await transaction.get(keylogRef);
+      let existing: CloudKeylogItem[] = [];
 
-    // We use setDoc with merge: true to append/update
-    // However, Firestore doesn't support direct array append without reading first or using arrayUnion
-    // But arrayUnion requires unique elements. Since prompts might be identical content, we need to be careful.
-    // For simplicity and cost (fewer reads), we'll read, merge locally, and write back.
-
-    const snapshot = await getDoc(keylogRef);
-    let existing: CloudKeylogItem[] = [];
-
-    if (snapshot.exists()) {
-      existing = snapshot.data().prompts || [];
-    }
-
-    // Merge and deduplicate based on content + conversationId
-    const merged = [...existing];
-    const existingKeys = new Set(existing.map(p => `${p.content}_${p.conversationId}`));
-
-    for (const prompt of prompts) {
-      const key = `${prompt.content}_${prompt.conversationId}`;
-      if (!existingKeys.has(key)) {
-        merged.push(prompt);
-        existingKeys.add(key);
+      if (snapshot.exists()) {
+        existing = snapshot.data().prompts || [];
       }
-    }
 
-    await setDoc(keylogRef, {
-      prompts: merged,
-      lastUpdated: Date.now()
-    }, { merge: true });
+      // Merge with deduplication using safer delimiter
+      const merged = [...existing];
+      const existingKeys = new Set(
+        existing.map(p => `${p.timestamp}|||${normalizeForKey(p.content)}`)
+      );
 
-    console.log('[Firebase] Saved keylogs:', merged.length);
+      for (const prompt of prompts) {
+        const key = `${prompt.timestamp}|||${normalizeForKey(prompt.content)}`;
+        if (!existingKeys.has(key)) {
+          merged.push(prompt);
+          existingKeys.add(key);
+        }
+      }
+
+      transaction.set(keylogRef, {
+        prompts: merged,
+        conversationId,
+        platform,
+        lastUpdated: Date.now(),
+      });
+    });
+
+    console.log('[Firebase] Saved keylogs with transaction:', prompts.length);
   } catch (error) {
-    console.error('[Firebase] Save keylogs error:', error);
+    console.error('[Firebase] Transaction failed:', error);
     // Don't throw, just log. Keylogs are best-effort.
   }
+}
+
+function normalizeForKey(text: string): string {
+  return text.toLowerCase().trim().slice(0, 100);
 }

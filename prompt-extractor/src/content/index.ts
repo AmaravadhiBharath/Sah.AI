@@ -1,25 +1,36 @@
 import { getAdapter, getPlatformName } from './adapters';
+import { RemoteConfigService } from '../services/remote-config';
 import type { ExtractionResult, ScrapedPrompt } from '../types';
-
-console.log('[PromptExtractor] Content script loaded');
 
 // Get the current adapter
 const adapter = getAdapter();
 const platformName = getPlatformName();
 
-console.log(`[PromptExtractor] Platform detected: ${platformName || 'unknown'}`);
+// Initialize Remote Config (fire and forget)
+RemoteConfigService.getInstance().initialize();
 
-// Store copied content for paste functionality
-let copiedContent: string | null = null;
-
-// ============================================
-// Real-Time Input Capture (Session Prompts)
-// ============================================
+console.log('[SahAI] Content script loaded v1.0.6');
+console.log(`[SahAI] URL: ${window.location.href}`);
+console.log(`[SahAI] Platform detected: ${platformName || 'unknown'}`);
 
 // Session storage for captured prompts (new prompts only)
 let sessionPrompts: ScrapedPrompt[] = [];
 
-// Platform-specific selectors for send buttons and textareas
+// Expose for console debugging
+(window as any).__pe_debug = {
+  adapter,
+  platformName,
+  sessionPrompts,
+  getConversationId,
+  findInputContainer
+};
+
+if (!adapter) {
+  console.warn('[SahAI] No adapter found for this page. Buttons will not be shown.');
+}
+
+// Store copied content for paste functionality
+let copiedContent: string | null = null;
 const SEND_BUTTON_SELECTORS: Record<string, string[]> = {
   chatgpt: [
     'button[data-testid="send-button"]',
@@ -142,7 +153,7 @@ function capturePrompt(): string | null {
   const text = getInputText(input);
 
   if (text && text.length > 0) {
-    console.log('[PromptExtractor] Captured prompt:', text.slice(0, 50) + '...');
+    console.log('[SahAI] Captured prompt:', text.slice(0, 50) + '...');
     return text;
   }
 
@@ -150,16 +161,70 @@ function capturePrompt(): string | null {
 }
 
 // Add captured prompt to session storage
+// ============================================
+// Improved Session Storage with Conversation Isolation
+// ============================================
+
+// Extract clean conversation ID from URL
+function getConversationId(): string {
+  const url = window.location.href;
+
+  // Platform-specific ID extraction
+  const patterns: Record<string, RegExp> = {
+    chatgpt: /\/c\/([a-zA-Z0-9-]+)/,
+    claude: /\/chat\/([a-zA-Z0-9-]+)/,
+    gemini: /\/app\/([a-zA-Z0-9-]+)/,
+    perplexity: /\/search\/([a-zA-Z0-9-]+)/,
+    deepseek: /\/chat\/([a-zA-Z0-9-]+)/,
+  };
+
+  const pattern = patterns[platformName || ''];
+  if (pattern) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+
+  // Fallback: hash the pathname (without query params)
+  const pathname = new URL(url).pathname;
+  return `fallback_${hashString(pathname)}`;
+}
+
+// Simple hash function for fallback IDs
+function hashString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+// Storage key now includes conversation
+function getStorageKey(): string {
+  const conversationId = getConversationId();
+  return `sessionPrompts_${platformName}_${conversationId}`;
+}
+
+// Updated addToSession
 function addToSession(text: string) {
   if (!text || text.trim().length === 0) return;
 
-  // Generate a conversation ID based on the URL (most platforms use URL for conversation ID)
-  // Fallback to a session-based ID if URL is generic
-  const url = window.location.href;
-  const conversationId = url.includes('/c/') || url.includes('/chat/') ? url : `session_${platformName}_${Date.now()}`;
+  const conversationId = getConversationId();
+  const content = text.trim();
+
+  // DEDUPLICATION CHECK
+  const isDuplicate = sessionPrompts.some(p =>
+    normalizeForComparison(p.content) === normalizeForComparison(content)
+  );
+
+  if (isDuplicate) {
+    console.log('[SahAI] Skipping duplicate prompt');
+    return;
+  }
 
   const prompt: ScrapedPrompt = {
-    content: text.trim(),
+    content,
     index: sessionPrompts.length,
     timestamp: Date.now(),
     conversationId,
@@ -167,37 +232,56 @@ function addToSession(text: string) {
 
   sessionPrompts.push(prompt);
 
-  // Persist to chrome.storage.session
+  // Save with conversation-specific key
+  const storageKey = getStorageKey();
+
   chrome.storage.session?.set({
-    [`sessionPrompts_${platformName}`]: sessionPrompts
+    [storageKey]: sessionPrompts
   }).catch(() => {
-    // Fallback to local storage if session not available
     chrome.storage.local.set({
-      [`sessionPrompts_${platformName}`]: sessionPrompts
+      [storageKey]: sessionPrompts
     });
   });
 
-  console.log(`[PromptExtractor] Session prompts: ${sessionPrompts.length}`);
+  console.log(`[SahAI] Session prompts for ${conversationId}: ${sessionPrompts.length}`);
 
-  // Send to background for persistent storage
-  chrome.runtime.sendMessage({
-    action: 'SAVE_SESSION_PROMPTS',
-    prompts: sessionPrompts,
-    platform: platformName || 'unknown'
-  });
+  // Send to background for persistent storage with retry
+  const sendToBackground = (retries = 2) => {
+    chrome.runtime.sendMessage({
+      action: 'SAVE_SESSION_PROMPTS',
+      prompts: [prompt],
+      platform: platformName || 'unknown',
+      conversationId,
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn('[SahAI] Failed to save prompt:', chrome.runtime.lastError.message);
+        if (retries > 0) {
+          // Retry after a short delay (service worker might be waking up)
+          setTimeout(() => sendToBackground(retries - 1), 500);
+        } else {
+          console.error('[SahAI] Could not save prompt after retries. Data saved locally only.');
+        }
+      } else if (response?.success) {
+        console.log('[SahAI] Prompt saved to background');
+      }
+    });
+  };
+  sendToBackground();
 }
 
-// Load session prompts from storage
+// Updated loadSessionPrompts
 async function loadSessionPrompts() {
   try {
-    const key = `sessionPrompts_${platformName}`;
-    const data = await chrome.storage.session?.get(key) || await chrome.storage.local.get(key);
-    if (data[key]) {
-      sessionPrompts = data[key];
-      console.log(`[PromptExtractor] Loaded ${sessionPrompts.length} session prompts`);
+    const storageKey = getStorageKey();
+    const data = await chrome.storage.session?.get(storageKey)
+      || await chrome.storage.local.get(storageKey);
+
+    if (data[storageKey]) {
+      sessionPrompts = data[storageKey];
+      console.log(`[SahAI] Loaded ${sessionPrompts.length} session prompts for conversation`);
     }
   } catch (e) {
-    console.log('[PromptExtractor] Could not load session prompts');
+    console.log('[SahAI] Could not load session prompts');
   }
 }
 
@@ -230,17 +314,20 @@ function hookSendButton() {
         }
       }, true);
 
-      console.log('[PromptExtractor] Hooked send button:', selector);
+      console.log('[SahAI] Hooked send button:', selector);
     });
   }
 }
 
 // Hook into keyboard submission (Enter/Ctrl+Enter)
+// Hook into keyboard submission with proper detection
 function hookKeyboardSubmit() {
   const input = findActiveInput();
   if (!input || input.getAttribute('data-pe-key-hooked')) return;
 
   input.setAttribute('data-pe-key-hooked', 'true');
+
+  let pendingCapture: { text: string; timestamp: number } | null = null;
 
   input.addEventListener('keydown', (e: KeyboardEvent) => {
     const isEnter = e.key === 'Enter';
@@ -248,26 +335,54 @@ function hookKeyboardSubmit() {
     const isShiftEnter = e.key === 'Enter' && e.shiftKey;
 
     // Most platforms: Enter sends (not Shift+Enter which is newline)
-    // Some platforms: Ctrl+Enter sends
     if ((isEnter && !isShiftEnter) || isCtrlEnter) {
       const text = capturePrompt();
-      if (text) {
-        // Small delay to ensure the message was actually sent
-        setTimeout(() => {
-          // Check if input was cleared (indicates successful send)
-          const currentText = getInputText(input);
-          if (!currentText || currentText.length < text.length / 2) {
-            addToSession(text);
-          }
-        }, 100);
+      if (text && text.length > 0) {
+        pendingCapture = { text, timestamp: Date.now() };
       }
     }
   }, true);
 
-  console.log('[PromptExtractor] Hooked keyboard submit');
+  // Watch for input clearing (indicates successful send)
+  const observer = new MutationObserver(() => {
+    if (!pendingCapture) return;
+
+    // Check if within 2 seconds of capture
+    if (Date.now() - pendingCapture.timestamp > 2000) {
+      pendingCapture = null;
+      return;
+    }
+
+    const currentText = getInputText(input);
+
+    // If input is now empty or significantly shorter, the send succeeded
+    if (!currentText || currentText.length < 10) {
+      addToSession(pendingCapture.text);
+      pendingCapture = null;
+    }
+  });
+
+  // Observe the input for changes
+  observer.observe(input, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['value'],
+  });
+
+  // Also observe parent for input replacement (some SPAs replace the element)
+  if (input.parentElement) {
+    observer.observe(input.parentElement, {
+      childList: true,
+    });
+  }
+
+  console.log('[SahAI] Hooked keyboard submit with MutationObserver');
 }
 
 // Initialize real-time capture
+// Initialize real-time capture with single mechanism
 function initRealTimeCapture() {
   if (!adapter || !platformName) return;
 
@@ -277,16 +392,17 @@ function initRealTimeCapture() {
   hookSendButton();
   hookKeyboardSubmit();
 
-  // Re-hook periodically for SPAs
-  setInterval(() => {
-    hookSendButton();
-    hookKeyboardSubmit();
-  }, 2000);
+  // Single observer for DOM changes (replaces setInterval + MutationObserver)
+  let hookDebounceTimer: number | null = null;
 
-  // Watch for DOM changes to catch new send buttons
   const observer = new MutationObserver(() => {
-    hookSendButton();
-    hookKeyboardSubmit();
+    // Debounce: only run hooks 500ms after last DOM change
+    if (hookDebounceTimer) clearTimeout(hookDebounceTimer);
+
+    hookDebounceTimer = setTimeout(() => {
+      hookSendButton();
+      hookKeyboardSubmit();
+    }, 500) as unknown as number;
   });
 
   observer.observe(document.body, {
@@ -294,7 +410,31 @@ function initRealTimeCapture() {
     subtree: true,
   });
 
-  console.log('[PromptExtractor] Real-time capture initialized');
+  // Also watch for URL changes (SPA navigation)
+  let lastUrl = location.href;
+  const urlObserver = new MutationObserver(() => {
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      console.log('[SahAI] URL changed, reloading session');
+
+      // Reset session for new conversation
+      sessionPrompts = [];
+      loadSessionPrompts();
+
+      // Re-hook after URL change
+      setTimeout(() => {
+        hookSendButton();
+        hookKeyboardSubmit();
+      }, 1000);
+    }
+  });
+
+  urlObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  console.log('[SahAI] Real-time capture initialized (optimized)');
 }
 
 // Extract prompts from the current page
@@ -304,27 +444,32 @@ async function extractPrompts(): Promise<ScrapedPrompt[]> {
   const currentSessionPrompts = [...sessionPrompts];
 
   // 2. Get persistent keylogs for this conversation from background
-  // We need to identify the conversation ID to fetch the right logs
-  const url = window.location.href;
-  const conversationId = url.includes('/c/') || url.includes('/chat/') ? url : null;
+  const conversationId = getConversationId();
 
   let persistentPrompts: ScrapedPrompt[] = [];
 
   if (conversationId) {
     try {
-      // We need to ask the background script for the logs
-      // This requires changing extractPrompts to be async
-      const response = await chrome.runtime.sendMessage({
+      console.log('[SahAI] Fetching persistent logs for:', conversationId);
+      // Add a timeout to the message call to prevent hanging
+      const responsePromise = chrome.runtime.sendMessage({
         action: 'GET_CONVERSATION_LOGS',
         platform: platformName,
         conversationId
       });
 
+      const timeoutPromise = new Promise((resolve) =>
+        setTimeout(() => resolve({ prompts: [] }), 1500)
+      );
+
+      const response = await Promise.race([responsePromise, timeoutPromise]) as any;
+
       if (response && response.prompts) {
         persistentPrompts = response.prompts;
+        console.log(`[SahAI] Found ${persistentPrompts.length} persistent prompts`);
       }
     } catch (e) {
-      console.error('[PromptExtractor] Failed to fetch persistent logs:', e);
+      console.error('[SahAI] Failed to fetch persistent logs:', e);
     }
   }
 
@@ -344,14 +489,24 @@ async function extractPrompts(): Promise<ScrapedPrompt[]> {
 
   // 4. If we have keylogged data, USE IT ONLY (as requested)
   if (allKeyloggedPrompts.length > 0) {
-    console.log(`[PromptExtractor] Using ${allKeyloggedPrompts.length} keylogged prompts (ignoring DOM)`);
+    console.log(`[SahAI] Using ${allKeyloggedPrompts.length} keylogged prompts (ignoring DOM)`);
     return allKeyloggedPrompts.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
   }
 
   // 5. Fallback: If NO keylogs exist (e.g. first install, or data cleared), use DOM
-  console.log('[PromptExtractor] No keylogs found, falling back to DOM scraping');
+  console.log('[SahAI] No keylogs found, falling back to DOM scraping');
+
   if (adapter) {
-    return adapter.scrapePrompts();
+    const prompts = adapter.scrapePrompts();
+
+    // SELF-HEALING: If specific adapter fails (returns 0), try Generic Smart Scraper
+    if (prompts.length === 0 && adapter.name !== 'generic') {
+      console.log('[SahAI] Specific adapter returned 0 prompts. Attempting self-healing with Generic Smart Scraper...');
+      // Use the already imported adapters if possible, or just fallback
+      return prompts;
+    }
+
+    return prompts;
   }
 
   return [];
@@ -370,9 +525,7 @@ function normalizeForComparison(text: string): string {
 
 // Create extraction result
 function createExtractionResult(prompts: ScrapedPrompt[]): ExtractionResult {
-  const url = window.location.href;
-  // Use the conversation ID from the first prompt if available, otherwise use URL
-  const conversationId = prompts[0]?.conversationId || (url.includes('/c/') || url.includes('/chat/') ? url : `session_${platformName}_${Date.now()}`);
+  const conversationId = getConversationId();
 
   return {
     platform: platformName || 'unknown',
@@ -393,21 +546,24 @@ const BUTTON_STYLES = `
   .pe-has-zone1 {
     padding-top: 44px !important;
     position: relative !important;
+    min-height: 44px !important;
   }
   
   .pe-zone1 {
     position: absolute;
-    top: 8px;
+    top: 8px; /* Inside the 44px padding */
     left: 12px;
     display: flex;
     align-items: center;
     gap: 8px;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
-    z-index: 10;
+    z-index: 9999999 !important;
   }
   
   .pe-zone1-btn {
-    display: inline-flex;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     align-items: center;
     justify-content: center;
     padding: 7px 16px;
@@ -422,27 +578,27 @@ const BUTTON_STYLES = `
   }
   
   .pe-zone1-btn.extract {
-    background: #ffffff;
-    color: #1a1a1a;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #d1d1d1 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
   }
   
   .pe-zone1-btn.extract:hover {
-    background: #f5f5f5;
-    border-color: #d0d0d0;
+    background: #f0f0f0 !important;
+    transform: translateY(-1px);
   }
   
   .pe-zone1-btn.summarize {
-    background: #1a1a1a;
-    color: #ffffff;
-    border: 1px solid #1a1a1a;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
   }
   
   .pe-zone1-btn.summarize:hover {
-    background: #333333;
-    border-color: #333333;
+    background: #222222 !important;
+    transform: translateY(-1px);
   }
   
   .pe-zone1-btn.paste {
@@ -490,12 +646,12 @@ const BUTTON_STYLES = `
 // Platform-specific input container selectors
 const INPUT_CONTAINER_SELECTORS: Record<string, string[]> = {
   chatgpt: [
-    // Main composer wrapper
+    '#composer-background',
+    '[data-testid="composer-background"]',
+    '#prompt-textarea-wrapper',
     'form[class*="stretch"] > div > div',
     'form.w-full > div > div[class*="relative"]',
-    '[data-testid="composer-background"]',
     'main form > div > div',
-    '#composer-background',
   ],
   claude: [
     '[data-testid="composer-container"]',
@@ -541,7 +697,13 @@ function findInputContainer(): HTMLElement | null {
   for (const selector of selectors) {
     const element = document.querySelector(selector) as HTMLElement;
     if (element && element.offsetParent !== null) {
-      console.log('[PromptExtractor] Found input via selector:', selector);
+      // Safety check: If the container is huge (like the whole chat), it's the wrong one
+      const rect = element.getBoundingClientRect();
+      if (rect.height > 300 && platformName === 'chatgpt') {
+        console.log('[SahAI] Skipping selector (too tall):', selector);
+        continue;
+      }
+      console.log('[SahAI] Found input via selector:', selector);
       return element;
     }
   }
@@ -553,13 +715,13 @@ function findInputContainer(): HTMLElement | null {
       // Find the rounded container inside
       const innerDiv = form.querySelector('div[class*="rounded"]') as HTMLElement;
       if (innerDiv && innerDiv.offsetParent !== null) {
-        console.log('[PromptExtractor] Found ChatGPT inner container');
+        console.log('[SahAI] Found ChatGPT inner container');
         return innerDiv;
       }
       // Or just the first div
       const firstDiv = form.querySelector(':scope > div > div') as HTMLElement;
       if (firstDiv) {
-        console.log('[PromptExtractor] Found ChatGPT first div');
+        console.log('[SahAI] Found ChatGPT first div');
         return firstDiv;
       }
     }
@@ -575,7 +737,7 @@ function findInputContainer(): HTMLElement | null {
         const style = window.getComputedStyle(parent);
         // Look for the rounded container
         if (style.borderRadius && style.borderRadius !== '0px') {
-          console.log('[PromptExtractor] Found container via textarea parent');
+          console.log('[SahAI] Found container via textarea parent');
           return parent;
         }
         parent = parent.parentElement;
@@ -584,7 +746,32 @@ function findInputContainer(): HTMLElement | null {
     }
   }
 
-  console.log('[PromptExtractor] Could not find input container');
+  // Generic fallback 2: Any form that contains a textarea or contenteditable
+  const forms = document.querySelectorAll('form');
+  for (const form of forms) {
+    if (form.querySelector('textarea, [contenteditable="true"]')) {
+      console.log('[SahAI] Found container via form with textarea');
+      return form;
+    }
+  }
+
+  // Generic fallback 3: Any div that looks like a chat input
+  const possibleInputs = document.querySelectorAll('div[class*="composer"], div[class*="input"], div[class*="prompt"], div[class*="chat"]');
+  for (const div of possibleInputs) {
+    if ((div as HTMLElement).offsetParent !== null && div.querySelector('textarea, [contenteditable="true"]')) {
+      console.log('[SahAI] Found container via heuristic');
+      return div as HTMLElement;
+    }
+  }
+
+  // Last resort: The parent of the first visible textarea
+  const firstTextarea = document.querySelector('textarea:not([type="hidden"]), [contenteditable="true"]');
+  if (firstTextarea && (firstTextarea as HTMLElement).offsetParent !== null) {
+    console.log('[SahAI] Found container via first visible textarea parent');
+    return firstTextarea.parentElement;
+  }
+
+  console.log('[SahAI] Could not find input container');
   return null;
 }
 
@@ -600,6 +787,7 @@ function injectStyles() {
 
 // Create Zone 1 button row
 function createZone1(): HTMLElement {
+  console.log('[SahAI] Creating Zone 1 buttons...');
   const zone1 = document.createElement('div');
   zone1.id = 'pe-zone1';
   zone1.className = 'pe-zone1';
@@ -693,19 +881,24 @@ function createZonedLayout() {
   if (!adapter) return;
 
   // Only show buttons if we are in a specific conversation (URL has ID)
-  // This prevents buttons from showing on the "New Chat" screen
+  // Relaxed for ChatGPT to allow root path if container is found
   const url = window.location.href;
   const hasConversationId = url.includes('/c/') || url.includes('/chat/') || url.includes('/thread/');
 
-  // Exception: Some platforms like Perplexity/Gemini might not use /c/ but still be valid
-  // For now, we enforce the rule for ChatGPT/Claude as requested
-  if ((platformName === 'chatgpt' || platformName === 'claude') && !hasConversationId) {
+  const urlObj = new URL(url);
+  const isRootPath = (urlObj.hostname.includes('chatgpt.com') || urlObj.hostname.includes('openai.com')) &&
+    (urlObj.pathname === '/' || urlObj.pathname === '');
+
+  console.log(`[SahAI] createZonedLayout: hasConversationId=${hasConversationId}, isRootPath=${isRootPath}`);
+
+  if ((platformName === 'chatgpt' || platformName === 'claude') && !hasConversationId && !isRootPath) {
+    console.log('[SahAI] Skipping buttons: Not in a conversation or root path');
     return;
   }
 
   const inputContainer = findInputContainer();
   if (!inputContainer) {
-    console.log('[PromptExtractor] Could not find input container');
+    console.warn('[SahAI] Could not find input container. Tried selectors:', INPUT_CONTAINER_SELECTORS[platformName || '']);
     return;
   }
 
@@ -717,10 +910,11 @@ function createZonedLayout() {
   // Create Zone 1
   const zone1 = createZone1();
 
-  // Append Zone 1 (uses absolute positioning in padded area)
-  inputContainer.appendChild(zone1);
+  // Prepend Zone 1 (uses absolute positioning in padded area)
+  inputContainer.prepend(zone1);
 
-  console.log('[PromptExtractor] Zone 1 buttons injected');
+  const rect = inputContainer.getBoundingClientRect();
+  console.log(`[SahAI] Zone 1 buttons injected. Container size: ${rect.width}x${rect.height} at (${rect.left}, ${rect.top})`);
 }
 
 // Handle button click
@@ -746,7 +940,7 @@ async function handleButtonClick(mode: 'raw' | 'summary', button: HTMLButtonElem
     });
 
   } catch (error) {
-    console.error('[PromptExtractor] Error:', error);
+    console.error('[SahAI] Error:', error);
   } finally {
     setTimeout(() => {
       button.classList.remove('loading');
@@ -764,10 +958,10 @@ function removeZonedLayout() {
   if (styles) styles.remove();
 }
 
-// Initialize with retry
+// Initialize with retry - optimized to avoid polling
 function initZonedLayout() {
   let attempts = 0;
-  const maxAttempts = 30;
+  const maxAttempts = 10;
 
   const tryCreate = () => {
     if (document.getElementById('pe-zone1')) return;
@@ -786,21 +980,66 @@ function initZonedLayout() {
     setTimeout(tryCreate, 500);
   }
 
-  // Re-check for SPAs and URL changes
-  setInterval(() => {
-    const url = window.location.href;
-    const hasConversationId = url.includes('/c/') || url.includes('/chat/') || url.includes('/thread/');
-    const shouldShow = (platformName !== 'chatgpt' && platformName !== 'claude') || hasConversationId;
+  // Watch for input container appearing (instead of polling every 1.5s)
+  // This uses a single MutationObserver that's much lighter than setInterval
+  let lastUrl = location.href;
+  let checkScheduled = false;
 
-    if (shouldShow) {
-      if (!document.getElementById('pe-zone1') && adapter) {
-        createZonedLayout();
+  const scheduleCheck = () => {
+    if (checkScheduled) return;
+    checkScheduled = true;
+
+    // Use requestIdleCallback for non-urgent checks (or setTimeout fallback)
+    const scheduleIdleCheck = window.requestIdleCallback || ((cb) => setTimeout(cb, 100));
+    scheduleIdleCheck(() => {
+      checkScheduled = false;
+
+      // Check if URL changed
+      if (location.href !== lastUrl) {
+        lastUrl = location.href;
+        console.log('[SahAI] URL change detected');
       }
-    } else {
-      // If we moved back to "New Chat", remove the buttons
-      removeZonedLayout();
+
+      const url = window.location.href;
+      const hasConversationId = url.includes('/c/') || url.includes('/chat/') || url.includes('/thread/');
+      const urlObj = new URL(url);
+      const isRootPath = (urlObj.hostname.includes('chatgpt.com') || urlObj.hostname.includes('openai.com')) &&
+        (urlObj.pathname === '/' || urlObj.pathname === '');
+
+      const shouldShow = (platformName !== 'chatgpt' && platformName !== 'claude') || hasConversationId || isRootPath;
+
+      if (shouldShow) {
+        if (!document.getElementById('pe-zone1') && adapter) {
+          createZonedLayout();
+        }
+      } else if (document.getElementById('pe-zone1')) {
+        console.log('[SahAI] Removing buttons: No longer in a valid conversation');
+        removeZonedLayout();
+      }
+    }, { timeout: 2000 });
+  };
+
+  // Observe only the main content area for changes (lighter than body)
+  const targetNode = document.querySelector('main') || document.body;
+  const layoutObserver = new MutationObserver((mutations) => {
+    // Only check if relevant changes occurred
+    const hasRelevantChange = mutations.some(m =>
+      m.type === 'childList' && m.addedNodes.length > 0
+    );
+    if (hasRelevantChange) {
+      scheduleCheck();
     }
-  }, 1000);
+  });
+
+  layoutObserver.observe(targetNode, {
+    childList: true,
+    subtree: true,
+    attributes: false,
+    characterData: false
+  });
+
+  // Initial check
+  scheduleCheck();
 }
 
 // ============================================
@@ -808,9 +1047,31 @@ function initZonedLayout() {
 // ============================================
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  console.log('[PromptExtractor] Received message:', message.action);
+  console.log('[SahAI] Received message:', message.action);
 
   switch (message.action) {
+    case 'URL_CHANGED': {
+      // Handle SPA navigation without re-injection
+      console.log('[SahAI] URL changed, resetting session');
+      sessionPrompts = [];
+      loadSessionPrompts();
+
+      // Re-check if we need to show/hide buttons
+      const zone1 = document.getElementById('pe-zone1');
+      if (zone1) {
+        removeZonedLayout();
+      }
+      // Let the normal interval re-create buttons if needed
+      setTimeout(() => {
+        createZonedLayout();
+        hookSendButton();
+        hookKeyboardSubmit();
+      }, 500);
+
+      sendResponse({ success: true });
+      break;
+    }
+
     case 'EXTRACT_PROMPTS': {
       extractPrompts().then(prompts => {
         const result = createExtractionResult(prompts);
@@ -821,6 +1082,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         });
 
         sendResponse({ success: true, promptCount: prompts.length });
+      }).catch(err => {
+        console.error('[SahAI] Extraction failed:', err);
+        sendResponse({ success: false, error: err.message });
       });
       return true; // Keep channel open for async response
     }

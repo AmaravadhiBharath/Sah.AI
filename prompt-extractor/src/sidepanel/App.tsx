@@ -66,7 +66,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -195,54 +194,6 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // Connect to service worker
-  useEffect(() => {
-    const port = chrome.runtime.connect({ name: 'sidepanel' });
-    portRef.current = port;
-
-    port.onMessage.addListener((message) => {
-      if (message.action === 'EXTRACTION_RESULT' || message.action === 'EXTRACTION_FROM_PAGE_RESULT') {
-        setError(null);
-        const extractMode = message.mode || mode;
-        if (message.mode) setMode(message.mode);
-        handleExtractionResult(message.result, extractMode);
-
-        if (extractMode === 'summary' && message.result.prompts.length > 0) {
-          setLoadingMessage('Consolidating prompts...');
-          port.postMessage({ action: 'SUMMARIZE_PROMPTS', prompts: message.result.prompts });
-        }
-      } else if (message.action === 'STATUS_RESULT') {
-        setStatus({ supported: message.supported, platform: message.platform });
-      } else if (message.action === 'SUMMARY_RESULT') {
-        setLoading(false);
-        setLoadingMessage('');
-        if (message.success && message.result?.summary) {
-          setSummary(message.result.summary);
-          setError(null);
-          // Auto-save to history when summary is ready
-          if (lastExtractionResult) {
-            autoSaveToHistory(lastExtractionResult, 'summary', message.result.summary);
-          }
-        } else if (message.error) {
-          setError(friendlyError(message.error));
-        }
-        if (message.quotaUsed !== undefined) {
-          setQuota({ used: message.quotaUsed, limit: message.quotaLimit || 10 });
-          chrome.storage.local.set({ quotaUsed: message.quotaUsed, quotaLimit: message.quotaLimit || 10 });
-        }
-      } else if (message.action === 'ERROR') {
-        setLoading(false);
-        setLoadingMessage('');
-        setError(friendlyError(message.error));
-      } else if (message.action === 'PROGRESS') {
-        setLoadingMessage(message.message || 'Processing...');
-      }
-    });
-
-    port.postMessage({ action: 'GET_STATUS' });
-    return () => port.disconnect();
-  }, [mode]);
-
   // Keep track of last result for auto-save
   const [lastExtractionResult, setLastExtractionResult] = useState<ExtractionResult | null>(null);
 
@@ -284,7 +235,6 @@ export default function App() {
     setView('main');
     setSummary(null);
     setError(null);
-    setError(null);
     setShowStats(true);
     setCurrentTimestamp(null);
 
@@ -294,14 +244,113 @@ export default function App() {
     }
   }, [autoSaveToHistory]);
 
+  // Refs to access latest state in callbacks without triggering re-connections
+  const modeRef = useRef(mode);
+  const lastResultRef = useRef(lastExtractionResult);
+
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { lastResultRef.current = lastExtractionResult; }, [lastExtractionResult]);
+
+  // Message handler - extracted so it can be reused on reconnection
+  const handlePortMessage = useCallback((message: any) => {
+    if (message.action === 'EXTRACTION_RESULT' || message.action === 'EXTRACTION_FROM_PAGE_RESULT') {
+      setError(null);
+      const extractMode = message.mode || modeRef.current;
+      if (message.mode) setMode(message.mode);
+      handleExtractionResult(message.result, extractMode);
+
+      if (extractMode === 'summary' && message.result.prompts.length > 0) {
+        setLoadingMessage('Consolidating prompts...');
+        portRef.current?.postMessage({ action: 'SUMMARIZE_PROMPTS', prompts: message.result.prompts });
+      }
+    } else if (message.action === 'STATUS_RESULT') {
+      setStatus({ supported: message.supported, platform: message.platform });
+    } else if (message.action === 'SUMMARY_RESULT') {
+      setLoading(false);
+      setLoadingMessage('');
+      if (message.success && message.result?.summary) {
+        setSummary(message.result.summary);
+        setError(null);
+        // Auto-save to history when summary is ready
+        if (lastResultRef.current) {
+          autoSaveToHistory(lastResultRef.current, 'summary', message.result.summary);
+        }
+      } else if (message.error) {
+        setError(friendlyError(message.error));
+      }
+      if (message.quotaUsed !== undefined) {
+        setQuota({ used: message.quotaUsed, limit: message.quotaLimit || 10 });
+        chrome.storage.local.set({ quotaUsed: message.quotaUsed, quotaLimit: message.quotaLimit || 10 });
+      }
+    } else if (message.action === 'ERROR') {
+      setLoading(false);
+      setLoadingMessage('');
+      setError(friendlyError(message.error));
+    } else if (message.action === 'PROGRESS') {
+      setLoadingMessage(message.message || 'Processing...');
+    }
+  }, [handleExtractionResult, autoSaveToHistory]);
+
+  // Connect to service worker with auto-reconnection
+  const connectPort = useCallback(() => {
+    const port = chrome.runtime.connect({ name: 'sidepanel' });
+    portRef.current = port;
+
+    port.onMessage.addListener(handlePortMessage);
+
+    port.onDisconnect.addListener(() => {
+      console.log('[SahAI] Port disconnected, will reconnect on next action');
+      portRef.current = null;
+    });
+
+    port.postMessage({ action: 'GET_STATUS' });
+    return port;
+  }, [handlePortMessage]);
+
+  useEffect(() => {
+    const port = connectPort();
+    return () => {
+      portRef.current = null;
+      port.disconnect();
+    };
+  }, [connectPort]);
+
   const handleExtract = useCallback(() => {
+    console.log('[SahAI] handleExtract called, mode:', mode);
+
+    // Reconnect with proper listeners if disconnected
+    if (!portRef.current) {
+      console.warn('[SahAI] Port not connected, reconnecting with listeners...');
+      connectPort();
+    }
+
     setLoading(true);
     setError(null);
     setDuration(null);
     startTimeRef.current = performance.now();
     setLoadingMessage('Extracting prompts...');
+
+    console.log('[SahAI] Sending EXTRACT_PROMPTS message');
     portRef.current?.postMessage({ action: 'EXTRACT_PROMPTS', mode });
-  }, [mode]);
+
+    // Safety timeout in case service worker or content script hangs
+    setTimeout(() => {
+      setLoading((currentLoading) => {
+        if (currentLoading) {
+          console.warn('[SahAI] Extraction timed out in sidepanel');
+          setError('Request timed out. Please try again.');
+          return false;
+        }
+        return currentLoading;
+      });
+    }, 8000);
+  }, [mode, connectPort]);
+
+  useEffect(() => {
+    const handleTriggerExtract = () => handleExtract();
+    window.addEventListener('trigger-extract', handleTriggerExtract);
+    return () => window.removeEventListener('trigger-extract', handleTriggerExtract);
+  }, [handleExtract]);
 
   const handleCopy = useCallback(async () => {
     if (!result) return;
@@ -349,47 +398,6 @@ export default function App() {
     return () => window.removeEventListener('mousedown', handleClickOutside);
   }, [showHistoryModal, showSettingsModal, showProfileModal]);
 
-  const handleSave = useCallback(async () => {
-    if (!result) return;
-
-    const preview = result.prompts[0]?.content.slice(0, 50) || 'No prompts';
-    const historyItem: HistoryItem = {
-      id: Date.now().toString(),
-      platform: result.platform,
-      promptCount: result.prompts.length,
-      mode,
-      timestamp: Date.now(),
-      prompts: result.prompts,
-      preview,
-    };
-
-    setHistory(prev => {
-      const updated = [historyItem, ...prev].slice(0, 50);
-      chrome.storage.local.set({ extractionHistory: updated });
-      return updated;
-    });
-
-    if (user) {
-      try {
-        await saveHistoryToCloud(user.id, historyItem as CloudHistoryItem);
-      } catch (error) {
-        console.error('[App] Cloud save failed:', error);
-      }
-    }
-
-    // Download file
-    const content = result.prompts.map((p, i) => `${i + 1}. ${p.content}`).join('\n\n');
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `prompts-${result.platform}-${Date.now()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    // Show success animation
-    setShowSuccess(true);
-  }, [result, mode, user]);
 
   const loadHistoryItem = (item: HistoryItem) => {
     setResult({ prompts: item.prompts, platform: item.platform, url: '', title: '', extractedAt: item.timestamp });
@@ -406,9 +414,11 @@ export default function App() {
   };
 
   const handleClearResult = useCallback(() => {
+    console.log('[SahAI] Clearing result');
     setResult(null);
     setSummary(null);
     setError(null);
+    setLastExtractionResult(null);
   }, []);
 
   const wordCount = result?.prompts.reduce((acc, p) => acc + p.content.split(/\s+/).length, 0) || 0;
@@ -468,7 +478,18 @@ export default function App() {
               ) : mode === 'summary' && summary ? (
                 <SummaryCard summary={summary} />
               ) : result && result.prompts.length > 0 ? (
-                <PromptsList prompts={result.prompts} />
+                <>
+                  <div className="floating-actions">
+                    <button
+                      onClick={handleCopy}
+                      className={`floating-copy-btn ${copied ? 'success' : ''}`}
+                      title="Copy all prompts"
+                    >
+                      {copied ? <IconCheck /> : <IconCopy />}
+                    </button>
+                  </div>
+                  <PromptsList prompts={result.prompts} />
+                </>
               ) : (
                 <EmptyState
                   supported={status.supported}
@@ -477,76 +498,43 @@ export default function App() {
               )}
             </div>
 
-            {/* Stats */}
-            {(result || summary) && (
-              <div className={`stats-bar ${!showStats ? 'hidden' : ''}`}>
-                <span className="stat-badge count-up" key={`p-${promptCount}`}>{animatedCount.prompts} prompts</span>
-                <span className="stat-badge count-up" key={`w-${wordCount}`}>{animatedCount.words} words</span>
-                {currentTimestamp ? (
-                  <span className="stat-badge count-up">
-                    {new Date(currentTimestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                  </span>
-                ) : duration !== null && (
-                  <span className="stat-badge count-up">{duration.toFixed(1)}s</span>
+            {/* Sticky Action Bar */}
+            {!error && !loading && (
+              <div className="action-bar-sticky">
+                {/* Stats */}
+                {(result || summary) && (
+                  <div className={`stats-bar ${!showStats ? 'hidden' : ''}`} style={{ marginBottom: '12px', borderTop: 'none', padding: '0' }}>
+                    <span className="stat-badge count-up" key={`p-${promptCount}`}>{animatedCount.prompts} prompts</span>
+                    <span className="stat-badge count-up" key={`w-${wordCount}`}>{animatedCount.words} words</span>
+                    {currentTimestamp ? (
+                      <span className="stat-badge count-up">
+                        {new Date(currentTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(currentTimestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                    ) : duration !== null && (
+                      <span className="stat-badge count-up">{duration.toFixed(1)}s</span>
+                    )}
+                    {quota && (
+                      <span className={`stat-badge ${quota.used >= quota.limit ? 'warning' : ''}`}>
+                        {quota.used}/{quota.limit} daily
+                      </span>
+                    )}
+                  </div>
                 )}
-                {quota && (
-                  <span className={`stat-badge ${quota.used >= quota.limit ? 'warning' : ''}`}>
-                    {quota.used}/{quota.limit} daily
-                  </span>
-                )}
+
+                <div className={`extract-btn-wrapper ${loading ? 'pulsing' : ''}`}>
+                  <button
+                    onClick={handleExtract}
+                    disabled={!status.supported || loading}
+                    className={`btn-primary ${loading ? 'loading' : ''}`}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <span>Generate</span>
+                  </button>
+                </div>
+
               </div>
             )}
 
-            {/* Actions */}
-            <div className="action-bar">
-              <div className={`extract-btn-wrapper ${loading ? 'pulsing' : ''}`}>
-                {loading && (
-                  <>
-                    <div className="pulse-ring pulse-1" />
-                    <div className="pulse-ring pulse-2" />
-                    <div className="pulse-ring pulse-3" />
-                  </>
-                )}
-                <button
-                  onClick={handleExtract}
-                  disabled={!status.supported || loading}
-                  className={`btn-primary ${loading ? 'loading' : ''}`}
-                >
-                  {loading ? (
-                    <>
-                      <div className="btn-spinner">
-                        <div className="spinner-ring" />
-                      </div>
-                      <span>{loadingMessage || 'Processing...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Generate</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="secondary-actions">
-                <button
-                  onClick={handleCopy}
-                  disabled={!result}
-                  className={`btn-secondary ${copied ? 'success' : ''}`}
-                  title="Cmd+C"
-                >
-                  {copied ? <IconCheckAnimated /> : <IconCopy />}
-                  <span>{copied ? 'Copied!' : 'Copy'}</span>
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={!result}
-                  className="btn-secondary"
-                >
-                  <IconDownload />
-                  <span>Save</span>
-                </button>
-              </div>
-            </div>
           </>
         )}
       </main>
@@ -590,178 +578,193 @@ export default function App() {
 
       {/* Floating Popups */}
 
-      {showProfileModal && (
-        <div className="popup popup-left">
-          <div className="popup-header">
-            <span className="popup-title">Profile</span>
-          </div>
-          <div className="popup-body">
-            {user ? (
-              <>
-                <div className="popup-user">
-                  <div className="popup-avatar">
-                    {user.picture ? <img src={user.picture} alt="" /> : <IconUser />}
+      {
+        showProfileModal && (
+          <div className="popup popup-left">
+            <div className="popup-header">
+              <span className="popup-title">Profile</span>
+            </div>
+            <div className="popup-body">
+              {user ? (
+                <>
+                  <div className="popup-user">
+                    <div className="popup-avatar">
+                      {user.picture ? <img src={user.picture} alt="" /> : <IconUser />}
+                    </div>
+                    <div className="popup-user-info">
+                      <span className="popup-user-name">{user.name}</span>
+                      <span className="popup-user-email">{user.email}</span>
+                    </div>
                   </div>
-                  <div className="popup-user-info">
-                    <span className="popup-user-name">{user.name}</span>
-                    <span className="popup-user-email">{user.email}</span>
-                  </div>
-                </div>
-                <button onClick={() => { signOut(); setUser(null); setTier('guest'); setShowProfileModal(false); }} className="popup-btn danger">
-                  Sign out
+                  <button onClick={() => { signOut(); setUser(null); setTier('guest'); setShowProfileModal(false); }} className="popup-btn danger">
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={async () => {
+                    setSigningIn(true);
+                    try {
+                      const u = await signInWithGoogle();
+                      setUser(u);
+                      setTier('free');
+                      setShowProfileModal(false);
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setSigningIn(false);
+                    }
+                  }}
+                  className="popup-btn primary"
+                  disabled={signingIn}
+                >
+                  {signingIn ? (
+                    <>
+                      <span className="spinner"></span>
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      <IconGoogle />
+                      Sign in with Google
+                    </>
+                  )}
                 </button>
-              </>
-            ) : (
-              <button
-                onClick={async () => {
-                  setSigningIn(true);
-                  try {
-                    const u = await signInWithGoogle();
-                    setUser(u);
-                    setTier('free');
-                    setShowProfileModal(false);
-                  } catch (e) {
-                    console.error(e);
-                  } finally {
-                    setSigningIn(false);
-                  }
-                }}
-                className="popup-btn primary"
-                disabled={signingIn}
-              >
-                {signingIn ? (
-                  <>
-                    <span className="spinner"></span>
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    <IconGoogle />
-                    Sign in with Google
-                  </>
-                )}
-              </button>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {showHistoryModal && (
-        <div className="popup popup-right popup-history">
-          <div className="popup-header">
-            <div className="popup-title-group">
-              <span className="popup-title">History</span>
-              <button
-                className="popup-external-link"
-                onClick={() => chrome.tabs.create({ url: 'history.html' })}
-                title="Open full history"
-              >
+      {
+        showHistoryModal && (
+          <div className="popup popup-right popup-history">
+            <div className="popup-header">
+              <div className="popup-title-group">
+                <span className="popup-title">History</span>
+                <button
+                  className="popup-external-link"
+                  onClick={() => chrome.tabs.create({ url: 'history.html' })}
+                  title="Open full history"
+                >
+                  <IconExternalLink />
+                </button>
+              </div>
+              {history.length > 0 && !confirmClear && (
+                <button className="popup-clear" onClick={() => setConfirmClear(true)}>
+                  Clear all
+                </button>
+              )}
+              {confirmClear && (
+                <div className="popup-confirm">
+                  <button className="popup-confirm-btn danger" onClick={() => { setHistory([]); chrome.storage.local.remove('extractionHistory'); setConfirmClear(false); }}>
+                    Yes, clear
+                  </button>
+                  <button className="popup-confirm-btn" onClick={() => setConfirmClear(false)}>
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="popup-body popup-scroll">
+              {history.length === 0 ? (
+                <p className="popup-empty">No extractions yet</p>
+              ) : (
+                history.slice(0, 20).map(item => (
+                  <button key={item.id} className="popup-history-item" onClick={() => { loadHistoryItem(item); setShowHistoryModal(false); }}>
+                    <PlatformLogo platform={item.platform} />
+                    <div className="popup-history-info">
+                      <span className="popup-history-preview">{item.preview}</span>
+                      <span className="popup-history-meta">
+                        {item.mode === 'summary' ? 'Summary • ' : ''}
+                        {item.promptCount} prompts • {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(item.timestamp).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )
+      }
+
+      {
+        showSettingsModal && (
+          <div className="popup popup-right">
+            <div className="popup-header">
+              <span className="popup-title">Settings</span>
+            </div>
+            <div className="popup-body">
+              <div className="popup-setting">
+                <span className="popup-setting-label">Theme</span>
+                <select value={theme} onChange={e => handleThemeChange(e.target.value as Theme)} className="popup-select">
+                  <option value="system">System</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </div>
+              <div className="popup-setting">
+                <span className="popup-setting-label">Version</span>
+                <span className="popup-setting-value">1.0.0</span>
+              </div>
+              <button onClick={() => { setShowPulseCheck(true); setShowSettingsModal(false); }} className="popup-setting-link">
+                <span className="popup-setting-label">Pulse Check</span>
                 <IconExternalLink />
               </button>
             </div>
-            {history.length > 0 && !confirmClear && (
-              <button className="popup-clear" onClick={() => setConfirmClear(true)}>
-                Clear all
-              </button>
-            )}
-            {confirmClear && (
-              <div className="popup-confirm">
-                <button className="popup-confirm-btn danger" onClick={() => { setHistory([]); chrome.storage.local.remove('extractionHistory'); setConfirmClear(false); }}>
-                  Yes, clear
-                </button>
-                <button className="popup-confirm-btn" onClick={() => setConfirmClear(false)}>
-                  Cancel
-                </button>
-              </div>
-            )}
           </div>
-          <div className="popup-body popup-scroll">
-            {history.length === 0 ? (
-              <p className="popup-empty">No extractions yet</p>
-            ) : (
-              history.slice(0, 20).map(item => (
-                <button key={item.id} className="popup-history-item" onClick={() => { loadHistoryItem(item); setShowHistoryModal(false); }}>
-                  <PlatformLogo platform={item.platform} />
-                  <div className="popup-history-info">
-                    <span className="popup-history-preview">{item.preview}</span>
-                    <span className="popup-history-meta">
-                      {item.mode === 'summary' ? 'Summary • ' : ''}
-                      {item.promptCount} prompts • {new Date(item.timestamp).toLocaleDateString()}
-                    </span>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+        )
+      }
 
-      {showSettingsModal && (
-        <div className="popup popup-right">
-          <div className="popup-header">
-            <span className="popup-title">Settings</span>
-          </div>
-          <div className="popup-body">
-            <div className="popup-setting">
-              <span className="popup-setting-label">Theme</span>
-              <select value={theme} onChange={e => handleThemeChange(e.target.value as Theme)} className="popup-select">
-                <option value="system">System</option>
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
-            </div>
-            <div className="popup-setting">
-              <span className="popup-setting-label">Version</span>
-              <span className="popup-setting-value">1.0.0</span>
-            </div>
-            <button onClick={() => { setShowPulseCheck(true); setShowSettingsModal(false); }} className="popup-setting-link">
-              <span className="popup-setting-label">Pulse Check</span>
-              <IconExternalLink />
-            </button>
-          </div>
-        </div>
-      )}
+      {
+        showPulseCheck && (
+          <PulseCheckModal onClose={() => setShowPulseCheck(false)} userEmail={user?.email} />
+        )
+      }
 
-      {showPulseCheck && (
-        <PulseCheckModal onClose={() => setShowPulseCheck(false)} userEmail={user?.email} />
-      )}
 
-      {/* Success Overlay with Sparkles */}
-      {showSuccess && (
-        <div className="success-overlay">
-          <div className="sparkles">
-            <div className="sparkle s1" />
-            <div className="sparkle s2" />
-            <div className="sparkle s3" />
-            <div className="sparkle s4" />
-            <div className="sparkle s5" />
-            <div className="sparkle s6" />
-          </div>
-          <div className="success-content">
-            <div className="success-icon">
-              <IconCheckLarge />
-            </div>
-            <span className="success-text">Saved & Downloaded</span>
-          </div>
-        </div>
-      )}
-
-      {/* Toast */}
-      {copied && (
-        <div className="toast">
-          <IconCheck />
-          <span>Copied to clipboard</span>
-        </div>
-      )}
+      {/* Copied Toast with exit animation */}
+      <Toast visible={copied}>
+        <IconCheck />
+        <span>Copied to clipboard</span>
+      </Toast>
 
       <style>{styles}</style>
-    </div>
+    </div >
   );
 }
 
 // ═══════════════════════════════════════════════════
 // COMPONENTS
 // ═══════════════════════════════════════════════════
+
+// Toast component with enter/exit animations
+function Toast({ visible, children }: { visible: boolean; children: React.ReactNode }) {
+  const [shouldRender, setShouldRender] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setShouldRender(true);
+      setIsExiting(false);
+    } else if (shouldRender) {
+      setIsExiting(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsExiting(false);
+      }, 200); // Match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [visible, shouldRender]);
+
+  if (!shouldRender) return null;
+
+  return (
+    <div className={`toast ${isExiting ? 'toast-exit' : ''}`}>
+      {children}
+    </div>
+  );
+}
 
 function NavItem({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
   return (
@@ -816,26 +819,37 @@ function SummaryCard({ summary }: { summary: string }) {
 }
 
 function EmptyState({ supported, platform }: { supported: boolean; platform: string | null }) {
+  const platforms = [
+    { name: 'ChatGPT', url: 'https://chatgpt.com', logo: <LogoChatGPT /> },
+    { name: 'Claude', url: 'https://claude.ai', logo: <LogoClaude /> },
+    { name: 'Gemini', url: 'https://gemini.google.com', logo: <LogoGemini /> },
+    { name: 'Perplexity', url: 'https://perplexity.ai', logo: <LogoPerplexity /> },
+    { name: 'DeepSeek', url: 'https://chat.deepseek.com', logo: <LogoDeepseek /> },
+  ];
+
   return (
-    <div className="empty-state-container">
-      <div className="prompt-card placeholder">
-        <div className="prompt-index">1</div>
-        <div className="prompt-body">
-          <p className="prompt-text placeholder-text">
-            {supported
-              ? `I'm ready! Click "Extract" below to capture this entire conversation from ${platform || 'this page'}.`
-              : 'Head over to ChatGPT, Claude, or Gemini to start capturing your conversations.'}
-          </p>
-        </div>
+    <div className="empty-state">
+      <div className="empty-icon">
+        <IconList />
       </div>
-      <div className="prompt-card placeholder opacity-50">
-        <div className="prompt-index">2</div>
-        <div className="prompt-body">
-          <p className="prompt-text placeholder-text">
-            Pro tip: You can also use the floating button on the page itself for faster access!
-          </p>
+      <h2>{supported ? `Ready to extract from ${platform}` : 'Open an AI platform to start'}</h2>
+      <p className="empty-desc">
+        {supported
+          ? 'Click Generate to capture all prompts from this conversation.'
+          : 'Navigate to one of the supported platforms below to begin extracting your prompts.'}
+      </p>
+
+      {!supported && (
+        <div className="platform-launchpad">
+          {platforms.map(p => (
+            <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" className="platform-link">
+              <div className="platform-link-logo">{p.logo}</div>
+              <span>{p.name}</span>
+            </a>
+          ))}
         </div>
-      </div>
+      )}
+
     </div>
   );
 }
@@ -843,11 +857,7 @@ function EmptyState({ supported, platform }: { supported: boolean; platform: str
 function LoadingState({ message }: { message?: string }) {
   return (
     <div className="loading-state">
-      <div className="loading-animation">
-        <div className="loading-ring" />
-        <div className="loading-ring delay-1" />
-        <div className="loading-ring delay-2" />
-      </div>
+      <div className="simple-spinner" />
       <span className="loading-text">{message || 'Processing...'}</span>
     </div>
   );
@@ -942,13 +952,6 @@ const IconCopy = () => (
   </svg>
 );
 
-const IconDownload = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" />
-    <line x1="12" y1="15" x2="12" y2="3" />
-  </svg>
-);
 
 const IconCheck = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -959,13 +962,6 @@ const IconCheck = () => (
 const IconCheckAnimated = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--highlight)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="check-animated">
     <polyline points="20 6 9 17 4 12" strokeDasharray="24" strokeDashoffset="0" style={{ animation: 'checkmark 0.3s ease-out' }} />
-  </svg>
-);
-
-const IconCheckLarge = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-    <polyline points="22 4 12 14.01 9 11.01" />
   </svg>
 );
 
@@ -1412,30 +1408,6 @@ const styles = `
   }
 
   /* Mode Toggle */
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-light);
-    background: var(--surface-primary);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    min-height: 60px;
-  }
-
-  .header-left {
-    flex: 1;
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .header-right {
-    flex: 1;
-  }
-
-  /* Mode Toggle */
   .mode-toggle {
     display: inline-flex;
     padding: 3px;
@@ -1468,11 +1440,11 @@ const styles = `
     box-shadow: var(--shadow-sm);
   }
 
-  /* Content Area */
   .content-area {
     flex: 1;
     overflow: auto;
-    padding: 16px;
+    padding: 12px 16px; /* Reduced top padding */
+    position: relative;
   }
 
   /* Prompts */
@@ -1814,7 +1786,7 @@ const styles = `
     position: absolute;
     bottom: 100%;
     left: 50%;
-    transform: translateX(-50%) translateY(-8px);
+    transform: translate(-50%, -8px);
     background: #000000;
     color: #ffffff;
     padding: 4px 8px;
@@ -1837,7 +1809,7 @@ const styles = `
     position: absolute;
     top: 100%;
     left: 50%;
-    transform: translateX(-50%) translateY(8px);
+    transform: translate(-50%, 8px);
     background: #000000;
     color: #ffffff;
     padding: 4px 8px;
@@ -1860,7 +1832,7 @@ const styles = `
 
   .has-tooltip:hover .tooltip-bottom {
     opacity: 1;
-    transform: translateX(-50%) translateY(4px);
+    transform: translate(-50%, 4px);
   }
 
   [data-theme="dark"] .nav-tooltip {
@@ -1872,20 +1844,12 @@ const styles = `
   .nav-item:hover .nav-tooltip,
   .nav-profile:hover .nav-tooltip {
     opacity: 1;
-    transform: translateX(-50%) translateY(-4px);
+    transform: translate(-50%, -4px);
   }
 
+  /* Note: .nav-item is already defined above - adding position: relative here */
   .nav-item {
     position: relative;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: background var(--duration-fast) var(--ease-out);
   }
 
   .nav-profile:hover {
@@ -2307,26 +2271,13 @@ const styles = `
     gap: 20px;
   }
 
-  .loading-animation {
-    position: relative;
-    width: 48px;
-    height: 48px;
-  }
-
-  .loading-ring {
-    position: absolute;
-    inset: 0;
-    border: 2px solid var(--border-default);
+  .simple-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--surface-tertiary);
+    border-top-color: var(--text-primary);
     border-radius: 50%;
-    animation: ripple 1.5s ease-out infinite;
-  }
-
-  .loading-ring.delay-1 {
-    animation-delay: 0.3s;
-  }
-
-  .loading-ring.delay-2 {
-    animation-delay: 0.6s;
+    animation: spin 0.8s linear infinite;
   }
 
   .loading-text {
@@ -2625,44 +2576,10 @@ const styles = `
     cursor: pointer;
   }
 
-  /* Success Overlay */
-  .success-overlay {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--grey-900);
-    color: var(--white);
-    padding: 8px 16px;
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    z-index: 200;
-    box-shadow: var(--shadow-lg);
-    animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .success-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 32px 48px;
-    background: var(--surface-primary);
-    border-radius: var(--radius-2xl);
-    box-shadow: var(--shadow-xl);
-    animation: successPop 0.4s var(--ease-out);
-  }
-
-  .success-icon {
+  .toast.success {
+    border: 1px solid var(--highlight);
     color: var(--highlight);
-  }
-
-  .success-text {
-    font-size: var(--text-base);
-    font-weight: 500;
-    color: var(--text-primary);
+    background: var(--highlight-surface);
   }
 
   /* Toast */
@@ -2682,7 +2599,33 @@ const styles = `
     font-size: var(--text-sm);
     font-weight: 500;
     z-index: 100;
-    animation: fadeInUp 0.2s var(--ease-out);
+    animation: toastFadeInUp 0.2s var(--ease-out);
+  }
+
+  @keyframes toastFadeInUp {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 8px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  @keyframes toastFadeOutDown {
+    from {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, 8px);
+    }
+  }
+
+  .toast-exit {
+    animation: toastFadeOutDown 0.2s var(--ease-out) forwards;
   }
 
   [data-theme="dark"] .toast {
@@ -3214,5 +3157,132 @@ const styles = `
   
   .pulse-close {
     width: 100%;
+  }
+
+  /* Floating Actions */
+  .floating-actions {
+    position: sticky;
+    top: 0;
+    right: 0;
+    display: flex;
+    justify-content: flex-end;
+    height: 0; /* Don't take up space */
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .floating-copy-btn {
+    pointer-events: auto;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s;
+    margin-top: 4px; /* Slight offset from top */
+  }
+
+  .floating-copy-btn:hover {
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+    transform: scale(1.05);
+  }
+
+  .floating-copy-btn.success {
+    background: var(--highlight);
+    border-color: var(--highlight);
+    color: var(--white);
+  }
+
+  /* Platform Launchpad */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--surface-secondary);
+    border-radius: var(--radius-2xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    margin-bottom: 20px;
+  }
+
+  .empty-state h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .empty-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    max-width: 280px;
+  }
+
+  .platform-launchpad {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .platform-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.2s;
+  }
+
+  .platform-link:hover {
+    border-color: var(--text-primary);
+    background: var(--surface-hover);
+    transform: translateY(-2px);
+  }
+
+  .platform-link-logo {
+    color: var(--text-secondary);
+  }
+
+  .platform-link span {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .empty-action {
+    margin-top: 20px;
+  }
+
+  /* Sticky Action Bar */
+  .action-bar-sticky {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    background: linear-gradient(to top, var(--bg-primary) 80%, transparent);
+    z-index: 100;
   }
 `;

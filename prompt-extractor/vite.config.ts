@@ -59,17 +59,24 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    minify: false,
     rollupOptions: {
       input: {
         sidepanel: resolve(__dirname, 'src/sidepanel/index.html'),
         history: resolve(__dirname, 'src/sidepanel/history.html'),
-        content: resolve(__dirname, 'src/content/index.ts'),
         'service-worker': resolve(__dirname, 'src/background/service-worker.ts'),
       },
       output: {
         entryFileNames: '[name].js',
-        chunkFileNames: 'chunks/[name]-[hash].js',
+        chunkFileNames: '[name].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
+        manualChunks: (id) => {
+          // Force everything into the entry points to avoid ESM imports in content scripts
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+          return undefined;
+        },
       },
     },
   },

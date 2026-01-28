@@ -57,6 +57,7 @@ export type MessageAction =
   | 'TOGGLE_BUTTONS'
   | 'CONTENT_COPIED'
   | 'SAVE_SESSION_PROMPTS'
+  | 'GET_CONVERSATION_LOGS'
   | 'ERROR';
 
 export interface ExtractMessage {
@@ -117,6 +118,12 @@ export interface SaveSessionPromptsMessage {
   platform: string;
 }
 
+export interface GetConversationLogsMessage {
+  action: 'GET_CONVERSATION_LOGS';
+  platform: string;
+  conversationId: string;
+}
+
 export type Message =
   | ExtractMessage
   | ExtractionResultMessage
@@ -128,4 +135,5 @@ export type Message =
   | StatusMessage
   | StatusResultMessage
   | ToggleButtonsMessage
-  | SaveSessionPromptsMessage;
+  | SaveSessionPromptsMessage
+  | GetConversationLogsMessage;

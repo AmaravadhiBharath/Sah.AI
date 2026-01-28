@@ -5,8 +5,8 @@ export class ChatGPTAdapter extends BaseAdapter {
   name = 'chatgpt';
 
   detect(): boolean {
-    return location.hostname.includes('chatgpt.com') || 
-           location.hostname.includes('chat.openai.com');
+    return location.hostname.includes('chatgpt.com') ||
+      location.hostname.includes('chat.openai.com');
   }
 
   scrapePrompts(): ScrapedPrompt[] {
@@ -26,7 +26,26 @@ export class ChatGPTAdapter extends BaseAdapter {
       if (prompts.length > 0) return prompts;
     }
 
-    // Strategy 2: Article structure with user detection
+    // Strategy 2: New Test IDs
+    const turns = document.querySelectorAll('[data-testid^="conversation-turn-"]');
+    turns.forEach((turn, index) => {
+      // Check if this turn is from the user
+      const isUser = turn.querySelector('[data-message-author-role="user"]') ||
+        turn.querySelector('.user-icon') ||
+        turn.textContent?.includes('You'); // Fallback
+
+      if (!isUser) return;
+
+      const content = this.cleanText(this.getVisibleText(turn));
+      if (content && !seen.has(content)) {
+        seen.add(content);
+        prompts.push({ content, index });
+      }
+    });
+
+    if (prompts.length > 0) return prompts;
+
+    // Strategy 3: Article structure
     const articles = document.querySelectorAll('article');
     let promptIndex = 0;
     articles.forEach((article) => {
