@@ -87,6 +87,29 @@ export default function App() {
   const [animatedCount, setAnimatedCount] = useState({ prompts: 0, words: 0 });
   const [showStats, setShowStats] = useState(true);
 
+  const profileRef = useRef<HTMLDivElement>(null);
+  const historyRef = useRef<HTMLDivElement>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (showProfileModal && profileRef.current && !profileRef.current.contains(target)) {
+        setShowProfileModal(false);
+      }
+      if (showHistoryModal && historyRef.current && !historyRef.current.contains(target)) {
+        setShowHistoryModal(false);
+      }
+      if (showSettingsModal && settingsRef.current && !settingsRef.current.contains(target)) {
+        setShowSettingsModal(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileModal, showHistoryModal, showSettingsModal]);
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop;
     if (scrollTop > 10 && showStats) {
@@ -438,7 +461,7 @@ export default function App() {
           ) : result ? (
             <button onClick={handleClearResult} className="icon-btn has-tooltip">
               <IconArrowLeft />
-              <div className="tooltip-bottom">Back</div>
+              <div className="tooltip-bottom">Clear</div>
             </button>
           ) : null}
         </div>
@@ -580,7 +603,7 @@ export default function App() {
 
       {
         showProfileModal && (
-          <div className="popup popup-left">
+          <div className="popup popup-left" ref={profileRef}>
             <div className="popup-header">
               <span className="popup-title">Profile</span>
             </div>
@@ -638,7 +661,7 @@ export default function App() {
 
       {
         showHistoryModal && (
-          <div className="popup popup-right popup-history">
+          <div className="popup popup-right popup-history" ref={historyRef}>
             <div className="popup-header">
               <div className="popup-title-group">
                 <span className="popup-title">History</span>
@@ -690,7 +713,7 @@ export default function App() {
 
       {
         showSettingsModal && (
-          <div className="popup popup-right">
+          <div className="popup popup-right" ref={settingsRef}>
             <div className="popup-header">
               <span className="popup-title">Settings</span>
             </div>
@@ -788,16 +811,36 @@ function PromptsList({ prompts }: { prompts: ScrapedPrompt[] }) {
 
 function PromptCard({ prompt, index }: { prompt: ScrapedPrompt; index: number }) {
   const [expanded, setExpanded] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const isLong = prompt.content.length > 200;
   const text = isLong && !expanded ? prompt.content.slice(0, 200) + '...' : prompt.content;
 
+  useEffect(() => {
+    if (!expanded) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+        setExpanded(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [expanded]);
+
   return (
-    <div className="prompt-card">
+    <div className="prompt-card" ref={cardRef}>
       <div className="prompt-index">{index + 1}</div>
       <div className="prompt-body">
         <p className="prompt-text">{text}</p>
         {isLong && (
-          <button onClick={() => setExpanded(!expanded)} className="expand-btn">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(!expanded);
+            }}
+            className="expand-btn"
+          >
             {expanded ? 'Show less' : 'Show more'}
           </button>
         )}
@@ -1577,10 +1620,11 @@ const styles = `
   .stats-bar {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--bg-primary);
     border-top: 1px solid var(--border-light);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s var(--ease-out);
     height: auto;
     opacity: 1;
     overflow: hidden;
@@ -3281,8 +3325,10 @@ const styles = `
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 16px;
-    background: linear-gradient(to top, var(--bg-primary) 80%, transparent);
+    padding: 12px 16px 16px;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-light);
     z-index: 100;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
   }
 `;

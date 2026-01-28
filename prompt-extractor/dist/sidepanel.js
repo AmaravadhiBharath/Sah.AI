@@ -185,6 +185,25 @@ function App() {
   const portRef = reactExports.useRef(null);
   const [animatedCount, setAnimatedCount] = reactExports.useState({ prompts: 0, words: 0 });
   const [showStats, setShowStats] = reactExports.useState(true);
+  const profileRef = reactExports.useRef(null);
+  const historyRef = reactExports.useRef(null);
+  const settingsRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    const handleClickOutside = (event) => {
+      const target = event.target;
+      if (showProfileModal && profileRef.current && !profileRef.current.contains(target)) {
+        setShowProfileModal(false);
+      }
+      if (showHistoryModal && historyRef.current && !historyRef.current.contains(target)) {
+        setShowHistoryModal(false);
+      }
+      if (showSettingsModal && settingsRef.current && !settingsRef.current.contains(target)) {
+        setShowSettingsModal(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showProfileModal, showHistoryModal, showSettingsModal]);
   const handleScroll = (e) => {
     const scrollTop = e.currentTarget.scrollTop;
     if (scrollTop > 10 && showStats) {
@@ -477,7 +496,7 @@ function App() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "tooltip-bottom", children: "Back" })
       ] }) : result ? /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: handleClearResult, className: "icon-btn has-tooltip", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(IconArrowLeft, {}),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "tooltip-bottom", children: "Back" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "tooltip-bottom", children: "Clear" })
       ] }) : null }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mode-toggle", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -613,7 +632,7 @@ function App() {
         )
       ] })
     ] }),
-    showProfileModal && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup popup-left", children: [
+    showProfileModal && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup popup-left", ref: profileRef, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "popup-header", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "popup-title", children: "Profile" }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "popup-body", children: user ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup-user", children: [
@@ -657,7 +676,7 @@ function App() {
         }
       ) })
     ] }),
-    showHistoryModal && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup popup-right popup-history", children: [
+    showHistoryModal && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup popup-right popup-history", ref: historyRef, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup-header", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup-title-group", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "popup-title", children: "History" }),
@@ -699,7 +718,7 @@ function App() {
         ] })
       ] }, item.id)) })
     ] }),
-    showSettingsModal && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup popup-right", children: [
+    showSettingsModal && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup popup-right", ref: settingsRef, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "popup-header", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "popup-title", children: "Settings" }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup-body", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "popup-setting", children: [
@@ -762,13 +781,34 @@ function PromptsList({ prompts }) {
 }
 function PromptCard({ prompt, index }) {
   const [expanded, setExpanded] = reactExports.useState(false);
+  const cardRef = reactExports.useRef(null);
   const isLong = prompt.content.length > 200;
   const text = isLong && !expanded ? prompt.content.slice(0, 200) + "..." : prompt.content;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-card", children: [
+  reactExports.useEffect(() => {
+    if (!expanded) return;
+    const handleClickOutside = (event) => {
+      if (cardRef.current && !cardRef.current.contains(event.target)) {
+        setExpanded(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [expanded]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-card", ref: cardRef, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-index", children: index + 1 }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-body", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "prompt-text", children: text }),
-      isLong && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setExpanded(!expanded), className: "expand-btn", children: expanded ? "Show less" : "Show more" })
+      isLong && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          onClick: (e) => {
+            e.stopPropagation();
+            setExpanded(!expanded);
+          },
+          className: "expand-btn",
+          children: expanded ? "Show less" : "Show more"
+        }
+      )
     ] })
   ] });
 }
@@ -1423,10 +1463,11 @@ const styles = `
   .stats-bar {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--bg-primary);
     border-top: 1px solid var(--border-light);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s var(--ease-out);
     height: auto;
     opacity: 1;
     overflow: hidden;
@@ -3127,9 +3168,11 @@ const styles = `
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 16px;
-    background: linear-gradient(to top, var(--bg-primary) 80%, transparent);
+    padding: 12px 16px 16px;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-light);
     z-index: 100;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
   }
 `;
 class TelemetryService {

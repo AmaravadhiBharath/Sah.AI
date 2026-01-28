@@ -661,7 +661,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "SAVE_SESSION_PROMPTS": {
       const { prompts, platform, conversationId } = message;
       const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-      const key = conversationId ? `keylog_${platform}_${conversationId}_${today}` : `keylog_${platform}_${today}`;
+      const key = conversationId ? `keylog_${platform}_${conversationId}` : `keylog_${platform}_${today}`;
       chrome.storage.local.get([key], (result) => {
         const existing = result[key] || [];
         const merged = [...existing];
@@ -699,7 +699,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "GET_CONVERSATION_LOGS": {
       const { platform, conversationId } = message;
       const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-      const specificKey = `keylog_${platform}_${conversationId}_${today}`;
+      const specificKey = `keylog_${platform}_${conversationId}`;
       const generalKey = `keylog_${platform}_${today}`;
       chrome.storage.local.get([specificKey, generalKey], (result) => {
         let conversationLogs = result[specificKey] || [];

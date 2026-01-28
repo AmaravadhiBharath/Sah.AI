@@ -487,29 +487,24 @@ async function extractPrompts(): Promise<ScrapedPrompt[]> {
     }
   }
 
-  // 4. If we have keylogged data, USE IT ONLY (as requested)
-  if (allKeyloggedPrompts.length > 0) {
-    console.log(`[SahAI] Using ${allKeyloggedPrompts.length} keylogged prompts (ignoring DOM)`);
-    return allKeyloggedPrompts.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-  }
-
-  // 5. Fallback: If NO keylogs exist (e.g. first install, or data cleared), use DOM
-  console.log('[SahAI] No keylogs found, falling back to DOM scraping');
+  // 4. Merge with DOM scraping
+  let finalPrompts = [...allKeyloggedPrompts];
 
   if (adapter) {
-    const prompts = adapter.scrapePrompts();
+    console.log('[SahAI] Augmenting with DOM scraping...');
+    const domPrompts = adapter.scrapePrompts();
 
-    // SELF-HEALING: If specific adapter fails (returns 0), try Generic Smart Scraper
-    if (prompts.length === 0 && adapter.name !== 'generic') {
-      console.log('[SahAI] Specific adapter returned 0 prompts. Attempting self-healing with Generic Smart Scraper...');
-      // Use the already imported adapters if possible, or just fallback
-      return prompts;
+    const existingContent = new Set(allKeyloggedPrompts.map(p => normalizeForComparison(p.content)));
+
+    for (const p of domPrompts) {
+      if (!existingContent.has(normalizeForComparison(p.content))) {
+        finalPrompts.push(p);
+      }
     }
-
-    return prompts;
   }
 
-  return [];
+  // 5. Final sort and return
+  return finalPrompts.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 }
 
 // Merge session and DOM prompts, avoiding duplicates

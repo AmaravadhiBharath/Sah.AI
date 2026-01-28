@@ -222,10 +222,9 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
         conversationId?: string;
       };
 
-      // Use date + conversation for the key
       const today = new Date().toISOString().split('T')[0];
       const key = conversationId
-        ? `keylog_${platform}_${conversationId}_${today}`
+        ? `keylog_${platform}_${conversationId}`
         : `keylog_${platform}_${today}`;
 
       chrome.storage.local.get([key], (result) => {
@@ -277,10 +276,8 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
         conversationId: string;
       };
 
-      // Get logs from local storage
       const today = new Date().toISOString().split('T')[0];
-      // Try both specific key and general key (fallback)
-      const specificKey = `keylog_${platform}_${conversationId}_${today}`;
+      const specificKey = `keylog_${platform}_${conversationId}`;
       const generalKey = `keylog_${platform}_${today}`;
 
       chrome.storage.local.get([specificKey, generalKey], (result) => {
