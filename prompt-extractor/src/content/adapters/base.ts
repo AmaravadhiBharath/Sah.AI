@@ -1,0 +1,41 @@
+import type { PlatformAdapter, ScrapedPrompt } from '../../types';
+
+// Base class with common utilities for adapters
+export abstract class BaseAdapter implements PlatformAdapter {
+  abstract name: string;
+  abstract detect(): boolean;
+  abstract scrapePrompts(): ScrapedPrompt[];
+
+  // Utility: Deep query selector that pierces shadow DOM
+  protected deepQuerySelectorAll(selector: string, root: Node = document): Element[] {
+    let nodes = Array.from((root as ParentNode).querySelectorAll(selector));
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const el = node as Element;
+      if (el.shadowRoot) {
+        nodes = [...nodes, ...this.deepQuerySelectorAll(selector, el.shadowRoot)];
+      }
+    }
+    return nodes;
+  }
+
+  // Utility: Clean text content
+  protected cleanText(text: string): string {
+    return text
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Utility: Check if text is UI noise
+  protected isUIElement(text: string): boolean {
+    const uiPatterns = /^(copy|regenerate|share|edit|delete|save|retry|cancel|submit|send|stop|continue|new chat|clear)$/i;
+    return uiPatterns.test(text.trim()) || text.trim().length < 3;
+  }
+
+  // Utility: Extract visible text from element
+  protected getVisibleText(element: Element): string {
+    const el = element as HTMLElement;
+    return el.innerText || el.textContent || '';
+  }
+}
