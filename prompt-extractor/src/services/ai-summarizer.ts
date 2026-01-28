@@ -191,26 +191,26 @@ function normalize(text: string): string {
 function similarity(a: string, b: string): number {
   const normA = normalize(a);
   const normB = normalize(b);
-  
+
   if (normA === normB) return 1;
   if (normA.length === 0 || normB.length === 0) return 0;
-  
+
   // Check if one contains the other
   if (normA.includes(normB) || normB.includes(normA)) {
     const shorter = Math.min(normA.length, normB.length);
     const longer = Math.max(normA.length, normB.length);
     return shorter / longer;
   }
-  
+
   // Simple word overlap
   const wordsA = new Set(normA.split(' ').filter(w => w.length > 2));
   const wordsB = new Set(normB.split(' ').filter(w => w.length > 2));
-  
+
   if (wordsA.size === 0 || wordsB.size === 0) return 0;
-  
+
   let overlap = 0;
   wordsA.forEach(w => { if (wordsB.has(w)) overlap++; });
-  
+
   return overlap / Math.max(wordsA.size, wordsB.size);
 }
 
@@ -249,7 +249,7 @@ function filterPrompts(prompts: ScrapedPrompt[]): FilteredPrompt[] {
 
   // Pass 1: Remove exact duplicates (keep first occurrence)
   const dedupedWithIndex: { prompt: ScrapedPrompt; index: number }[] = [];
-  
+
   for (let i = 0; i < prompts.length; i++) {
     const normalized = normalize(prompts[i].content);
     if (!seen.has(normalized) && prompts[i].content.trim().length > 0) {
@@ -260,10 +260,10 @@ function filterPrompts(prompts: ScrapedPrompt[]): FilteredPrompt[] {
 
   // Pass 2: Remove near-duplicates (>85% similar)
   const uniquePrompts: { prompt: ScrapedPrompt; index: number }[] = [];
-  
+
   for (const item of dedupedWithIndex) {
     let isDuplicate = false;
-    
+
     for (const existing of uniquePrompts) {
       if (similarity(item.prompt.content, existing.prompt.content) > 0.85) {
         // Keep the longer one (more info)
@@ -275,7 +275,7 @@ function filterPrompts(prompts: ScrapedPrompt[]): FilteredPrompt[] {
         break;
       }
     }
-    
+
     if (!isDuplicate) {
       uniquePrompts.push(item);
     }
@@ -288,7 +288,7 @@ function filterPrompts(prompts: ScrapedPrompt[]): FilteredPrompt[] {
 
   for (const item of uniquePrompts) {
     const isFiller = isFillerOnly(item.prompt.content);
-    
+
     // Keep fillers only if: very few prompts OR filler has context (like "yes, do that")
     if (isFiller && substantialCount > 3 && item.prompt.content.length < 20) {
       continue; // Skip pure fillers when we have enough content
@@ -306,25 +306,25 @@ function filterPrompts(prompts: ScrapedPrompt[]): FilteredPrompt[] {
   // Pass 4: Merge consecutive very similar prompts (iterations/refinements)
   const merged: FilteredPrompt[] = [];
   let i = 0;
-  
+
   while (i < result.length) {
     const current = result[i];
     const mergedIndices = [current.originalIndex];
     let mergedContent = current.content;
-    
+
     // Look ahead for similar consecutive prompts
     let j = i + 1;
     while (j < result.length) {
       const next = result[j];
       const sim = similarity(current.content, next.content);
-      
+
       // If very similar but next adds info, merge them
       if (sim > 0.6 && sim < 0.95 && next.content.length > current.content.length * 0.3) {
         // Find the unique parts of next
         const currentWords = new Set(normalize(mergedContent).split(' '));
         const nextWords = normalize(next.content).split(' ');
         const uniqueWords = nextWords.filter(w => !currentWords.has(w) && w.length > 2);
-        
+
         if (uniqueWords.length > 0) {
           mergedContent = mergedContent + ' [Update: ' + next.content + ']';
           mergedIndices.push(next.originalIndex);
@@ -334,18 +334,18 @@ function filterPrompts(prompts: ScrapedPrompt[]): FilteredPrompt[] {
         break;
       }
     }
-    
+
     merged.push({
       content: mergedContent,
       originalIndex: current.originalIndex,
       merged: mergedIndices.length > 1 ? mergedIndices : undefined,
     });
-    
+
     i = j > i + 1 ? j : i + 1;
   }
 
-  console.log(`[Filter] ${prompts.length} → ${merged.length} prompts (${Math.round((1 - merged.length/prompts.length) * 100)}% reduction)`);
-  
+  console.log(`[Filter] ${prompts.length} → ${merged.length} prompts (${Math.round((1 - merged.length / prompts.length) * 100)}% reduction)`);
+
   return merged;
 }
 
@@ -354,7 +354,7 @@ export class AISummarizer {
     try {
       // Apply smart filtering
       const filtered = filterPrompts(prompts);
-      
+
       const content = filtered
         .map((p, i) => `${i + 1}. ${p.content}`)
         .join('\n\n');

@@ -1614,7 +1614,8 @@ const styles = `
     font-size: var(--text-base);
     line-height: var(--leading-relaxed);
     color: var(--text-primary);
-    white-space: pre-wrap;
+    white-space: pre-line;
+    text-align: justify;
   }
 
   /* Stats Bar */
