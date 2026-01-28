@@ -16,7 +16,8 @@ import {
   orderBy,
   limit,
   deleteDoc,
-  getDoc
+  getDoc,
+  where
 } from 'firebase/firestore';
 
 import { config } from '../config';
@@ -39,6 +40,11 @@ export async function initializeFirebase() {
 
 // Export db getter to handle async initialization
 export const getDb = async () => {
+  // Service Worker check: Ensure we don't crash if window is missing
+  if (typeof window === 'undefined' && typeof self === 'undefined') {
+    throw new Error('Firebase cannot be initialized in this environment');
+  }
+
   if (!db) await initializeFirebase();
   return db;
 };
@@ -367,6 +373,40 @@ export async function saveKeylogsToCloud(userId: string, platform: string, promp
   } catch (error) {
     console.error('[Firebase] Transaction failed:', error);
     // Don't throw, just log. Keylogs are best-effort.
+  }
+}
+
+/**
+ * Get raw keylogs from Firestore for a specific conversation
+ */
+export async function getKeylogsFromCloud(userId: string, conversationId: string): Promise<CloudKeylogItem[]> {
+  try {
+    const db = await getDb();
+    const keylogsRef = collection(db, `users/${userId}/keylogs`);
+    const q = query(keylogsRef, where('conversationId', '==', conversationId));
+    const snapshot = await getDocs(q);
+
+    let allPrompts: CloudKeylogItem[] = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.prompts && Array.isArray(data.prompts)) {
+        allPrompts = [...allPrompts, ...data.prompts];
+      }
+    });
+
+    // Deduplicate and sort
+    const seen = new Set<string>();
+    const unique = allPrompts.filter(p => {
+      const key = `${p.timestamp}|||${normalizeForKey(p.content)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return unique.sort((a, b) => a.timestamp - b.timestamp);
+  } catch (error) {
+    console.error('[Firebase] Get keylogs error:', error);
+    return [];
   }
 }
 

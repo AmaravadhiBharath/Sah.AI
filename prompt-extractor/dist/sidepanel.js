@@ -353,6 +353,7 @@ function App() {
       if (message.mode) setMode(message.mode);
       handleExtractionResult(message.result, extractMode);
       if (extractMode === "summary" && message.result.prompts.length > 0) {
+        setLoading(true);
         setLoadingMessage("Consolidating prompts...");
         (_a2 = portRef.current) == null ? void 0 : _a2.postMessage({ action: "SUMMARIZE_PROMPTS", prompts: message.result.prompts });
       }
@@ -1456,7 +1457,8 @@ const styles = `
     font-size: var(--text-base);
     line-height: var(--leading-relaxed);
     color: var(--text-primary);
-    white-space: pre-wrap;
+    white-space: pre-line;
+    text-align: justify;
   }
 
   /* Stats Bar */
@@ -3207,7 +3209,7 @@ class TelemetryService {
         return { collection: collection2, addDoc: addDoc2 };
       }, true ? [] : void 0, import.meta.url);
       const { getDb } = await __vitePreload(async () => {
-        const { getDb: getDb2 } = await import("./firebase.js").then((n) => n.k);
+        const { getDb: getDb2 } = await import("./firebase.js").then((n) => n.l);
         return { getDb: getDb2 };
       }, true ? __vite__mapDeps([0,1]) : void 0, import.meta.url);
       const db = await getDb();

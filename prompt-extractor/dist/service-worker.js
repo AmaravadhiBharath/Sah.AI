@@ -3,7 +3,7 @@ var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 var _a;
-import { _ as __vitePreload, h as getCurrentUserId, i as getDb, j as saveKeylogsToCloud } from "./firebase.js";
+import { _ as __vitePreload, h as getCurrentUserId, i as getKeylogsFromCloud, j as getDb, k as saveKeylogsToCloud } from "./firebase.js";
 import { d as doc, i as increment } from "./vendor.js";
 class CircuitBreaker {
   constructor(config) {
@@ -119,10 +119,10 @@ async function resilientFetch(url, options = {}) {
   });
 }
 const BACKEND_URL = "https://tai-backend.amaravadhibharath.workers.dev";
-const CONSOLIDATION_RULES = `[INTENT COMPILATION PROTOCOL v4.0 - ENTERPRISE]
+const CONSOLIDATION_RULES = `[INTENT COMPILATION PROTOCOL v5.0 - ENTERPRISE]
 
 CORE DIRECTIVE: Compile user intent into an actionable specification.
-PHILOSOPHY: Include everything. Assume nothing. Resolve confusion.
+PHILOSOPHY: SummarAI does not summarize conversations. It compiles intent.
 
 ═══════════════════════════════════════════════════════════════════════════════
 SECTION A: OUTPUT FORMAT
@@ -136,7 +136,7 @@ A1. FINAL STATE ONLY
 ✓ "Color: green"
 
 A2. SPECIFICATION FORMAT
-- Output reads as a product specification
+- Output reads as a product specification or final brief
 - Self-contained: executable by another person/AI
 - No conversation references: "as discussed", "user said"
 
@@ -144,6 +144,18 @@ A3. STRUCTURAL COHERENCE
 - Reads as if written once, not stitched
 - Logical grouping by topic
 - Professional, neutral language
+
+A4. PURE INSTRUCTION ONLY (OUTPUT-ONLY)
+- No headers like "Project Specification" or "Summary"
+- No intro sentences like "The project entails..." or "The user wants..."
+- Start directly with the requirements/instructions
+- ✗ "The user wants a login page"
+- ✓ "Login page required"
+
+A5. TEMPORAL IRRELEVANCE
+- Remove all time references from the conversation
+- ✗ "Earlier we said X", "Now do Y", "Later add Z"
+- ✓ "Requirement: X, Y, Z"
 
 ═══════════════════════════════════════════════════════════════════════════════
 SECTION B: ZERO INFORMATION LOSS (CRITICAL)
@@ -160,10 +172,10 @@ B2. MULTIPLE OPTIONS = INCLUDE ALL
 - Never assume which is preferred
 ✓ "Colors: blue, green (both mentioned)"
 
-B3. DEDUPLICATION
+B3. DEDUPLICATION WITHOUT LOSS
 - Identical statements → merge into ONE complete version
 - Keep the most complete/specific version
-- Never shorten at cost of meaning
+- Never shorten at cost of meaning or clarity
 
 B4. NEGATIVE CONSTRAINTS
 - Preserve exactly: "no", "don't", "never", "avoid", "without"
@@ -172,6 +184,10 @@ B4. NEGATIVE CONSTRAINTS
 B5. PRIORITY INDICATORS
 - Preserve: "critical", "important", "must", "essential", "priority"
 ✓ "Performance is critical"
+
+B6. SINGLE-MENTION PRESERVATION
+- Requirements mentioned even once are authoritative
+- Do not omit "one-time" constraints
 
 ═══════════════════════════════════════════════════════════════════════════════
 SECTION C: CONFLICT RESOLUTION
@@ -182,16 +198,26 @@ C1. TRUE CONFLICTS ONLY
 - "Make blue" → "Make green" (can't be both) = latest wins
 - "Make blue" → "add green accents" (can coexist) = include both
 
-C2. LATEST WINS (FOR TRUE CONFLICTS)
+C2. LATEST WINS (OVERRIDE SUPREMACY)
 - Latest explicit instruction takes precedence
 - Remove earlier conflicting instruction completely
+- Do not reference discarded states
+
+C2a. SILENT REPLACEMENT
+- When X is replaced by Y, do NOT mention X was removed.
+- Output ONLY Y.
+- ✗ "Breakfast plates were replaced by lunch sets"
+- ✓ "Lunch sets"
 
 C3. SPECIFICITY OVERRIDE
 - Specific overrides generic
 - "Make colorful" → "Use blue and white only" = "Blue and white only"
 
 C4. USER OVER AI
-- User instructions override AI suggestions
+- User instructions always override AI suggestions or interpretations
+
+C5. LATEST SPECIFICITY WINS
+- If a later instruction is more specific than an earlier one, it is the final state
 
 ═══════════════════════════════════════════════════════════════════════════════
 SECTION D: INTERPRETATION
@@ -206,15 +232,23 @@ D2. INFORMAL TO FORMAL
 ✗ "The kid is class 5 I think"
 ✓ "Class level: 5"
 
-D3. FILLER REMOVAL
-- Remove: "I think", "maybe", "let's try"
+D3. FILLER REMOVAL (META-LANGUAGE IGNORING)
+- Remove: "I think", "maybe", "let's try", "just an idea"
 - KEEP the intent within
 ✗ "I think we need auth" → remove entirely
 ✓ "I think we need auth" → "Authentication required"
 
-D4. NO INFERENCE
+D4. NO ASSUMPTION (NO INFERENCE)
 - Never add information not stated
-- If not mentioned, do not include
+- If not mentioned, do not include or auto-fill defaults
+- Omit missing attributes (duration, platform, etc.) if not specified
+
+D5. TONE NEUTRALIZATION
+- Remove emotional tone (excitement, frustration, praise)
+- Keep only constraints, decisions, and preferences
+
+D6. INSTRUCTION VS EXPLANATION
+- Instructions always override explanations or informal commentary
 
 ═══════════════════════════════════════════════════════════════════════════════
 SECTION E: EDGE CASES
@@ -268,9 +302,7 @@ SECTION F: VALIDATION
 
 ═══════════════════════════════════════════════════════════════════════════════
 
-SummarAI compiles intent. It does not summarize conversations.
-
-[END PROTOCOL v4.0]
+[END PROTOCOL v5.0]
 `;
 const FILLER_PATTERNS = [
   /^(ok|okay|yes|no|sure|thanks|thank you|got it|alright|right|yep|nope|cool|great|perfect|nice|good|fine|understood)\.?$/i,
@@ -487,7 +519,7 @@ async function fetchRemoteConfigUpdates(currentVersion) {
       return { doc: doc3, getDoc: getDoc2 };
     }, true ? [] : void 0, import.meta.url);
     const { getDb: getDb2 } = await __vitePreload(async () => {
-      const { getDb: getDb3 } = await import("./firebase.js").then((n) => n.k);
+      const { getDb: getDb3 } = await import("./firebase.js").then((n) => n.l);
       return { getDb: getDb3 };
     }, true ? __vite__mapDeps([0,1]) : void 0, import.meta.url);
     const db = await getDb2();
@@ -504,6 +536,9 @@ async function fetchRemoteConfigUpdates(currentVersion) {
   } catch (error) {
     console.warn("[RemoteConfig] Firestore update failed, using cached config:", error);
   }
+}
+if (typeof self !== "undefined" && typeof window === "undefined") {
+  self.window = self;
 }
 console.log("[SahAI] Service worker started");
 initializeAISummarizer();
@@ -701,12 +736,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
       const specificKey = `keylog_${platform}_${conversationId}`;
       const generalKey = `keylog_${platform}_${today}`;
-      chrome.storage.local.get([specificKey, generalKey], (result) => {
+      chrome.storage.local.get([specificKey, generalKey], async (result) => {
         let conversationLogs = result[specificKey] || [];
         if (conversationLogs.length === 0 && result[generalKey]) {
           conversationLogs = result[generalKey].filter(
             (log) => log.conversationId === conversationId
           );
+        }
+        const userId = await getCurrentUserId();
+        if (userId && conversationLogs.length < 5) {
+          console.log("[SahAI] Local logs sparse, fetching from cloud...");
+          const cloudLogs = await getKeylogsFromCloud(userId, conversationId);
+          if (cloudLogs.length > 0) {
+            const localContent = new Set(conversationLogs.map((p) => p.content));
+            const merged = [...conversationLogs];
+            for (const cloudPrompt of cloudLogs) {
+              if (!localContent.has(cloudPrompt.content)) {
+                merged.push(cloudPrompt);
+              }
+            }
+            conversationLogs = merged.sort((a, b) => a.timestamp - b.timestamp);
+            chrome.storage.local.set({ [specificKey]: conversationLogs });
+          }
         }
         sendResponse({
           success: true,
@@ -811,9 +862,11 @@ async function handleSidePanelMessage(message) {
     case "SUMMARIZE_PROMPTS": {
       const prompts = message.prompts;
       try {
+        console.log(`[SahAI] Summarizing ${prompts.length} prompts...`);
         const result = await withKeepAlive(async () => {
           return await aiSummarizer.summarize(prompts);
         });
+        console.log("[SahAI] Summarization successful");
         broadcastToSidePanels({
           action: "SUMMARY_RESULT",
           result,
@@ -821,15 +874,17 @@ async function handleSidePanelMessage(message) {
         });
       } catch (error) {
         console.error("[SahAI] Summarization error:", error);
+        const fallbackSummary = prompts.map((p) => p.content).join("\n\n");
         broadcastToSidePanels({
           action: "SUMMARY_RESULT",
           result: {
             original: prompts,
-            summary: prompts.map((p) => p.content).join("\n\n---\n\n"),
+            summary: fallbackSummary,
             promptCount: { before: prompts.length, after: prompts.length }
           },
-          success: false,
-          error: error instanceof Error ? error.message : "Summarization failed"
+          success: true,
+          // Mark as success so UI displays the fallback
+          error: error instanceof Error ? error.message : "AI Summarization failed, showing raw prompts."
         });
       }
       break;

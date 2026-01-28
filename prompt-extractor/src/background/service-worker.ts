@@ -1,10 +1,15 @@
 import type { ExtractionResult, Message, Mode } from '../types';
 import { aiSummarizer, initializeAISummarizer } from '../services/ai-summarizer';
-import { saveKeylogsToCloud, getCurrentUserId, CloudKeylogItem } from '../services/firebase';
+import { saveKeylogsToCloud, getCurrentUserId, CloudKeylogItem, getKeylogsFromCloud } from '../services/firebase';
 import { doc, increment } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
 import { RemoteConfigService, CACHE_TTL, LAST_FETCH_KEY } from '../services/remote-config';
 import { fetchRemoteConfigUpdates } from '../services/remote-config-fetcher';
+
+// Polyfill window for libraries that expect it
+if (typeof self !== 'undefined' && typeof window === 'undefined') {
+  (self as any).window = self;
+}
 
 console.log('[SahAI] Service worker started');
 
@@ -280,7 +285,7 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
       const specificKey = `keylog_${platform}_${conversationId}`;
       const generalKey = `keylog_${platform}_${today}`;
 
-      chrome.storage.local.get([specificKey, generalKey], (result) => {
+      chrome.storage.local.get([specificKey, generalKey], async (result) => {
         let conversationLogs = result[specificKey] || [];
 
         // If no specific logs, check general logs and filter
@@ -288,6 +293,30 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
           conversationLogs = result[generalKey].filter((log: any) =>
             log.conversationId === conversationId
           );
+        }
+
+        // If still no logs or very few, try fetching from cloud
+        const userId = await getCurrentUserId();
+        if (userId && conversationLogs.length < 5) {
+          console.log('[SahAI] Local logs sparse, fetching from cloud...');
+          const cloudLogs = await getKeylogsFromCloud(userId, conversationId);
+
+          if (cloudLogs.length > 0) {
+            // Merge cloud logs with local logs
+            const localContent = new Set(conversationLogs.map((p: any) => p.content));
+            const merged = [...conversationLogs];
+
+            for (const cloudPrompt of cloudLogs) {
+              if (!localContent.has(cloudPrompt.content)) {
+                merged.push(cloudPrompt);
+              }
+            }
+
+            conversationLogs = merged.sort((a, b) => a.timestamp - b.timestamp);
+
+            // Cache back to local for next time
+            chrome.storage.local.set({ [specificKey]: conversationLogs });
+          }
         }
 
         sendResponse({
@@ -441,15 +470,19 @@ async function handleSidePanelMessage(message: Message) {
         });
       } catch (error) {
         console.error('[SahAI] Summarization error:', error);
+
+        // Fallback: Just join the prompts if AI fails
+        const fallbackSummary = prompts.map(p => p.content).join('\n\n');
+
         broadcastToSidePanels({
           action: 'SUMMARY_RESULT',
           result: {
             original: prompts,
-            summary: prompts.map(p => p.content).join('\n\n---\n\n'),
+            summary: fallbackSummary,
             promptCount: { before: prompts.length, after: prompts.length },
           },
-          success: false,
-          error: error instanceof Error ? error.message : 'Summarization failed',
+          success: true, // Mark as success so UI displays the fallback
+          error: error instanceof Error ? error.message : 'AI Summarization failed, showing raw prompts.',
         });
       }
       break;
