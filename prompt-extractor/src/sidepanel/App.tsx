@@ -283,6 +283,7 @@ export default function App() {
       handleExtractionResult(message.result, extractMode);
 
       if (extractMode === 'summary' && message.result.prompts.length > 0) {
+        setLoading(true);
         setLoadingMessage('Consolidating prompts...');
         portRef.current?.postMessage({ action: 'SUMMARIZE_PROMPTS', prompts: message.result.prompts });
       }

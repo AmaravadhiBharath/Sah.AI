@@ -12,39 +12,39 @@ export class GeminiAdapter extends BaseAdapter {
     const prompts: ScrapedPrompt[] = [];
     const seen = new Set<string>();
 
-    // Strategy 1: User query elements (Gemini uses custom elements)
-    const userQueries = this.deepQuerySelectorAll('user-query, [class*="user-query"], [class*="query-text"]');
-    if (userQueries.length > 0) {
-      userQueries.forEach((el, index) => {
-        const content = this.cleanText(this.getVisibleText(el));
-        if (content && !this.isUIElement(content) && !seen.has(content)) {
-          seen.add(content);
-          prompts.push({ content, index });
-        }
-      });
-      if (prompts.length > 0) return prompts;
-    }
+    // Find all potential prompt elements
+    const candidates = this.deepQuerySelectorAll([
+      'user-query',
+      '[class*="user-query"]',
+      '[class*="query-text"]',
+      '.query-content',
+      '.user-message',
+      '[data-query]',
+      'div[data-message-author-role="user"]'
+    ].join(', '));
 
-    // Strategy 2: Query containers
-    const queryContainers = this.deepQuerySelectorAll('.query-content, .user-message, [data-query]');
-    queryContainers.forEach((el, index) => {
+    // Filter to keep only the top-most elements (avoid splitting one message into multiple prompts)
+    console.log(`[SahAI] Gemini candidates found: ${candidates.length}`);
+    const topLevelElements = candidates.filter(el => {
+      return !candidates.some(other => other !== el && other.contains(el));
+    });
+
+    topLevelElements.forEach((el, index) => {
       const content = this.cleanText(this.getVisibleText(el));
-      if (content && content.length > 3 && !seen.has(content)) {
+      if (content && !this.isUIElement(content) && !seen.has(content)) {
         seen.add(content);
         prompts.push({ content, index });
       }
     });
 
-    // Strategy 3: Look in main conversation area
+    // Fallback: Strategy 3: Look in main conversation area if nothing found
     if (prompts.length === 0) {
       const main = document.querySelector('main, [role="main"]');
       if (main) {
-        // Gemini often has turn containers
         const turns = main.querySelectorAll('[class*="turn"], [class*="message"]');
         let promptIndex = 0;
         turns.forEach((turn) => {
           const classList = turn.className.toLowerCase();
-          // Skip model/AI responses
           if (classList.includes('model') || classList.includes('response') || classList.includes('answer')) {
             return;
           }

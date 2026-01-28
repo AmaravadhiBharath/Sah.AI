@@ -428,9 +428,11 @@ async function handleSidePanelMessage(message: Message) {
       const prompts = (message as { prompts: Array<{ content: string; index: number }> }).prompts;
 
       try {
+        console.log(`[SahAI] Summarizing ${prompts.length} prompts...`);
         const result = await withKeepAlive(async () => {
           return await aiSummarizer.summarize(prompts);
         });
+        console.log('[SahAI] Summarization successful');
 
         broadcastToSidePanels({
           action: 'SUMMARY_RESULT',

@@ -539,9 +539,9 @@ function createExtractionResult(prompts: ScrapedPrompt[]): ExtractionResult {
 const BUTTON_STYLES = `
   /* Add space at top of container for Zone 1 */
   .pe-has-zone1 {
-    padding-top: 44px !important;
+    padding-top: 48px !important;
     position: relative !important;
-    min-height: 44px !important;
+    min-height: 80px !important;
   }
   
   .pe-zone1 {
@@ -654,8 +654,10 @@ const INPUT_CONTAINER_SELECTORS: Record<string, string[]> = {
     'fieldset[class*="composer"]',
   ],
   gemini: [
-    '.input-area-container',
     'rich-textarea',
+    '.input-area',
+    '.input-area-container',
+    'section[class*="input-area"]',
     '.text-input-field_textarea-wrapper',
   ],
   perplexity: [
@@ -694,7 +696,7 @@ function findInputContainer(): HTMLElement | null {
     if (element && element.offsetParent !== null) {
       // Safety check: If the container is huge (like the whole chat), it's the wrong one
       const rect = element.getBoundingClientRect();
-      if (rect.height > 300 && platformName === 'chatgpt') {
+      if (rect.height > 400) {
         console.log('[SahAI] Skipping selector (too tall):', selector);
         continue;
       }

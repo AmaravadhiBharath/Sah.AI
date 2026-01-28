@@ -8,7 +8,13 @@ export abstract class BaseAdapter implements PlatformAdapter {
 
   // Utility: Deep query selector that pierces shadow DOM
   protected deepQuerySelectorAll(selector: string, root: Node = document): Element[] {
-    let nodes = Array.from((root as ParentNode).querySelectorAll(selector));
+    let nodes: Element[] = [];
+    try {
+      nodes = Array.from((root as ParentNode).querySelectorAll(selector));
+    } catch (e) {
+      console.warn('[SahAI] Invalid selector:', selector);
+    }
+
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
     let node;
     while ((node = walker.nextNode())) {
