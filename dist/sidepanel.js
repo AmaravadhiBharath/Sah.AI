@@ -74,18 +74,69 @@ async function initializeAuth() {
     isLoading: false
   };
 }
+const IconHome = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "9 22 9 12 15 12 15 22" })
+] });
+const IconSettings = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "3" })
+] });
 const IconUser = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
   /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" }),
   /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "7", r: "4" })
 ] });
-const IconHistory = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" }) });
-const IconSettings = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-  /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "3" }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51h.09a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" })
+const HistoryView = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-inner", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "Past Extractions" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No history available yet." })
+] });
+const SettingsView = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-inner", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "Settings" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Theme" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value", children: "System" })
+  ] }),
+  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "App Version" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value", children: "3.1.2" })
+  ] }),
+  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Support" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value link", children: "Get Help" })
+  ] }),
+  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Account" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value", children: "Active" })
+  ] })
+] });
+const ProfileView = ({ user, tier }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-inner", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "section-title", children: "Account Detail" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-hero", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hero-avatar", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "hero-info", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hero-name", children: (user == null ? void 0 : user.name) || "Guest User" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hero-tier", children: tier })
+    ] })
+  ] }),
+  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "usage-stats", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-label", children: "Daily Usage" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-value", children: "24 / 50" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-label", children: "Member Since" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-value", children: "Jan 2026" })
+    ] })
+  ] }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "auth-action-btn", children: user ? "Sign Out" : "Sign In with Google" })
 ] });
 function AshokApp() {
+  const [view, setView] = reactExports.useState("home");
+  const [configTab, setConfigTab] = reactExports.useState("history");
   const [mode, setMode] = reactExports.useState("raw");
   const [isExpanded, setIsExpanded] = reactExports.useState(false);
+  const [isEditing, setIsEditing] = reactExports.useState(false);
+  const [selectedPrompts, setSelectedPrompts] = reactExports.useState(/* @__PURE__ */ new Set());
   const [status, setStatus] = reactExports.useState({ supported: false, platform: null });
   const [result, setResult] = reactExports.useState(null);
   const [loading, setLoading] = reactExports.useState(false);
@@ -102,6 +153,7 @@ function AshokApp() {
         setResult(res);
         setLoading(false);
         setIsExpanded(true);
+        setView("home");
       } else if (message.action === "STATUS_RESULT") {
         setStatus({ supported: message.supported, platform: message.platform });
       } else if (message.action === "ERROR") {
@@ -124,78 +176,201 @@ function AshokApp() {
     setResult(null);
     setError(null);
     setIsExpanded(true);
+    setView("home");
     if (portRef.current) {
       portRef.current.postMessage({ action: "EXTRACT_PROMPTS", mode });
     }
   };
   const handleBack = () => {
-    setIsExpanded(false);
-    setResult(null);
-    setLoading(false);
-    setError(null);
+    if (view === "config") {
+      setView("home");
+    } else {
+      setIsExpanded(false);
+      setResult(null);
+      setLoading(false);
+      setError(null);
+      setIsEditing(false);
+      setSelectedPrompts(/* @__PURE__ */ new Set());
+    }
+  };
+  const openConfig = (tab) => {
+    setIsExpanded(true);
+    setView("config");
+    setConfigTab(tab);
+  };
+  const toggleEdit = () => {
+    setIsEditing(!isEditing);
+    setSelectedPrompts(/* @__PURE__ */ new Set());
+  };
+  const toggleSelection = (idx) => {
+    const newSet = new Set(selectedPrompts);
+    if (newSet.has(idx)) newSet.delete(idx);
+    else newSet.add(idx);
+    setSelectedPrompts(newSet);
+  };
+  const handleDelete = () => {
+    if (!result) return;
+    if (selectedPrompts.size === 0) return;
+    const remainingPrompts = result.prompts.filter((_, i) => !selectedPrompts.has(i));
+    setResult({ ...result, prompts: remainingPrompts });
+    setSelectedPrompts(/* @__PURE__ */ new Set());
   };
   const handleCopy = async () => {
     if (!result) return;
-    const text = result.prompts.map((p) => p.content).join("\n\n");
+    const promptsToCopy = selectedPrompts.size > 0 ? result.prompts.filter((_, i) => selectedPrompts.has(i)) : result.prompts;
+    const text = promptsToCopy.map((p) => p.content).join("\n\n");
     await navigator.clipboard.writeText(text);
+    if (isEditing) {
+      setIsEditing(false);
+      setSelectedPrompts(/* @__PURE__ */ new Set());
+    }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app-container", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "main-content", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `action-island ${isExpanded ? "expanded" : ""}`, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toggle-row", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "button",
-            {
-              className: `mode-btn ${mode === "raw" ? "active" : ""}`,
-              onClick: () => {
-                if (!loading) setMode("raw");
-              },
-              children: "Extract"
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "button",
-            {
-              className: `mode-btn ${mode === "summary" ? "active" : ""}`,
-              onClick: () => {
-                if (!loading) setMode("summary");
-              },
-              children: "summarize"
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `controls-row ${isExpanded ? "visible" : ""}`, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "control-btn", onClick: handleBack, children: "Back" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "control-btn", children: "Edit" })
-        ] }),
-        isExpanded && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `prompts-area ${isExpanded ? "visible" : ""}`, children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "loader-minimal" }) : error ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 20, textAlign: "center", color: "red" }, children: error }) : result ? result.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-box", children: p.content }, i)) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 20, textAlign: "center", opacity: 0.5 }, children: "..." }) }),
-        isExpanded ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "action-buttons-container", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn", onClick: handleGenerate, children: "Re-Generate" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn", onClick: handleCopy, children: "Copy" })
-        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+  const renderToggleRow = () => {
+    if (view === "home") {
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toggle-row", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
           "button",
           {
-            className: "generate-btn-lg",
-            onClick: handleGenerate,
-            disabled: !status.supported,
-            children: "Generate"
+            className: `mode-btn ${mode === "raw" ? "active" : ""}`,
+            onClick: () => {
+              if (!loading) setMode("raw");
+            },
+            children: "Extract"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `mode-btn ${mode === "summary" ? "active" : ""}`,
+            onClick: () => {
+              if (!loading) setMode("summary");
+            },
+            children: "summarize"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: "toggle-nav-btn",
+            onClick: () => openConfig("history"),
+            title: "Go to Config",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconSettings, {})
           }
         )
+      ] });
+    } else {
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toggle-row", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: "toggle-nav-btn",
+            onClick: () => setView("home"),
+            title: "Go to Home",
+            style: { marginRight: 4 },
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHome, {})
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `mode-btn ${configTab === "history" ? "active" : ""}`,
+            onClick: () => setConfigTab("history"),
+            children: "History"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `mode-btn ${configTab === "settings" ? "active" : ""}`,
+            onClick: () => setConfigTab("settings"),
+            children: "Settings"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `mode-btn ${configTab === "profile" ? "active" : ""}`,
+            onClick: () => setConfigTab("profile"),
+            children: "Profile"
+          }
+        )
+      ] });
+    }
+  };
+  const renderContentArea = () => {
+    let content;
+    if (view === "config") {
+      if (configTab === "history") content = /* @__PURE__ */ jsxRuntimeExports.jsx(HistoryView, {});
+      else if (configTab === "settings") content = /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsView, {});
+      else content = /* @__PURE__ */ jsxRuntimeExports.jsx(ProfileView, { user, tier });
+    } else {
+      content = /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "loader-minimal" }) : error ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 20, textAlign: "center", color: "red" }, children: error }) : result ? result.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: `prompt-box 
+                                    ${isEditing ? "selectable" : ""} 
+                                    ${isEditing && selectedPrompts.has(i) ? "selected" : ""} 
+                                    ${isEditing && !selectedPrompts.has(i) && selectedPrompts.size > 0 ? "dimmed" : ""}
+                                `,
+          onClick: () => isEditing && toggleSelection(i),
+          children: [
+            isEditing && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "selection-indicator", children: selectedPrompts.has(i) ? "✓" : "" }),
+            p.content
+          ]
+        },
+        i
+      )) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 20, textAlign: "center", opacity: 0.5 }, children: "..." }) });
+    }
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `view-content-anim 
+                ${view === "home" ? "prompts-area" : ""} 
+                ${view === "home" && isExpanded ? "visible" : ""}
+            `, children: content });
+  };
+  const islandExpanded = isExpanded || view === "config";
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app-container", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: `main-content ${islandExpanded ? "expanded-view" : ""}`, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `action-island ${islandExpanded ? "expanded" : ""}`, children: [
+        renderToggleRow(),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `controls-row ${islandExpanded ? "visible" : ""}`, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "control-btn", onClick: handleBack, children: "Back" }),
+          view === "home" && result ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              className: `control-btn ${isEditing ? "primary" : ""}`,
+              onClick: toggleEdit,
+              children: isEditing ? "Done" : "Edit"
+            }
+          ) : view === "config" ? /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "control-btn primary", onClick: handleBack, children: "Save" }) : null
+        ] }),
+        islandExpanded && renderContentArea(),
+        view === "home" && islandExpanded && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "action-buttons-container", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              className: "dual-btn",
+              onClick: isEditing ? handleDelete : handleGenerate,
+              style: isEditing ? { color: "#ef4444", borderColor: "#ef4444" } : {},
+              children: isEditing ? `Delete (${selectedPrompts.size})` : "Re-Generate"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn", onClick: handleCopy, children: isEditing ? `Copy (${selectedPrompts.size})` : "Copy" })
+        ] }),
+        view === "home" && !islandExpanded && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "generate-btn-lg", onClick: handleGenerate, disabled: !status.supported, children: "Generate" })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `upgrade-pill ${isExpanded ? "visible" : ""}`, children: "Upgrade" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `upgrade-pill ${islandExpanded ? "visible" : ""}`, children: "Upgrade" })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("footer", { className: "app-footer", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "footer-profile-section", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "footer-avatar", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "footer-user-info", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "footer-name", children: (user == null ? void 0 : user.name) || "Guest" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "footer-badge", children: tier })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "footer-profile-btn", onClick: () => openConfig("profile"), children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "footer-avatar-sm", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "footer-user-stack", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "footer-name-min", children: (user == null ? void 0 : user.name) || "Guest" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "footer-badge-min", children: tier })
         ] })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "footer-actions", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "footer-icon-btn", title: "History", children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHistory, {}) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "footer-icon-btn", title: "Settings", children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconSettings, {}) })
-      ] })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "footer-status-area", children: status.platform && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "status-pill-active", title: `Connected to ${status.platform}`, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "status-dot" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "platform-name", children: status.platform })
+      ] }) })
     ] })
   ] });
 }
