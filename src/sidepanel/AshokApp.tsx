@@ -390,14 +390,12 @@ export default function AshokApp() {
                 {view === 'history' && renderHistory()}
                 {view === 'settings' && renderSettings()}
 
-                {/* Upgrade Button - Only show on Main view */}
-                {view === 'main' && (
-                    <button className={`upgrade-pill ${isExpanded ? 'visible' : ''}`}>
-                        Upgrade
-                    </button>
-                )}
-
             </main>
+
+            {/* Upgrade Button - Show on all views */}
+            <button className={`upgrade-pill ${isExpanded || view !== 'main' ? 'visible' : ''}`}>
+                Upgrade
+            </button>
 
             {/* Footer */}
             <footer className="app-footer">

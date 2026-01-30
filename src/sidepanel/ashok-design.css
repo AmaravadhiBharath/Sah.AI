@@ -298,32 +298,29 @@ body {
 
 /* Upgrade Button (Outside Island) */
 .upgrade-pill {
+    position: absolute;
+    bottom: var(--footer-height);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
     width: var(--island-width);
     max-width: var(--island-max-width);
     background: #E5E7EB;
-    /* Subtle grey */
     color: #374151;
     border: none;
     padding: 12px;
     border-radius: 100px;
-    margin-top: 16px;
-    /* Space above */
-    margin-bottom: 16px;
-    /* Space below */
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
     text-align: center;
     opacity: 0;
-    transform: translateY(10px);
     transition: all 0.5s ease 0.1s;
-    /* Slight delay */
     z-index: 5;
 }
 
 .upgrade-pill.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
 }
 
 /* Footer Container */
