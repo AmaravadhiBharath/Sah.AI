@@ -1,0 +1,187 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                 LOVABLE PROMPTS - RIGHT-ALIGNED DISPLAY FIX                    ║
+║                                                                                 ║
+║         Prompts now display right-aligned to match Lovable UI layout           ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BEFORE: INCONSISTENT LAYOUT ❌
+
+Lovable Chat Interface:                SahAI Extraction Panel:
+┌──────────────────────────────┐      ┌──────────────────────────────┐
+│                              │      │                              │
+│           AI Response        │      │ [1] First user prompt        │
+│           (Left-aligned)     │      │ [2] Second user prompt       │
+│                              │      │ [3] Third user prompt        │
+│  User Prompt (Right-aligned) │      │                              │
+│  ────────────────────────→   │      │ (LEFT-aligned - doesn't      │
+│                              │      │  match conversation!)        │
+│           AI Response        │      │                              │
+│           (Left-aligned)     │      │                              │
+│                              │      │                              │
+└──────────────────────────────┘      └──────────────────────────────┘
+
+Problem: User sees prompts on RIGHT in Lovable, but LEFT in extraction
+Result: Confusing and inconsistent UI experience
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AFTER: CONSISTENT LAYOUT ✅
+
+Lovable Chat Interface:                SahAI Extraction Panel:
+┌──────────────────────────────┐      ┌──────────────────────────────┐
+│                              │      │                              │
+│           AI Response        │      │           First user [1]     │
+│           (Left-aligned)     │      │           Second user [2]    │
+│                              │      │           Third user [3]     │
+│  User Prompt (Right-aligned) │      │                              │
+│  ────────────────────────→   │      │ (RIGHT-aligned - matches     │
+│                              │      │  Lovable conversation UI!)   │
+│           AI Response        │      │                              │
+│           (Left-aligned)     │      │                              │
+│                              │      │                              │
+└──────────────────────────────┘      └──────────────────────────────┘
+
+Solution: Prompts now display right-aligned to mirror Lovable layout
+Result: Consistent, intuitive UI that matches the conversation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DETAILED VISUAL COMPARISON:
+
+LEFT SIDE (Before)                    RIGHT SIDE (After)
+────────────────────────────────────────────────────────────────
+
+[1] First user prompt                 First user prompt [1]
+[2] Second user prompt                Second user prompt [2]
+[3] Third user prompt                 Third user prompt [3]
+
+Index on LEFT                         Index on RIGHT
+Less visual space used                More visual space used
+Doesn't match Lovable                 MATCHES Lovable ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CARD STYLING:
+
+Before (All Platforms):
+┌────────────────────────────────────────┐
+│ [1] This is the user prompt text       │
+│     inside the extraction card.        │
+│     Standard left-aligned layout.  [x] │
+└────────────────────────────────────────┘
+
+
+After (Lovable Only):
+┌────────────────────────────────────────┐
+│                          This is the   │
+│                          user prompt   │
+│                          text inside   │
+│                          the card. [1] │
+│                                    [x] │
+└────────────────────────────────────────┘
+
+New Features for Lovable:
+  ✅ Blue index badge (#3B82F6)
+  ✅ Gradient background (light/dark mode)
+  ✅ Right-to-left text flow
+  ✅ Matches Lovable conversation layout
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+THEME SUPPORT:
+
+Light Mode:
+┌────────────────────────────────────────┐
+│ [Light grey gradient]   Prompt [1]     │
+│                                    [x] │
+└────────────────────────────────────────┘
+Index Badge: 🔵 Blue (#3B82F6)
+
+Dark Mode:
+┌────────────────────────────────────────┐
+│ [Dark grey gradient]    Prompt [1]     │
+│                                    [x] │
+└────────────────────────────────────────┘
+Index Badge: 🔵 Light Blue (#60a5FA)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OTHER PLATFORMS (UNCHANGED):
+
+ChatGPT, Claude, Gemini, etc. still show left-aligned layout:
+
+┌────────────────────────────────────────┐
+│ [1] This is the user prompt text       │
+│     inside the extraction card.        │
+│     Standard left-aligned layout.  [x] │
+└────────────────────────────────────────┘
+
+Only Lovable gets the special right-aligned styling!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IMPLEMENTATION SUMMARY:
+
+✅ Platform Detection
+   - Checks if status.platform === 'lovable'
+
+✅ Conditional Styling
+   - Applies prompt-card-lovable class only for Lovable
+
+✅ CSS Flexbox Reversal
+   - flex-direction: row-reverse (flips layout right-to-left)
+
+✅ Visual Styling
+   - Gradient background for distinction
+   - Blue index badge for Lovable identification
+   - Light/dark mode support
+
+✅ Backwards Compatible
+   - All other platforms unaffected
+   - No breaking changes
+   - Works with all existing features
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FILES MODIFIED:
+
+src/sidepanel/App.tsx
+  ├─ Line 523: Add platform parameter to PromptsList
+  ├─ Line 810: Update PromptsList signature to accept platform
+  ├─ Line 815: Pass platform to PromptCard
+  ├─ Line 821: Update PromptCard signature to accept platform
+  ├─ Line 827: Add isLovable variable
+  ├─ Line 841: Apply conditional CSS class
+  ├─ Line 1689: Add .prompt-card-lovable CSS styles
+  └─ Lines 1690-1701: Add theme-specific styles and gradients
+
+Total Changes: 19 lines (purely cosmetic, zero breaking changes)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+USER EXPERIENCE:
+
+Before:
+  - Confusing: Right-aligned in Lovable, left-aligned in SahAI
+  - Requires mental context switch
+  - Feels broken or inconsistent
+
+After:
+  - Intuitive: Matches Lovable's layout exactly
+  - Visual consistency improves trust
+  - More professional appearance
+  - Users know they're looking at Lovable prompts (blue badge)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STATUS: ✅ COMPLETE
+
+The Lovable prompt extraction now displays with right-aligned layout matching
+the conversation UI, providing a consistent and intuitive user experience.
+
+All other platforms remain unaffected and display as before.
+
+Ready to test! 🚀
+

@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SahAI - Premium Sidepanel Design (Adobe Style)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a84ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 15px;
+        }
+
+        /* Main Container */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Viewport Sizes */
+        .design-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .size-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 4px;
+        }
+
+        /* Sidepanel Frame */
+        .sidepanel-frame {
+            aspect-ratio: 280/680;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* ===== LAYOUT STRUCTURE ===== */
+        /* 80% Results Area */
+        .results-area {
+            flex: 4;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 20% Footer Area */
+        .footer-area {
+            flex: 1;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== RESULTS SECTION (80%) ===== */
+        .results-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+
+        /* Floating Toggle (Floating on top of results) */
+        .floating-toggle {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e8e8e8;
+            padding: 4px;
+            display: flex;
+            gap: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(12px);
+            margin-bottom: 12px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #999;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .toggle-btn.active {
+            background: #0a84ff;
+            color: white;
+            box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+        }
+
+        .toggle-btn:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .toggle-btn.active:hover {
+            background: #0071e3;
+        }
+
+        /* Results List Container */
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        /* Result Item (Premium Style) */
+        .result-item {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0a84ff 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 200ms;
+        }
+
+        .result-item:hover {
+            border-color: #e0e0e0;
+            box-shadow: 0 8px 24px rgba(10, 132, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .result-item:hover::before {
+            opacity: 1;
+        }
+
+        .result-item.extract-mode {
+            /* Extract mode styling */
+        }
+
+        .result-item.summarize-mode {
+            background: linear-gradient(135deg, #f8f8ff 0%, #f5f9ff 100%);
+            border-color: #e8eeff;
+        }
+
+        /* Result Item Header */
+        .result-header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .result-number {
+            font-weight: 800;
+            color: #0a84ff;
+            font-size: 10px;
+            min-width: 16px;
+            line-height: 1;
+        }
+
+        .result-platform {
+            font-size: 9px;
+            color: #999;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        /* Result Item Content */
+        .result-text {
+            font-size: 12px;
+            color: #1a1a1a;
+            line-height: 1.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-bottom: 8px;
+        }
+
+        .result-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 9px;
+            color: #bbb;
+            align-items: center;
+        }
+
+        .result-meta-dot {
+            width: 2px;
+            height: 2px;
+            background: #bbb;
+            border-radius: 50%;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 32px 24px;
+            text-align: center;
+            color: #999;
+            flex: 1;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            opacity: 0.6;
+        }
+
+        .empty-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .empty-text {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.6;
+        }
+
+        /* ===== FOOTER SECTION (20%) ===== */
+        .primary-btn {
+            flex: 1;
+            height: 36px;
+            background: linear-gradient(135deg, #0a84ff 0%, #0071e3 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(10, 132, 255, 0.3);
+        }
+
+        .primary-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(10, 132, 255, 0.2);
+        }
+
+        .primary-btn:disabled {
+            background: #f0f0f0;
+            color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .footer-icon {
+            font-size: 12px;
+        }
+
+        /* ===== SCROLLBAR STYLING ===== */
+        .results-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .results-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .results-content::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .results-content::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        /* ===== STATES & VARIATIONS ===== */
+        .states-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .state-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .state-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+        }
+
+        .state-description {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        /* ===== DARK THEME ===== */
+        .dark-theme {
+            background: #0a0a0a;
+        }
+
+        .dark-theme .results-area {
+            background: #141414;
+        }
+
+        .dark-theme .results-content {
+            color: #f5f5f5;
+        }
+
+        .dark-theme .footer-area {
+            background: #0a0a0a;
+            border-top-color: #2a2a2a;
+        }
+
+        .dark-theme .floating-toggle {
+            background: #1a1a1a;
+            border-color: #2a2a2a;
+        }
+
+        .dark-theme .toggle-btn {
+            color: #666;
+        }
+
+        .dark-theme .toggle-btn:hover {
+            background: #2a2a2a;
+            color: #f5f5f5;
+        }
+
+        .dark-theme .result-item {
+            background: #1a1a1a;
+            border-color: #2a2a2a;
+            color: #f5f5f5;
+        }
+
+        .dark-theme .result-item:hover {
+            border-color: #333;
+            box-shadow: 0 8px 24px rgba(10, 132, 255, 0.15);
+        }
+
+        .dark-theme .result-item.summarize-mode {
+            background: linear-gradient(135deg, #0f1a3f 0%, #0a1a2e 100%);
+            border-color: #1a2a4a;
+        }
+
+        .dark-theme .result-text {
+            color: #f5f5f5;
+        }
+
+        .dark-theme .result-meta {
+            color: #666;
+        }
+
+        .dark-theme .result-meta-dot {
+            background: #666;
+        }
+
+        /* ===== SPECS SECTION ===== */
+        .specs-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .specs-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1a1a1a;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .spec-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #0a84ff;
+        }
+
+        .spec-value {
+            font-size: 13px;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .spec-code {
+            background: #f5f5f5;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            overflow-x: auto;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .specs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f5f5f5 25%, #f0f0f0 50%, #f5f5f5 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .comparison-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 12px;
+        }
+
+        .comparison-table td:first-child {
+            font-weight: 600;
+            color: #1a1a1a;
+            width: 40%;
+        }
+
+        .comparison-table td:nth-child(2),
+        .comparison-table td:nth-child(3) {
+            text-align: center;
+            color: #666;
+        }
+
+        .feature-yes {
+            color: #34c759;
+            font-weight: 700;
+        }
+
+        .feature-no {
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 SahAI - Premium Sidepanel Design</h1>
+        <p class="subtitle">Adobe XD Style • 80% Results • 20% Footer • Premium Quality</p>
+
+        <!-- Main Design Views -->
+        <div class="main-grid">
+            <!-- Light Theme -->
+            <div class="design-section">
+                <div class="size-label">Light Mode</div>
+                <div class="sidepanel-frame">
+                    <!-- 80% Results Area -->
+                    <div class="results-area">
+                        <div class="results-content">
+                            <!-- Floating Toggle -->
+                            <div class="floating-toggle">
+                                <button class="toggle-btn active">✨ Extract</button>
+                                <button class="toggle-btn">📊 Summarize</button>
+                            </div>
+
+                            <!-- Results List -->
+                            <div class="results-list">
+                                <div class="result-item extract-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#1</span>
+                                        <span class="result-platform">ChatGPT</span>
+                                    </div>
+                                    <div class="result-text">Can you help me build a React component with TypeScript and proper type definitions?</div>
+                                    <div class="result-meta">
+                                        <span>2.4k chars</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>2 min ago</span>
+                                    </div>
+                                </div>
+
+                                <div class="result-item extract-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#2</span>
+                                        <span class="result-platform">Claude</span>
+                                    </div>
+                                    <div class="result-text">What about the design system architecture? How do I structure it for maximum scalability?</div>
+                                    <div class="result-meta">
+                                        <span>1.8k chars</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>5 min ago</span>
+                                    </div>
+                                </div>
+
+                                <div class="result-item extract-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#3</span>
+                                        <span class="result-platform">ChatGPT</span>
+                                    </div>
+                                    <div class="result-text">How do I optimize performance when dealing with large datasets in React applications?</div>
+                                    <div class="result-meta">
+                                        <span>1.5k chars</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>8 min ago</span>
+                                    </div>
+                                </div>
+
+                                <div class="result-item extract-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#4</span>
+                                        <span class="result-platform">Gemini</span>
+                                    </div>
+                                    <div class="result-text">Explain caching strategies and how to implement them in a Node.js backend...</div>
+                                    <div class="result-meta">
+                                        <span>1.2k chars</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>12 min ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 20% Footer Area -->
+                    <div class="footer-area">
+                        <button class="primary-btn">
+                            <span class="footer-icon">⬇️</span>
+                            Extract All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dark Theme -->
+            <div class="design-section">
+                <div class="size-label">Dark Mode</div>
+                <div class="sidepanel-frame dark-theme">
+                    <div class="results-area">
+                        <div class="results-content">
+                            <div class="floating-toggle">
+                                <button class="toggle-btn active">✨ Extract</button>
+                                <button class="toggle-btn">📊 Summarize</button>
+                            </div>
+
+                            <div class="results-list">
+                                <div class="result-item extract-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#1</span>
+                                        <span class="result-platform">ChatGPT</span>
+                                    </div>
+                                    <div class="result-text">Can you help me build a React component with TypeScript and proper type definitions?</div>
+                                    <div class="result-meta">
+                                        <span>2.4k chars</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>2 min ago</span>
+                                    </div>
+                                </div>
+
+                                <div class="result-item extract-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#2</span>
+                                        <span class="result-platform">Claude</span>
+                                    </div>
+                                    <div class="result-text">What about the design system architecture? How do I structure it for maximum scalability?</div>
+                                    <div class="result-meta">
+                                        <span>1.8k chars</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>5 min ago</span>
+                                    </div>
+                                </div>
+
+                                <div class="result-item extract-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#3</span>
+                                        <span class="result-platform">ChatGPT</span>
+                                    </div>
+                                    <div class="result-text">How do I optimize performance when dealing with large datasets in React applications?</div>
+                                    <div class="result-meta">
+                                        <span>1.5k chars</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>8 min ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer-area">
+                        <button class="primary-btn">
+                            <span class="footer-icon">⬇️</span>
+                            Extract All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summarize Mode -->
+            <div class="design-section">
+                <div class="size-label">Summarize Mode</div>
+                <div class="sidepanel-frame">
+                    <div class="results-area">
+                        <div class="results-content">
+                            <div class="floating-toggle">
+                                <button class="toggle-btn">✨ Extract</button>
+                                <button class="toggle-btn active">📊 Summarize</button>
+                            </div>
+
+                            <div class="results-list">
+                                <div class="result-item summarize-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#1</span>
+                                        <span class="result-platform">Summary</span>
+                                    </div>
+                                    <div class="result-text"><strong>Topic:</strong> Building React Components. Key points: TypeScript usage, best practices, type definitions...</div>
+                                    <div class="result-meta">
+                                        <span>Summary of 4 prompts</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>Generated now</span>
+                                    </div>
+                                </div>
+
+                                <div class="result-item summarize-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#2</span>
+                                        <span class="result-platform">Summary</span>
+                                    </div>
+                                    <div class="result-text"><strong>Topic:</strong> Design Systems & Architecture. Key points: Scalability, structure, best patterns...</div>
+                                    <div class="result-meta">
+                                        <span>Summary of 2 prompts</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>Generated now</span>
+                                    </div>
+                                </div>
+
+                                <div class="result-item summarize-mode">
+                                    <div class="result-header">
+                                        <span class="result-number">#3</span>
+                                        <span class="result-platform">Summary</span>
+                                    </div>
+                                    <div class="result-text"><strong>Topic:</strong> Performance Optimization. Key points: Caching, data handling, optimization strategies...</div>
+                                    <div class="result-meta">
+                                        <span>Summary of 2 prompts</span>
+                                        <span class="result-meta-dot"></span>
+                                        <span>Generated now</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer-area">
+                        <button class="primary-btn">
+                            <span class="footer-icon">⬇️</span>
+                            Extract All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- State Variations -->
+        <div class="states-grid">
+            <div class="state-section">
+                <div class="state-title">📭 Empty State</div>
+                <div class="state-description">When user first opens extension or no prompts extracted yet</div>
+                <div class="sidepanel-frame">
+                    <div class="results-area">
+                        <div class="results-content">
+                            <div class="floating-toggle">
+                                <button class="toggle-btn active">✨ Extract</button>
+                                <button class="toggle-btn">📊 Summarize</button>
+                            </div>
+                            <div class="empty-state">
+                                <div class="empty-icon">💬</div>
+                                <div class="empty-title">No prompts yet</div>
+                                <div class="empty-text">Start a conversation on ChatGPT, Claude, or Gemini to begin</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer-area">
+                        <button class="primary-btn" disabled>
+                            <span class="footer-icon">⬇️</span>
+                            Extract All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="state-section">
+                <div class="state-title">⏳ Loading State</div>
+                <div class="state-description">While extracting prompts from the page</div>
+                <div class="sidepanel-frame">
+                    <div class="results-area">
+                        <div class="results-content">
+                            <div class="floating-toggle">
+                                <button class="toggle-btn active">✨ Extract</button>
+                                <button class="toggle-btn">📊 Summarize</button>
+                            </div>
+                            <div class="results-list">
+                                <div class="result-item skeleton" style="height: 60px;"></div>
+                                <div class="result-item skeleton" style="height: 60px;"></div>
+                                <div class="result-item skeleton" style="height: 60px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer-area">
+                        <button class="primary-btn" disabled>
+                            <span class="footer-icon">⏳</span>
+                            Extracting...
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="state-section">
+                <div class="state-title">🔍 Detail View</div>
+                <div class="state-description">When user clicks on a prompt item to see full content</div>
+                <div class="sidepanel-frame">
+                    <div class="results-area">
+                        <div class="results-content" style="padding: 16px; background: white;">
+                            <div style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px;">
+                                <div style="font-size: 11px; color: #999; margin-bottom: 4px;">Prompt #1</div>
+                                <div style="font-size: 13px; font-weight: 700; color: #1a1a1a;">Can you help me build...</div>
+                            </div>
+                            <div style="font-size: 12px; color: #666; line-height: 1.6; margin-bottom: 12px;">
+                                Can you help me build a React component with TypeScript and proper type definitions? I want to follow best practices and make sure the component is reusable and well-documented.
+                            </div>
+                            <div style="font-size: 10px; color: #bbb; padding-top: 12px; border-top: 1px solid #f0f0f0;">
+                                ChatGPT • 2.4k chars • 2 min ago
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer-area">
+                        <button class="primary-btn" style="background: #34c759;">
+                            <span class="footer-icon">✓</span>
+                            Copied!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Specifications -->
+        <div class="specs-section">
+            <div class="specs-title">📐 Design Specifications</div>
+            <div class="specs-grid">
+                <div class="spec-item">
+                    <div class="spec-label">Results Area Height</div>
+                    <div class="spec-value">80% of sidepanel</div>
+                    <div class="spec-code">flex: 4</div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">Footer Area Height</div>
+                    <div class="spec-value">20% of sidepanel</div>
+                    <div class="spec-code">flex: 1</div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">Result Item Styling</div>
+                    <div class="spec-value">12px border-radius • White bg • Hover effect</div>
+                    <div class="spec-code">border-radius: 12px</div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">Toggle Button</div>
+                    <div class="spec-value">Floating • Sticky top • 4px gap</div>
+                    <div class="spec-code">position: sticky; top: 0;</div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">Primary Button</div>
+                    <div class="spec-value">Gradient • 36px height • Full width minus padding</div>
+                    <div class="spec-code">background: linear-gradient(135deg, #0a84ff, #0071e3)</div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">Border Radius</div>
+                    <div class="spec-value">Frame: 16px • Items: 12px • Buttons: 10px</div>
+                    <div class="spec-code">border-radius: 16px/12px/10px</div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">Scrollbar</div>
+                    <div class="spec-value">6px width • Subtle gray • Hidden by default</div>
+                    <div class="spec-code">width: 6px; border-radius: 3px</div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">Animation</div>
+                    <div class="spec-value">200ms cubic-bezier • Smooth hover effects</div>
+                    <div class="spec-code">transition: all 200ms cubic-bezier(...)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Comparison -->
+        <div class="specs-section">
+            <div class="specs-title">✨ Premium vs Standard</div>
+            <table class="comparison-table">
+                <tr>
+                    <td>Layout Focus</td>
+                    <td><span class="feature-no">Header + Content + Footer (Equal)</span></td>
+                    <td><span class="feature-yes">80% Results + 20% Footer (User-Centric)</span></td>
+                </tr>
+                <tr>
+                    <td>Primary Control</td>
+                    <td><span class="feature-no">Top header area</span></td>
+                    <td><span class="feature-yes">Floating toggle within results</span></td>
+                </tr>
+                <tr>
+                    <td>Border Radius</td>
+                    <td><span class="feature-no">8px (standard)</span></td>
+                    <td><span class="feature-yes">12-16px (premium)</span></td>
+                </tr>
+                <tr>
+                    <td>Visual Hierarchy</td>
+                    <td><span class="feature-no">Flat, minimal shadows</span></td>
+                    <td><span class="feature-yes">Depth, gradient, motion</span></td>
+                </tr>
+                <tr>
+                    <td>Button Treatment</td>
+                    <td><span class="feature-no">Solid color</span></td>
+                    <td><span class="feature-yes">Gradient + shadow + hover lift</span></td>
+                </tr>
+                <tr>
+                    <td>Result Items</td>
+                    <td><span class="feature-no">Basic list items</span></td>
+                    <td><span class="feature-yes">Premium cards with accents & animations</span></td>
+                </tr>
+                <tr>
+                    <td>Mode Support</td>
+                    <td><span class="feature-no">Single mode only</span></td>
+                    <td><span class="feature-yes">Extract + Summarize modes</span></td>
+                </tr>
+                <tr>
+                    <td>Polish Level</td>
+                    <td><span class="feature-no">Functional (8/10)</span></td>
+                    <td><span class="feature-yes">Premium Adobe-style (9.5/10)</span></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Implementation Guide -->
+        <div class="specs-section">
+            <div class="specs-title">🛠️ Implementation Guide</div>
+            <div class="specs-grid">
+                <div class="spec-item">
+                    <div class="spec-label">HTML Structure</div>
+                    <div class="spec-code">
+&lt;div class="results-area"&gt;
+  &lt;div class="results-content"&gt;
+    &lt;div class="floating-toggle"&gt;...&lt;/div&gt;
+    &lt;div class="results-list"&gt;...&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="footer-area"&gt;
+  &lt;button class="primary-btn"&gt;...&lt;/button&gt;
+&lt;/div&gt;
+                    </div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">CSS Flexbox Layout</div>
+                    <div class="spec-code">
+.sidepanel-frame {
+  display: flex;
+  flex-direction: column;
+}
+.results-area { flex: 4; }
+.footer-area { flex: 1; }
+                    </div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">Toggle Interaction</div>
+                    <div class="spec-code">
+// Extract Mode
+.results-list shows full prompts
+
+// Summarize Mode
+.results-list shows AI summaries
+change color: #f8f8ff → #f5f9ff
+                    </div>
+                </div>
+
+                <div class="spec-item">
+                    <div class="spec-label">Button States</div>
+                    <div class="spec-code">
+Default: #0a84ff gradient
+Hover: transform: translateY(-2px)
+Active: transform: translateY(0)
+Disabled: #f0f0f0 gray
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

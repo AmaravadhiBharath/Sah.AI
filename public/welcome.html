@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to SahAI</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+        background: linear-gradient(135deg, #1E1E1E 0%, #2D2D2D 100%);
+        color: #F5F5F5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .container {
+        max-width: 480px;
+        text-align: center;
+      }
+      .logo {
+        margin: 0 auto 24px;
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: #F5F5F5;
+      }
+      .logo span {
+        color: #3b82f6;
+      }
+      h1 {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .subtitle {
+        font-size: 16px;
+        color: #B8B8B8;
+        margin-bottom: 40px;
+        line-height: 1.5;
+      }
+      .features {
+        text-align: left;
+        margin-bottom: 40px;
+      }
+      .feature {
+        display: flex;
+        gap: 16px;
+        padding: 16px;
+        background: #252525;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border: 1px solid #3A3A3A;
+      }
+      .feature-icon {
+        width: 40px;
+        height: 40px;
+        background: #3b82f620;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 18px;
+      }
+      .feature-text h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .feature-text p {
+        font-size: 12px;
+        color: #B8B8B8;
+        line-height: 1.4;
+      }
+      .cta {
+        display: inline-block;
+        padding: 14px 32px;
+        background: #3b82f6;
+        color: #FFF;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 0.2s;
+        cursor: pointer;
+        border: none;
+      }
+      .cta:hover {
+        background: #2563eb;
+      }
+      .platforms {
+        margin-top: 32px;
+        font-size: 11px;
+        color: #7A7A7A;
+      }
+      .platforms span {
+        display: inline-block;
+        padding: 4px 8px;
+        background: #2D2D2D;
+        border-radius: 4px;
+        margin: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">Sah<span>AI</span></div>
+      <h1>Welcome to SahAI</h1>
+      <p class="subtitle">Extract and consolidate your AI conversation prompts with one click.</p>
+      
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">1</div>
+          <div class="feature-text">
+            <h3>Navigate to any AI chat</h3>
+            <p>Open ChatGPT, Claude, Gemini, or any supported platform.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">2</div>
+          <div class="feature-text">
+            <h3>Click Extract or Summarize</h3>
+            <p>Find the buttons in the chat input area. Extract gets raw prompts, Summarize consolidates them.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">3</div>
+          <div class="feature-text">
+            <h3>Copy, Save, or Download</h3>
+            <p>Use the side panel to copy to clipboard, save to history, or download as a file.</p>
+          </div>
+        </div>
+      </div>
+      
+      <button class="cta" onclick="window.close()">GET STARTED</button>
+      
+      <div class="platforms">
+        <span>ChatGPT</span>
+        <span>Claude</span>
+        <span>Gemini</span>
+        <span>Perplexity</span>
+        <span>DeepSeek</span>
+        <span>Lovable</span>
+        <span>Bolt</span>
+        <span>Cursor</span>
+        <span>Meta AI</span>
+      </div>
+    </div>
+  </body>
+</html>

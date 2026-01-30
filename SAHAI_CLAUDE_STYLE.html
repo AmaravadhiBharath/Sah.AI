@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SahAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #ffffff;
+            --bg-secondary: #f9f9f9;
+            --text-primary: #0a0a0a;
+            --text-secondary: #565656;
+            --text-tertiary: #8b8b8b;
+            --border: #d9d9d9;
+            --border-light: #efefef;
+            --accent: #0a7df4;
+
+            --dark-bg: #1a1a1a;
+            --dark-bg-secondary: #262626;
+            --dark-text-primary: #ececec;
+            --dark-text-secondary: #adadad;
+            --dark-border: #404040;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: var(--dark-bg);
+                --bg-secondary: var(--dark-bg-secondary);
+                --text-primary: var(--dark-text-primary);
+                --text-secondary: var(--dark-text-secondary);
+                --border: var(--dark-border);
+                --border-light: #333333;
+            }
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 32px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+        }
+
+        /* Grid */
+        .showcase {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-bottom: 64px;
+        }
+
+        .showcase-item {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .showcase-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Panel */
+        .panel {
+            background: var(--bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            aspect-ratio: 9 / 16;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Header */
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .app-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .app-status {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 150ms ease;
+        }
+
+        .icon-button:hover {
+            background: var(--bg-secondary);
+        }
+
+        /* Content */
+        .panel-content {
+            flex: 4;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Toggle */
+        .mode-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            margin-bottom: 4px;
+        }
+
+        .mode-btn {
+            padding: 6px 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            transition: all 150ms ease;
+        }
+
+        .mode-btn.active {
+            background: var(--bg);
+            color: var(--text-primary);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Result Item */
+        .result-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 150ms ease;
+            flex-shrink: 0;
+        }
+
+        .result-item:hover {
+            border-color: var(--accent);
+            background: var(--bg);
+        }
+
+        .result-number {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .result-content {
+            font-size: 12px;
+            color: var(--text-primary);
+            line-height: 1.4;
+            margin-bottom: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .result-meta {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        /* Empty */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 32px 16px;
+            text-align: center;
+            flex: 1;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 28px;
+            opacity: 0.3;
+        }
+
+        .empty-message {
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        .panel-footer {
+            flex: 1;
+            padding: 12px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+        }
+
+        .extract-button {
+            flex: 1;
+            height: 36px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            transition: all 150ms ease;
+        }
+
+        .extract-button:hover {
+            background: #0860d0;
+        }
+
+        .extract-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Scrollbar */
+        .panel-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .panel-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 3px;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb:hover {
+            background: var(--border);
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 64px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: -0.3px;
+        }
+
+        .info-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .specs-table {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .spec-row {
+            display: grid;
+            grid-template-columns: 140px 1fr 160px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-light);
+            gap: 20px;
+            font-size: 13px;
+        }
+
+        .spec-row:last-child {
+            border-bottom: none;
+        }
+
+        .spec-key {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .spec-value {
+            color: var(--text-secondary);
+        }
+
+        .spec-code {
+            color: var(--accent);
+            font-family: 'Monaco', monospace;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1024px) {
+            .showcase {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 32px 24px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            .container {
+                padding: 24px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SahAI</h1>
+        <p class="subtitle">Extract and summarize prompts from Claude, ChatGPT, and more</p>
+
+        <!-- Showcase -->
+        <div class="showcase">
+            <!-- Light Theme -->
+            <div class="showcase-item">
+                <p class="showcase-label">Light</p>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="header-content">
+                            <div>
+                                <div class="app-name">SahAI</div>
+                                <div class="app-status">ChatGPT</div>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="icon-button" title="Settings">⚙️</button>
+                            <button class="icon-button" title="More">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-content">
+                        <div class="mode-toggle">
+                            <button class="mode-btn active">Extract</button>
+                            <button class="mode-btn">Summarize</button>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-number">#1</div>
+                            <div class="result-content">Can you help me build a React component with TypeScript and proper types?</div>
+                            <div class="result-meta">2.4k chars • 2m ago</div>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-number">#2</div>
+                            <div class="result-content">What about the design system architecture for maximum scalability?</div>
+                            <div class="result-meta">1.8k chars • 5m ago</div>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-number">#3</div>
+                            <div class="result-content">How do I optimize performance when dealing with large datasets?</div>
+                            <div class="result-meta">1.5k chars • 8m ago</div>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-number">#4</div>
+                            <div class="result-content">Explain caching strategies and Node.js implementation patterns...</div>
+                            <div class="result-meta">1.2k chars • 12m ago</div>
+                        </div>
+                    </div>
+
+                    <div class="panel-footer">
+                        <button class="extract-button">Extract All</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dark Theme -->
+            <div class="showcase-item">
+                <p class="showcase-label">Dark</p>
+                <div class="panel" style="background: #1a1a1a; border-color: #404040;">
+                    <div class="panel-header" style="border-bottom-color: #404040;">
+                        <div class="header-content">
+                            <div>
+                                <div class="app-name" style="color: #ececec;">SahAI</div>
+                                <div class="app-status" style="color: #adadad;">ChatGPT</div>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="icon-button" style="color: #adadad;">⚙️</button>
+                            <button class="icon-button" style="color: #adadad;">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-content" style="background: #1a1a1a;">
+                        <div class="mode-toggle" style="background: #262626;">
+                            <button class="mode-btn active" style="background: #1a1a1a; color: #ececec;">Extract</button>
+                            <button class="mode-btn" style="color: #adadad;">Summarize</button>
+                        </div>
+
+                        <div class="result-item" style="background: #262626; border-color: #404040; color: #ececec;">
+                            <div class="result-number">#1</div>
+                            <div class="result-content">Can you help me build a React component with TypeScript and proper types?</div>
+                            <div class="result-meta" style="color: #8b8b8b;">2.4k chars • 2m ago</div>
+                        </div>
+
+                        <div class="result-item" style="background: #262626; border-color: #404040; color: #ececec;">
+                            <div class="result-number">#2</div>
+                            <div class="result-content">What about the design system architecture for maximum scalability?</div>
+                            <div class="result-meta" style="color: #8b8b8b;">1.8k chars • 5m ago</div>
+                        </div>
+
+                        <div class="result-item" style="background: #262626; border-color: #404040; color: #ececec;">
+                            <div class="result-number">#3</div>
+                            <div class="result-content">How do I optimize performance when dealing with large datasets?</div>
+                            <div class="result-meta" style="color: #8b8b8b;">1.5k chars • 8m ago</div>
+                        </div>
+
+                        <div class="result-item" style="background: #262626; border-color: #404040; color: #ececec;">
+                            <div class="result-number">#4</div>
+                            <div class="result-content">Explain caching strategies and Node.js implementation patterns...</div>
+                            <div class="result-meta" style="color: #8b8b8b;">1.2k chars • 12m ago</div>
+                        </div>
+                    </div>
+
+                    <div class="panel-footer" style="border-top-color: #404040;">
+                        <button class="extract-button">Extract All</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summarize Mode -->
+            <div class="showcase-item">
+                <p class="showcase-label">Summarize</p>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="header-content">
+                            <div>
+                                <div class="app-name">SahAI</div>
+                                <div class="app-status">Summarizing...</div>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="icon-button">⚙️</button>
+                            <button class="icon-button">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-content">
+                        <div class="mode-toggle">
+                            <button class="mode-btn">Extract</button>
+                            <button class="mode-btn active">Summarize</button>
+                        </div>
+
+                        <div class="result-item" style="border-color: var(--accent);">
+                            <div class="result-number">#1</div>
+                            <div class="result-content"><strong>React Components</strong> • TypeScript, types, best practices</div>
+                            <div class="result-meta">From 4 prompts</div>
+                        </div>
+
+                        <div class="result-item" style="border-color: var(--accent);">
+                            <div class="result-number">#2</div>
+                            <div class="result-content"><strong>Design Systems</strong> • Architecture, scalability, structure</div>
+                            <div class="result-meta">From 2 prompts</div>
+                        </div>
+
+                        <div class="result-item" style="border-color: var(--accent);">
+                            <div class="result-number">#3</div>
+                            <div class="result-content"><strong>Performance</strong> • Optimization, caching, large datasets</div>
+                            <div class="result-meta">From 2 prompts</div>
+                        </div>
+                    </div>
+
+                    <div class="panel-footer">
+                        <button class="extract-button">Extract All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="section">
+            <h2 class="section-title">Features</h2>
+            <div class="info-card">
+                <strong>80% results, 20% action.</strong> Everything is about showing prompts. The extract button is there when you need it.<br><br>
+                <strong>Extract or Summarize.</strong> Toggle between full prompts and AI-generated summaries. Fast switching, no confusion.<br><br>
+                <strong>Light and Dark.</strong> Automatic theme detection. No settings menu needed.<br><br>
+                <strong>Clean and minimal.</strong> No design system theater. No corporate speak. Just functional design that works.
+            </div>
+        </div>
+
+        <!-- Specs -->
+        <div class="section">
+            <h2 class="section-title">Specifications</h2>
+            <div class="specs-table">
+                <div class="spec-row">
+                    <div class="spec-key">Font</div>
+                    <div class="spec-value">Inter with system fallbacks</div>
+                    <div class="spec-code">15px base</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-key">Colors</div>
+                    <div class="spec-value">Light: white/black • Dark: dark/light</div>
+                    <div class="spec-code">#0a7df4 accent</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-key">Layout</div>
+                    <div class="spec-value">80% content area, 20% footer</div>
+                    <div class="spec-code">9:16 ratio</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-key">Borders</div>
+                    <div class="spec-value">Subtle, 1px, light gray</div>
+                    <div class="spec-code">4px radius</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-key">Spacing</div>
+                    <div class="spec-value">Comfortable, consistent</div>
+                    <div class="spec-code">12px, 16px, 20px</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-key">Animations</div>
+                    <div class="spec-value">Smooth, 150ms, responsive</div>
+                    <div class="spec-code">ease transition</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-key">Theme</div>
+                    <div class="spec-value">Auto light/dark via CSS</div>
+                    <div class="spec-code">prefers-color-scheme</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-key">Status</div>
+                    <div class="spec-value">Production ready, zero dependencies</div>
+                    <div class="spec-code">Pure CSS + HTML</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

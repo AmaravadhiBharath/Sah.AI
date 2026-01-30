@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SahAI - Modern & Minimal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --text-tertiary: #999999;
+            --border: #e5e5e5;
+            --accent: #0066cc;
+            --accent-light: #f0f7ff;
+
+            --dark-bg: #0d0d0d;
+            --dark-bg-secondary: #1a1a1a;
+            --dark-text-primary: #ffffff;
+            --dark-text-secondary: #999999;
+            --dark-border: #2a2a2a;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: var(--dark-bg);
+                --bg-secondary: var(--dark-bg-secondary);
+                --text-primary: var(--dark-text-primary);
+                --text-secondary: var(--dark-text-secondary);
+                --border: var(--dark-border);
+                --accent-light: #0a2240;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        /* Layout Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        /* Sidepanel Frame */
+        .frame {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            aspect-ratio: 9/16;
+            max-width: 360px;
+            margin: 0 auto;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 200ms ease;
+        }
+
+        .frame:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Header */
+        .header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--bg-secondary);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .header-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .header-sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .icon-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 150ms ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        /* Content Area (80%) */
+        .content {
+            flex: 4;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Toggle */
+        .toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 6px 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            transition: all 150ms ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--bg);
+            color: var(--text-primary);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Result Item */
+        .result {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 150ms ease;
+            flex-shrink: 0;
+        }
+
+        .result:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+        }
+
+        .result-index {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .result-text {
+            font-size: 12px;
+            color: var(--text-primary);
+            line-height: 1.4;
+            margin-bottom: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .result-meta {
+            font-size: 10px;
+            color: var(--text-tertiary);
+        }
+
+        /* Empty State */
+        .empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 32px 16px;
+            text-align: center;
+            flex: 1;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 32px;
+            opacity: 0.4;
+        }
+
+        .empty-text {
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* Footer (20%) */
+        .footer {
+            flex: 1;
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-extract {
+            flex: 1;
+            height: 36px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            transition: all 150ms ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-extract:hover {
+            background: #0052a3;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.2);
+        }
+
+        .btn-extract:active {
+            transform: scale(0.98);
+        }
+
+        /* Scrollbar */
+        .content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .content::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: var(--accent-light);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .info-box strong {
+            color: var(--accent);
+        }
+
+        /* Specs Table */
+        .specs {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .spec-row {
+            display: grid;
+            grid-template-columns: 150px 1fr 1fr;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            gap: 16px;
+        }
+
+        .spec-row:last-child {
+            border-bottom: none;
+        }
+
+        .spec-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .spec-value {
+            color: var(--text-secondary);
+        }
+
+        .spec-code {
+            color: var(--accent);
+            font-family: 'Monaco', monospace;
+            font-size: 11px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .frame {
+                max-width: 100%;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SahAI</h1>
+        <p class="subtitle">Modern & minimal. Clean. Fast. Actually good.</p>
+
+        <!-- Showcase -->
+        <div class="grid">
+            <!-- Light Theme -->
+            <div>
+                <p style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.4px;">Light</p>
+                <div class="frame">
+                    <div class="header">
+                        <div class="header-left">
+                            <div class="logo">S</div>
+                            <div class="header-text">
+                                <div class="header-title">SahAI</div>
+                                <div class="header-sub">ChatGPT</div>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="icon-btn">⚙️</button>
+                            <button class="icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="content">
+                        <div class="toggle">
+                            <button class="toggle-btn active">✨ Extract</button>
+                            <button class="toggle-btn">📊 Sum</button>
+                        </div>
+
+                        <div class="result">
+                            <div class="result-index">#1</div>
+                            <div class="result-text">Can you help me build a React component with TypeScript?</div>
+                            <div class="result-meta">2.4k • 2m ago</div>
+                        </div>
+
+                        <div class="result">
+                            <div class="result-index">#2</div>
+                            <div class="result-text">What about the design system architecture for scalability?</div>
+                            <div class="result-meta">1.8k • 5m ago</div>
+                        </div>
+
+                        <div class="result">
+                            <div class="result-index">#3</div>
+                            <div class="result-text">How do I optimize performance with large datasets in React?</div>
+                            <div class="result-meta">1.5k • 8m ago</div>
+                        </div>
+
+                        <div class="result">
+                            <div class="result-index">#4</div>
+                            <div class="result-text">Explain caching strategies and Node.js implementation...</div>
+                            <div class="result-meta">1.2k • 12m ago</div>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        <button class="btn-extract">⬇ Extract</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dark Theme -->
+            <div>
+                <p style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.4px;">Dark</p>
+                <div class="frame" style="background: #0d0d0d; border-color: #2a2a2a;">
+                    <div class="header" style="background: #1a1a1a; border-bottom-color: #2a2a2a;">
+                        <div class="header-left">
+                            <div class="logo">S</div>
+                            <div class="header-text">
+                                <div class="header-title" style="color: #fff;">SahAI</div>
+                                <div class="header-sub" style="color: #999;">ChatGPT</div>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="icon-btn" style="color: #666;">⚙️</button>
+                            <button class="icon-btn" style="color: #666;">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="content" style="background: #0d0d0d;">
+                        <div class="toggle" style="background: #1a1a1a;">
+                            <button class="toggle-btn active" style="background: #2a2a2a; color: #fff;">✨ Extract</button>
+                            <button class="toggle-btn" style="color: #999;">📊 Sum</button>
+                        </div>
+
+                        <div class="result" style="background: #1a1a1a; border-color: #2a2a2a; color: #fff;">
+                            <div class="result-index">#1</div>
+                            <div class="result-text">Can you help me build a React component with TypeScript?</div>
+                            <div class="result-meta" style="color: #666;">2.4k • 2m ago</div>
+                        </div>
+
+                        <div class="result" style="background: #1a1a1a; border-color: #2a2a2a; color: #fff;">
+                            <div class="result-index">#2</div>
+                            <div class="result-text">What about the design system architecture for scalability?</div>
+                            <div class="result-meta" style="color: #666;">1.8k • 5m ago</div>
+                        </div>
+
+                        <div class="result" style="background: #1a1a1a; border-color: #2a2a2a; color: #fff;">
+                            <div class="result-index">#3</div>
+                            <div class="result-text">How do I optimize performance with large datasets in React?</div>
+                            <div class="result-meta" style="color: #666;">1.5k • 8m ago</div>
+                        </div>
+                    </div>
+
+                    <div class="footer" style="border-top-color: #2a2a2a;">
+                        <button class="btn-extract">⬇ Extract</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summarize Mode -->
+            <div>
+                <p style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.4px;">Summarize</p>
+                <div class="frame">
+                    <div class="header">
+                        <div class="header-left">
+                            <div class="logo">S</div>
+                            <div class="header-text">
+                                <div class="header-title">SahAI</div>
+                                <div class="header-sub">Summarizing...</div>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="icon-btn">⚙️</button>
+                            <button class="icon-btn">⋯</button>
+                        </div>
+                    </div>
+
+                    <div class="content">
+                        <div class="toggle">
+                            <button class="toggle-btn">✨ Extract</button>
+                            <button class="toggle-btn active">📊 Sum</button>
+                        </div>
+
+                        <div class="result" style="background: #f0f7ff; border-color: #0066cc;">
+                            <div class="result-index">#1</div>
+                            <div class="result-text"><strong>React:</strong> TypeScript usage, type safety, best practices...</div>
+                            <div class="result-meta">Grouped from 4 prompts</div>
+                        </div>
+
+                        <div class="result" style="background: #f0f7ff; border-color: #0066cc;">
+                            <div class="result-index">#2</div>
+                            <div class="result-text"><strong>Design:</strong> Architecture, scalability, component structure...</div>
+                            <div class="result-meta">Grouped from 2 prompts</div>
+                        </div>
+
+                        <div class="result" style="background: #f0f7ff; border-color: #0066cc;">
+                            <div class="result-index">#3</div>
+                            <div class="result-text"><strong>Performance:</strong> Optimization, caching, data handling...</div>
+                            <div class="result-meta">Grouped from 2 prompts</div>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        <button class="btn-extract">⬇ Extract</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div class="section">
+            <h2 class="section-title">What's Different</h2>
+            <div class="info-box">
+                <strong>Modern & minimal:</strong> No bullshit design system talk. No Material Design 3 corporate stuff. Just clean, simple, fast. Like Claude itself.<br><br>
+                <strong>80/20 layout:</strong> 80% results (what matters), 20% footer (extract button). Everything else is noise.<br><br>
+                <strong>Extract/Summarize:</strong> Toggle between full prompts and AI-generated summaries. Simple.<br><br>
+                <strong>Light + Dark:</strong> Automatic, looks good in both. No design debt.<br><br>
+                <strong>For developers:</strong> Build on this. It's meant to be simple, not prescriptive.
+            </div>
+        </div>
+
+        <!-- Specs -->
+        <div class="section">
+            <h2 class="section-title">Specs</h2>
+            <div class="specs">
+                <div class="spec-row">
+                    <div class="spec-label">Font</div>
+                    <div class="spec-value">Inter (system fallback)</div>
+                    <div class="spec-code">-apple-system, BlinkMacSystemFont</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-label">Colors (Light)</div>
+                    <div class="spec-value">White bg, black text, blue accent</div>
+                    <div class="spec-code">#0066cc</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-label">Colors (Dark)</div>
+                    <div class="spec-value">Black bg, white text, blue accent</div>
+                    <div class="spec-code">#0066cc</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-label">Border Radius</div>
+                    <div class="spec-value">Subtle (4-8px)</div>
+                    <div class="spec-code">4px, 8px</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-label">Padding</div>
+                    <div class="spec-value">Comfortable spacing</div>
+                    <div class="spec-code">12px, 16px</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-label">Layout</div>
+                    <div class="spec-value">80% content, 20% footer</div>
+                    <div class="spec-code">flex: 4, flex: 1</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-label">Animations</div>
+                    <div class="spec-value">150ms smooth, no bullshit</div>
+                    <div class="spec-code">ease, 150ms</div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-label">Sidepanel Size</div>
+                    <div class="spec-value">280px × 680px (9:16)</div>
+                    <div class="spec-code">aspect-ratio: 9/16</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom -->
+        <div class="section">
+            <h2 class="section-title">That's it</h2>
+            <div class="info-box">
+                Clean. Minimal. Works. Like Claude itself.<br><br>
+                Extract prompts. Summarize them. Done.<br><br>
+                No design system theater. No corporate speak. Just good design.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

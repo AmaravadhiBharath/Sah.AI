@@ -1,0 +1,209 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    MISSING BUTTONS - QUICK REFERENCE                       ║
+║                         SahAI Chrome Extension                             ║
+║                       ~60 Minutes to Complete Fix                          ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌─ ITEM 1: UPGRADE BUTTONS ─────────────────────────────────────────────────┐
+│ Severity: 🔴 CRITICAL (Blocks Revenue)                                     │
+│ Location: src/sidepanel/App.tsx, lines 729-744                             │
+│ Current: <button className="popup-btn upgrade">Upgrade to Go</button>      │
+│ Problem: Button renders but has NO onClick handler                         │
+│ Fix: Add onClick={() => window.open(upgradePage, '_blank')}               │
+│ Time: 5 minutes                                                             │
+│ Impact: Users can't upgrade, no monetization path                          │
+│                                                                             │
+│ ✓ "Upgrade to Go" button (Free → Go)                                       │
+│ ✓ "Upgrade to Pro" button (Go → Pro)                                       │
+│ ✓ "Upgrade to Infi" button (Pro → Infi)                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ ITEM 2: KEYBOARD HINTS BUTTON + MODAL ────────────────────────────────────┐
+│ Severity: 🟠 HIGH (UX Improvement)                                          │
+│ Location: Header + App.tsx main return (line ~730)                         │
+│ Status: Modal component exists, button missing, rendering missing          │
+│ What's Missing:                                                             │
+│   1. Help/? button in header to trigger                                    │
+│   2. {showKeyboardHints && <KeyboardHints ... />} in JSX                  │
+│   3. const [showKeyboardHints, setShowKeyboardHints] = useState(false)     │
+│ Fix: Add button + state + render                                           │
+│ Time: 10 minutes                                                            │
+│ Impact: Users can discover keyboard shortcuts                              │
+│                                                                             │
+│ Works via: Press ? key (line 470)                                          │
+│ Should also work via: Help button in header                                │
+│ Component: <KeyboardHints onClose={() => setShowKeyboardHints(false)} />   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ ITEM 3: ONBOARDING MODAL ─────────────────────────────────────────────────┐
+│ Severity: 🟡 MEDIUM (First-Time UX)                                        │
+│ Location: App.tsx main return + state section                              │
+│ Status: Component built, state managed, never rendered                     │
+│ What's Missing:                                                             │
+│   1. const [showOnboarding, setShowOnboarding] = useState(false)           │
+│   2. {showOnboarding && <OnboardingModal ... />} in JSX                    │
+│   3. First-launch detection logic                                          │
+│ Fix: Add state + render + first-launch trigger                             │
+│ Time: 10 minutes                                                            │
+│ Impact: Better new user onboarding experience                              │
+│                                                                             │
+│ Component: OnboardingModal (imported from UXComponents)                    │
+│ Where to show: First time user opens app                                   │
+│ Where to render: Main container, before nav dock                           │
+│ State already referenced: Line 476 (keyboard handler closes it)            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ ITEM 4: PULSE CHECK / FEEDBACK MODAL ─────────────────────────────────────┐
+│ Severity: 🔴 CRITICAL (User Feedback)                                      │
+│ Location: Settings modal (line 918) + main component                       │
+│ Status: Trigger button exists, modal component DOESN'T EXIST              │
+│ What's Missing:                                                             │
+│   1. PulseCheckModal component (need to create or find)                    │
+│   2. Render in main JSX: {showPulseCheck && <PulseCheckModal ... />}      │
+│ Fix: Create component OR import if exists elsewhere                        │
+│ Time: 15 minutes (create component) or 5 min (if exists)                   │
+│ Impact: Can collect user satisfaction & feedback                           │
+│                                                                             │
+│ Trigger exists at: Line 918 in Settings modal                              │
+│ State exists: showPulseCheck (line 82)                                     │
+│ Button text: "Send feedback"                                               │
+│ What should it do: Rating + optional text feedback                         │
+│ Where to send: Your backend/email/service                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ ITEM 5: BATCH ACTION BUTTONS (Copy/Delete Selected) ──────────────────────┐
+│ Severity: 🟠 HIGH (Feature Incomplete)                                     │
+│ Location: Results area, after PromptsList (line 580+)                      │
+│ Status: Selection logic works, action buttons missing                      │
+│ What's Missing:                                                             │
+│   1. Toolbar/buttons to ACT on selected prompts                            │
+│   2. Copy selected handler                                                 │
+│   3. Delete selected handler                                               │
+│ Current: Users can checkbox select but can't do anything!                  │
+│ Fix: Add action toolbar with buttons when items selected                   │
+│ Time: 10 minutes                                                            │
+│ Impact: Makes prompt selection feature actually useful                     │
+│                                                                             │
+│ Selection state: selectedPrompts (Set<number>)                             │
+│ Toggle handler: onTogglePrompt (works fine)                                │
+│ Missing: Buttons to use the selection                                      │
+│ Where to add: Immediately after </PromptsList>                             │
+│                                                                             │
+│ {selectedPrompts.size > 0 && (                                             │
+│   <div className="batch-actions">                                         │
+│     <button onClick={copySelected}>                                        │
+│       Copy {selectedPrompts.size}                                          │
+│     </button>                                                              │
+│     <button onClick={deleteSelected}>                                      │
+│       Delete {selectedPrompts.size}                                        │
+│     </button>                                                              │
+│   </div>                                                                   │
+│ )}                                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ ITEM 6: CLOUD SYNC BUTTON ────────────────────────────────────────────────┐
+│ Severity: 🟡 MEDIUM (Bonus Feature)                                        │
+│ Location: History modal header (line 821)                                  │
+│ Status: Logic implemented, button missing from UI                          │
+│ What's Missing: Button to trigger cloud sync                               │
+│ Fix: Add sync button in history modal                                      │
+│ Time: 5 minutes                                                             │
+│ Impact: Users can sync history with cloud                                  │
+│                                                                             │
+│ Logic available: getHistoryFromCloud(), mergeHistory()                     │
+│ Where to add: History modal header, near "Clear all" button                │
+│ Button text: "☁️ Sync" or "Sync with Cloud"                                │
+│ What it does: Pulls cloud history and merges with local                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ ITEM 7: STATE DECLARATIONS ──────────────────────────────────────────────┐
+│ Severity: 🟡 MEDIUM (Dependency)                                           │
+│ Location: App.tsx state section (lines 70-100)                             │
+│ Status: Some state vars referenced but not declared                        │
+│ What's Missing:                                                             │
+│   const [showKeyboardHints, setShowKeyboardHints] = useState(false);       │
+│   const [showOnboarding, setShowOnboarding] = useState(false);             │
+│ Fix: Add the two state declarations at top of component                    │
+│ Time: 2 minutes                                                             │
+│ Impact: Required to render keyboard hints & onboarding                     │
+│                                                                             │
+│ Note: showPulseCheck already exists (line 82)                              │
+│       showSettingsModal already exists (line 80)                           │
+│       Only need to add the two above                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                         IMPLEMENTATION SUMMARY                             ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║                                                                            ║
+║  Total Missing Elements: 7                                                ║
+║  Total Implementation Time: ~60 minutes                                    ║
+║  Difficulty Level: Easy (mostly copy-paste)                               ║
+║  Coding Experience Needed: Beginner-Intermediate                          ║
+║                                                                            ║
+║  🔴 CRITICAL (Must Do): Items 1, 4                                        ║
+║  🟠 HIGH (Should Do): Items 2, 5                                          ║
+║  🟡 MEDIUM (Nice to Have): Items 3, 6, 7                                  ║
+║                                                                            ║
+║  By Priority:                                                             ║
+║    1. Upgrade buttons (5 min)                                             ║
+║    2. Pulse check modal (15 min)                                          ║
+║    3. Keyboard hints (10 min)                                             ║
+║    4. Batch actions (10 min)                                              ║
+║    5. Onboarding (10 min)                                                 ║
+║    6. Cloud sync (5 min)                                                  ║
+║    7. State declarations (2 min)                                          ║
+║                                                                            ║
+║  TOTAL: 57 minutes                                                        ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌─ FILE REFERENCES ──────────────────────────────────────────────────────────┐
+│                                                                            │
+│  For DETAILED IMPLEMENTATION:                                             │
+│  → Read: MISSING_BUTTONS_IMPLEMENTATION_GUIDE.md                          │
+│                                                                            │
+│  For VISUAL REFERENCE:                                                    │
+│  → Read: MISSING_BUTTONS_VISUAL_MAP.md                                    │
+│                                                                            │
+│  For DEEP ANALYSIS:                                                       │
+│  → Read: MISSING_BUTTONS_ANALYSIS.md                                      │
+│                                                                            │
+│  For EXECUTIVE SUMMARY:                                                   │
+│  → Read: MISSING_BUTTONS_SUMMARY.txt                                      │
+│                                                                            │
+│  For NAVIGATION:                                                          │
+│  → Read: START_HERE_MISSING_BUTTONS.md (you are here)                     │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+KEY DECISION POINTS:
+
+  1️⃣  UPGRADE URL: What's your pricing page?
+      → Use this for window.open() in upgrade buttons
+
+  2️⃣  FEEDBACK DESTINATION: Where should feedback go?
+      → Email? Database? Slack webhook?
+
+  3️⃣  FIRST LAUNCH: When should onboarding show?
+      → New users only? Everyone? Non-logged-in?
+
+  4️⃣  BATCH DELETE: Reversible or permanent?
+      → With confirmation dialog?
+
+  5️⃣  CLOUD SYNC API: Is your backend ready?
+      → What's the endpoint for sync?
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                          READY TO START?                                  ║
+║                                                                            ║
+║  Step 1: Read MISSING_BUTTONS_IMPLEMENTATION_GUIDE.md                     ║
+║  Step 2: Open src/sidepanel/App.tsx in your editor                        ║
+║  Step 3: Start with Item 1 (Upgrade buttons - 5 min)                      ║
+║  Step 4: Work your way through the list                                   ║
+║  Step 5: Test each feature as you go                                      ║
+║                                                                            ║
+║  Estimated Total Time: ~60 minutes                                        ║
+║  By: End of day = Full UI completion ✅                                   ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝

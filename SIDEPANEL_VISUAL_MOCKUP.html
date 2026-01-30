@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SahAI Sidepanel - Visual Mockup (Before & After)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+            color: #1a1a1a;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .mockup-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .mockup-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mockup-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            padding: 0 4px;
+            text-align: center;
+        }
+
+        .mockup-frame {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            aspect-ratio: 9/16;
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+        }
+
+        /* ===== NEW DESIGN (RIGHT SIDE) ===== */
+        .new-design {
+            background: #fafafa;
+        }
+
+        /* Header */
+        .header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            background: #22c55e;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            font-size: 14px;
+        }
+
+        .icon-btn:hover {
+            background: #e8e8e8;
+            color: #1a1a1a;
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        .platform-badge {
+            background: #f5f5f5;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .platform-badge::before {
+            content: "●";
+            color: #34c759;
+            font-size: 8px;
+        }
+
+        .primary-btn {
+            background: #0a84ff;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            height: 48px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .primary-btn:hover {
+            background: #0071e3;
+            box-shadow: 0 4px 8px rgba(10, 132, 255, 0.3);
+        }
+
+        .primary-btn:active {
+            transform: scale(1.02);
+        }
+
+        .secondary-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .secondary-btn {
+            flex: 1;
+            background: transparent;
+            border: 1px solid #e8e8e8;
+            color: #666;
+            padding: 10px 12px;
+            height: 40px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 200ms;
+        }
+
+        .secondary-btn:hover {
+            border-color: #0a84ff;
+            color: #0a84ff;
+            background: rgba(10, 132, 255, 0.05);
+        }
+
+        /* Results Section */
+        .results-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 0 4px;
+        }
+
+        .results-title {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 13px;
+        }
+
+        .results-meta {
+            font-size: 11px;
+            color: #a3a3a3;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e8e8e8;
+            margin: 4px 0;
+        }
+
+        .prompt-item {
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 200ms;
+        }
+
+        .prompt-item:hover {
+            border-color: #0a84ff;
+            box-shadow: 0 4px 8px rgba(10, 132, 255, 0.1);
+            background: #f9f9f9;
+        }
+
+        .prompt-number {
+            font-weight: 700;
+            color: #0a84ff;
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        .prompt-text {
+            color: #1a1a1a;
+            font-size: 11px;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 12px 16px;
+            border-top: 1px solid #e8e8e8;
+            background: white;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .footer-btn {
+            flex: 1;
+            min-width: 60px;
+            background: white;
+            border: 1px solid #e8e8e8;
+            color: #666;
+            padding: 8px 12px;
+            height: 36px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 200ms;
+        }
+
+        .footer-btn:hover {
+            border-color: #0a84ff;
+            color: #0a84ff;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 24px 16px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 40px;
+            opacity: 0.6;
+        }
+
+        .empty-title {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 13px;
+        }
+
+        .empty-text {
+            color: #666;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .platform-icon {
+            aspect-ratio: 1;
+            background: #f5f5f5;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 200ms;
+        }
+
+        .platform-icon:hover {
+            background: #e8e8e8;
+            transform: scale(1.05);
+        }
+
+        /* Loading State */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 24px 16px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #e8e8e8;
+            border-top-color: #0a84ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 11px;
+        }
+
+        /* OLD DESIGN (LEFT SIDE) */
+        .old-design {
+            background: white;
+        }
+
+        .old-header {
+            padding: 16px;
+            border-bottom: 1px solid #ddd;
+            background: #f9f9f9;
+        }
+
+        .old-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .old-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            width: 100%;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .old-item {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 2px;
+            font-size: 11px;
+        }
+
+        .old-footer {
+            padding: 12px 16px;
+            border-top: 1px solid #ddd;
+            background: #f9f9f9;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Comparison Notes */
+        .comparison-notes {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        .notes-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1a1a1a;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .notes-section h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .notes-section ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .notes-section li {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .notes-section li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #a3a3a3;
+        }
+
+        .old-notes h3 {
+            color: #d64545;
+        }
+
+        .old-notes li::before {
+            color: #d64545;
+        }
+
+        .new-notes h3 {
+            color: #34c759;
+        }
+
+        .new-notes li::before {
+            color: #34c759;
+        }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .mockup-container {
+                grid-template-columns: 1fr;
+            }
+            .notes-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* State Examples */
+        .state-examples {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        .state-examples h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+
+        .state-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .state-card {
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .state-label {
+            background: #f5f5f5;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .state-mockup {
+            aspect-ratio: 9/16;
+            background: #fafafa;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        /* Dark Theme Preview */
+        .dark-preview {
+            background: #0a0a0a;
+            color: #f5f5f5;
+        }
+
+        .dark-preview .header {
+            background: #141414;
+            border-bottom-color: #2a2a2a;
+        }
+
+        .dark-preview .platform-badge {
+            background: #1a1a1a;
+            border-color: #2a2a2a;
+            color: #ababab;
+        }
+
+        .dark-preview .prompt-item {
+            background: #141414;
+            border-color: #2a2a2a;
+            color: #f5f5f5;
+        }
+
+        .dark-preview .prompt-text {
+            color: #f5f5f5;
+        }
+
+        .dark-preview .footer {
+            background: #141414;
+            border-top-color: #2a2a2a;
+        }
+
+        .dark-preview .secondary-btn {
+            border-color: #2a2a2a;
+            color: #ababab;
+        }
+
+        .dark-preview .secondary-btn:hover {
+            border-color: #0a84ff;
+            background: rgba(10, 132, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 SahAI Sidepanel Visual Mockup</h1>
+        <p class="subtitle">"Same Brain, New Skin" - Empathetic UI/UX Redesign</p>
+
+        <!-- Comparison Section -->
+        <div class="comparison-notes">
+            <h2 class="notes-title">Design Evolution: Before & After</h2>
+            <div class="notes-grid">
+                <div class="notes-section old-notes">
+                    <h3>❌ Current Design (Before)</h3>
+                    <ul>
+                        <li>Functional but busy interface</li>
+                        <li>Small, dense text elements</li>
+                        <li>Limited visual breathing room</li>
+                        <li>Basic button styles</li>
+                        <li>No celebration or delight</li>
+                        <li>Mixed color hierarchy</li>
+                        <li>Dense information layout</li>
+                    </ul>
+                </div>
+                <div class="notes-section new-notes">
+                    <h3>✅ New Design (After)</h3>
+                    <ul>
+                        <li>Calm, intentional layout</li>
+                        <li>Generous whitespace & breathing room</li>
+                        <li>Clear typography hierarchy</li>
+                        <li>Apple-inspired subtle design</li>
+                        <li>Success celebrations & delight</li>
+                        <li>Consistent, purposeful colors</li>
+                        <li>Progressive information disclosure</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Mockups -->
+        <div class="mockup-container">
+            <!-- OLD DESIGN -->
+            <div class="mockup-section">
+                <div class="mockup-title">❌ Current State (Before)</div>
+                <div class="mockup-frame old-design">
+                    <div class="old-header">
+                        <strong style="font-size: 13px;">SahAI</strong><br>
+                        <small style="color: #888;">ChatGPT</small>
+                    </div>
+                    <div class="old-content">
+                        <button class="old-btn">Extract Prompts</button>
+                        <div style="margin-bottom: 16px;">
+                            <small style="color: #888;">Recent Mode: raw</small>
+                        </div>
+                        <div style="margin-bottom: 8px; color: #666; font-weight: 600;">No prompts extracted yet</div>
+                        <div class="old-item">
+                            <strong>1.</strong> Can you help me build a React component?
+                        </div>
+                        <div class="old-item">
+                            <strong>2.</strong> What about the design system here?
+                        </div>
+                        <div class="old-item">
+                            <strong>3.</strong> How do I optimize performance?
+                        </div>
+                    </div>
+                    <div class="old-footer">
+                        <button style="flex: 1; background: white; border: 1px solid #ddd; padding: 6px; font-size: 10px; cursor: pointer;">Copy All</button>
+                        <button style="flex: 1; background: white; border: 1px solid #ddd; padding: 6px; font-size: 10px; cursor: pointer;">Export</button>
+                        <button style="flex: 1; background: white; border: 1px solid #ddd; padding: 6px; font-size: 10px; cursor: pointer;">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW DESIGN -->
+            <div class="mockup-section">
+                <div class="mockup-title">✅ New Design (After)</div>
+                <div class="mockup-frame new-design">
+                    <div class="header">
+                        <div class="logo-section">
+                            <div class="logo-icon">S</div>
+                            <span>SahAI</span>
+                        </div>
+                        <div class="header-actions">
+                            <button class="icon-btn" title="Settings">⚙️</button>
+                            <button class="icon-btn" title="Profile">👤</button>
+                        </div>
+                    </div>
+                    <div class="content">
+                        <div class="platform-badge">ChatGPT • Ready to extract</div>
+                        <button class="primary-btn">✨ Extract Prompts</button>
+                        <div class="secondary-btns">
+                            <button class="secondary-btn">Settings</button>
+                            <button class="secondary-btn">Help</button>
+                        </div>
+
+                        <div style="margin-top: 8px;">
+                            <div class="results-header">
+                                <div class="results-title">✓ 47 Prompts Found</div>
+                                <div class="results-meta">3,245 words • Completed in 2.4s</div>
+                            </div>
+                            <div class="divider" style="margin: 12px 0;"></div>
+                        </div>
+
+                        <div class="prompt-item">
+                            <div class="prompt-number">#1</div>
+                            <div class="prompt-text">Can you help me build a React component with TypeScript? Include type definitions and…</div>
+                        </div>
+                        <div class="prompt-item">
+                            <div class="prompt-number">#2</div>
+                            <div class="prompt-text">What about the design system here? How do we structure it for scalability?</div>
+                        </div>
+                        <div class="prompt-item">
+                            <div class="prompt-number">#3</div>
+                            <div class="prompt-text">How do I optimize performance when dealing with large datasets in React?</div>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <button class="footer-btn">📋 Copy All</button>
+                        <button class="footer-btn">📥 Export</button>
+                        <button class="footer-btn">🗑️ Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- State Examples -->
+        <div class="state-examples">
+            <h2>Interactive States & Variations</h2>
+            <div class="state-grid">
+                <!-- Empty State -->
+                <div class="state-card">
+                    <div class="state-label">Empty State (No Prompts)</div>
+                    <div class="state-mockup">
+                        <div class="empty-state" style="padding: 20px;">
+                            <div class="empty-icon">💬</div>
+                            <div class="empty-title">No prompts yet</div>
+                            <div class="empty-text">Start a conversation on ChatGPT to extract prompts</div>
+                            <div class="platform-grid">
+                                <div class="platform-icon">🤖</div>
+                                <div class="platform-icon">🧠</div>
+                                <div class="platform-icon">✨</div>
+                                <div class="platform-icon">⚡</div>
+                                <div class="platform-icon">🔮</div>
+                                <div class="platform-icon">🚀</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="state-card">
+                    <div class="state-label">Loading State (Extracting)</div>
+                    <div class="state-mockup">
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Extracting prompts...</div>
+                            <div style="font-size: 10px; color: #a3a3a3; margin-top: 8px;">Found 12 so far</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success State -->
+                <div class="state-card">
+                    <div class="state-label">Success State (Complete)</div>
+                    <div class="state-mockup">
+                        <div style="padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="text-align: center; font-size: 24px;">✨</div>
+                            <div style="text-align: center; font-weight: 600; color: #34c759; font-size: 12px;">Perfect!</div>
+                            <div style="text-align: center; color: #666; font-size: 11px;">47 prompts extracted</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dark Theme -->
+                <div class="state-card">
+                    <div class="state-label">🌙 Dark Theme Variant</div>
+                    <div class="state-mockup dark-preview">
+                        <div class="header">
+                            <div class="logo-section" style="color: #f5f5f5;">
+                                <div class="logo-icon">S</div>
+                                <span>SahAI</span>
+                            </div>
+                            <div class="header-actions">
+                                <button class="icon-btn" style="background: #1a1a1a; color: #ababab;">⚙️</button>
+                                <button class="icon-btn" style="background: #1a1a1a; color: #ababab;">👤</button>
+                            </div>
+                        </div>
+                        <div class="content" style="color: #f5f5f5;">
+                            <div class="platform-badge" style="color: #ababab;">ChatGPT • Ready</div>
+                            <button class="primary-btn">Extract Prompts</button>
+                            <div class="prompt-item" style="color: #f5f5f5;">
+                                <div class="prompt-number">#1</div>
+                                <div class="prompt-text">Can you help me with React?</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Responsive -->
+                <div class="state-card">
+                    <div class="state-label">📱 Mobile Optimized</div>
+                    <div class="state-mockup" style="padding: 8px; max-width: 100%;">
+                        <div class="header" style="padding: 10px; gap: 8px;">
+                            <div class="logo-section" style="font-size: 12px;">
+                                <div class="logo-icon" style="width: 20px; height: 20px; font-size: 10px;">S</div>
+                                <span>SahAI</span>
+                            </div>
+                            <div class="header-actions" style="gap: 4px;">
+                                <button class="icon-btn" style="width: 28px; height: 28px; font-size: 12px;">⚙️</button>
+                            </div>
+                        </div>
+                        <div class="content" style="padding: 12px; gap: 12px;">
+                            <button class="primary-btn" style="font-size: 11px;">Extract</button>
+                            <div class="prompt-item">
+                                <div class="prompt-number">#1</div>
+                                <div class="prompt-text" style="font-size: 10px;">Prompt text here...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail View (Modal) -->
+                <div class="state-card">
+                    <div class="state-label">🔍 Full Prompt Detail</div>
+                    <div class="state-mockup" style="padding: 16px; background: white; color: #1a1a1a; gap: 12px;">
+                        <div style="font-weight: 600; font-size: 12px;">Prompt #1</div>
+                        <div style="height: 1px; background: #e8e8e8;"></div>
+                        <div style="font-size: 11px; line-height: 1.6; color: #666;">
+                            Can you help me build a React component with TypeScript? I need proper type definitions and want to follow best practices...
+                        </div>
+                        <div style="height: 1px; background: #e8e8e8; margin-top: auto;"></div>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="secondary-btn" style="flex: 1;">← Prev</button>
+                            <button class="primary-btn" style="flex: 1; padding: 0;">Copy</button>
+                            <button class="secondary-btn" style="flex: 1;">Next →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Design Improvements -->
+        <div class="comparison-notes">
+            <h2 class="notes-title">🎯 Key Design Improvements</h2>
+            <div class="notes-grid">
+                <div class="notes-section new-notes">
+                    <h3>Visual & Spacing</h3>
+                    <ul>
+                        <li>Increased padding from 12px to 16px</li>
+                        <li>Better use of whitespace (breathing room)</li>
+                        <li>Consistent 8px gap between elements</li>
+                        <li>Subtle shadows for depth (0 4px 8px)</li>
+                        <li>Smooth border-radius (8px for main, 6px for secondary)</li>
+                        <li>Clean color palette (5 neutral + 3 functional)</li>
+                    </ul>
+                </div>
+                <div class="notes-section new-notes">
+                    <h3>Interaction & Feedback</h3>
+                    <ul>
+                        <li>Hover states show interactive elements</li>
+                        <li>Active states scale to 1.02 (subtle feedback)</li>
+                        <li>Smooth 200ms transitions (not instant)</li>
+                        <li>Focus states clearly visible</li>
+                        <li>Empty states feel warm, not punitive</li>
+                        <li>Success animations celebrate wins</li>
+                    </ul>
+                </div>
+                <div class="notes-section new-notes">
+                    <h3>Content & Hierarchy</h3>
+                    <ul>
+                        <li>One primary action per screen</li>
+                        <li>Clear platform status (platform badge)</li>
+                        <li>Results summary with emojis (visual language)</li>
+                        <li>Numbered prompts for scanning</li>
+                        <li>Truncated preview text (2 lines max)</li>
+                        <li>Meta information (time, word count)</li>
+                    </ul>
+                </div>
+                <div class="notes-section new-notes">
+                    <h3>Accessibility & Inclusivity</h3>
+                    <ul>
+                        <li>High contrast text (#1a1a1a on white)</li>
+                        <li>Min 48x48px touch targets</li>
+                        <li>Keyboard navigation support</li>
+                        <li>Clear focus states</li>
+                        <li>Dark theme for eye comfort</li>
+                        <li>Large, readable fonts (11-14px)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Implementation Guide -->
+        <div class="comparison-notes">
+            <h2 class="notes-title">🛠️ Implementation Guide</h2>
+            <div class="notes-grid">
+                <div>
+                    <h3 style="color: #0a84ff; margin-bottom: 12px;">CSS Variables</h3>
+                    <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; overflow: auto;">
+                        <pre style="margin: 0; color: #666;">--white: #ffffff
+--dark: #0a0a0a
+--bg-light: #fafafa
+--text-primary: #1a1a1a
+--text-secondary: #666666
+--border: #e8e8e8
+--primary: #0a84ff
+--success: #34c759
+--spacing-base: 16px
+--radius: 8px</pre>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: #0a84ff; margin-bottom: 12px;">React Component Structure</h3>
+                    <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; overflow: auto;">
+                        <pre style="margin: 0; color: #666;">├── Header (logo + actions)
+├── Content (flex, scrollable)
+│   ├── Platform Badge
+│   ├── Primary Button
+│   ├── Secondary Buttons
+│   └── Results List
+└── Footer (sticky, 3 cols)</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
