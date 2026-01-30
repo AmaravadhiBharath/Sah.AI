@@ -114,8 +114,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin-top: 0;
+    margin-bottom: 0;
     opacity: 0;
     height: 0;
     overflow: hidden;
@@ -125,6 +125,8 @@ body {
 .controls-row.visible {
     opacity: 1;
     height: auto;
+    margin-top: 16px;
+    margin-bottom: 16px;
     pointer-events: auto;
 }
 .control-btn {
@@ -229,7 +231,7 @@ body {
     font-size: 17px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 20px;
+    margin-top: 16px;
     transition: background 0.2s;
 }
 .generate-btn-lg:hover {
