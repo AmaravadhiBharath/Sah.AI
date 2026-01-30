@@ -515,7 +515,7 @@ let RemoteConfigService = _RemoteConfigService;
 async function fetchRemoteConfigUpdates(currentVersion) {
   try {
     const { doc: doc2, getDoc } = await __vitePreload(async () => {
-      const { doc: doc3, getDoc: getDoc2 } = await import("./vendor.js").then((n) => n.h);
+      const { doc: doc3, getDoc: getDoc2 } = await import("./vendor.js").then((n) => n.k);
       return { doc: doc3, getDoc: getDoc2 };
     }, true ? [] : void 0, import.meta.url);
     const { getDb: getDb2 } = await __vitePreload(async () => {
@@ -629,7 +629,7 @@ async function trackDailyMetrics(promptCount) {
     const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
     const metricsRef = doc(db, "metrics", today);
     const { setDoc } = await __vitePreload(async () => {
-      const { setDoc: setDoc2 } = await import("./vendor.js").then((n) => n.h);
+      const { setDoc: setDoc2 } = await import("./vendor.js").then((n) => n.k);
       return { setDoc: setDoc2 };
     }, true ? [] : void 0, import.meta.url);
     await setDoc(metricsRef, {

@@ -116,6 +116,7 @@ export default function App() {
 
   // Track selected prompts for checkbox functionality
   const [selectedPrompts, setSelectedPrompts] = useState<Set<number>>(new Set());
+  const [isEditing, setIsEditing] = useState(false);
 
 
 
@@ -277,6 +278,8 @@ export default function App() {
     setError(null);
     setShowStats(false);
     setLastExtractedContent(''); // Changed from null to '' to match useState type
+    setIsEditing(false);
+    setSelectedPrompts(new Set());
     closeModals();
   };
 
@@ -534,33 +537,26 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="m3-top-app-bar animate-fade-in">
-        <div className="header-left">
-          {(result || summary || view !== 'main') && (
+      {view !== 'main' && (
+        <header className="m3-top-app-bar animate-fade-in">
+          <div className="header-left">
             <button
-              onClick={result || summary ? handleClearResult : () => setView('main')}
-              className="icon-btn has-tooltip"
-              title="Back"
+              onClick={() => {
+                if (result || summary) {
+                  handleClearResult();
+                } else {
+                  setView("main");
+                }
+              }}
+              className="icon-btn"
             >
               <IconArrowLeft />
             </button>
-          )}
-        </div>
-
-        <div className="mode-toggle-center">
-          {(result || summary || loading || error) && (
-            <ModeToggle mode={mode} onChange={setMode} />
-          )}
-        </div>
-
-        <div className="header-right">
-          {(result || summary) && (
-            <button onClick={handleCopy} className="icon-btn has-tooltip" title="Copy All">
-              {copied ? <IconCheck /> : <IconCopy />}
-            </button>
-          )}
-        </div>
-      </header>
+          </div>
+          <div className="header-right">
+          </div>
+        </header>
+      )}
 
       <main className="main">
         {view === 'main' && (
@@ -569,6 +565,12 @@ export default function App() {
               className={`content-area animate-m3-fade-in ${(!result || (result && result.prompts.length === 0)) && !summary && !loading && !error ? 'is-empty' : ''}`}
               onScroll={handleScroll}
             >
+              <div className="content-inner-header">
+                {(result || summary || loading || error) && (
+                  <ModeToggle mode={mode} onChange={setMode} />
+                )}
+              </div>
+
               {error ? (
                 <ErrorState error={error} onRetry={handleExtract} />
               ) : loading ? (
@@ -576,10 +578,27 @@ export default function App() {
               ) : mode === 'summary' && summary ? (
                 <SummaryCard summary={summary} />
               ) : result && result.prompts.length > 0 ? (
-                <div className="result-view">
+                <div className="result-view animate-m3-fade-in">
+                  {/* Result Header Controls */}
+                  <div className="result-header-controls">
+                    <button
+                      className="text-action-btn"
+                      onClick={() => handleClearResult()}
+                    >
+                      Back
+                    </button>
+                    <button
+                      className={`text-action-btn ${isEditing ? 'active' : ''}`}
+                      onClick={() => setIsEditing(!isEditing)}
+                    >
+                      {isEditing ? 'Done' : 'Edit'}
+                    </button>
+                  </div>
+
                   <PromptsList
                     prompts={result.prompts}
                     selectedPrompts={selectedPrompts}
+                    isEditing={isEditing}
                     onTogglePrompt={(idx) => {
                       const newSelected = new Set(selectedPrompts);
                       if (newSelected.has(idx)) {
@@ -589,7 +608,42 @@ export default function App() {
                       }
                       setSelectedPrompts(newSelected);
                     }}
+                    onDeletePrompt={(idx) => {
+                      const newPrompts = result.prompts.filter((_, i) => i !== idx);
+                      setResult({ ...result, prompts: newPrompts });
+                      // Also remove from selected if was there
+                      if (selectedPrompts.has(idx)) {
+                        const newSelected = new Set(selectedPrompts);
+                        newSelected.delete(idx);
+                        setSelectedPrompts(newSelected);
+                      }
+                    }}
                   />
+
+                  {/* Result Footer Actions */}
+                  <div className="result-footer-actions">
+                    <button
+                      className="pill-action-btn"
+                      onClick={handleExtract}
+                      disabled={loading}
+                    >
+                      Re-Generate
+                    </button>
+                    <button
+                      className="pill-action-btn"
+                      onClick={handleCopy}
+                    >
+                      {copied ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+
+                  {/* Upgrade Button */}
+                  <button
+                    className="upgrade-full-btn"
+                    onClick={() => alert('Upgrade to Pro to unlock more features!')}
+                  >
+                    Upgrade
+                  </button>
                 </div>
               ) : (
                 <div className="empty-state-centered">
@@ -605,7 +659,7 @@ export default function App() {
                       onClick={() => setMode('summary')}
                       className={`empty-toggle-btn ${mode === 'summary' ? 'active' : ''}`}
                     >
-                      summarize
+                      Summarize
                     </button>
                   </div>
 
@@ -940,20 +994,26 @@ export default function App() {
       </Toast>
 
       {/* UX Enhancement Modals */}
-      {showOnboarding && (
-        <OnboardingModal onClose={() => setShowOnboarding(false)} />
-      )}
+      {
+        showOnboarding && (
+          <OnboardingModal onClose={() => setShowOnboarding(false)} />
+        )
+      }
 
-      {showKeyboardHints && (
-        <KeyboardHints onClose={() => setShowKeyboardHints(false)} />
-      )}
+      {
+        showKeyboardHints && (
+          <KeyboardHints onClose={() => setShowKeyboardHints(false)} />
+        )
+      }
 
-      {showSuccessCelebration && (
-        <SuccessCelebration
-          message={`🎉 Extracted ${result?.prompts.length || 0} prompts successfully!`}
-          onClose={() => setShowSuccessCelebration(false)}
-        />
-      )}
+      {
+        showSuccessCelebration && (
+          <SuccessCelebration
+            message={`🎉 Extracted ${result?.prompts.length || 0} prompts successfully!`}
+            onClose={() => setShowSuccessCelebration(false)}
+          />
+        )
+      }
 
       <style>{styles}</style>
     </div >
@@ -1003,10 +1063,12 @@ function Toast({ visible, children }: { visible: boolean; children: React.ReactN
 //   );
 // }
 
-function PromptsList({ prompts, selectedPrompts, onTogglePrompt }: {
+function PromptsList({ prompts, selectedPrompts, isEditing, onTogglePrompt, onDeletePrompt }: {
   prompts: any[];
   selectedPrompts?: Set<number>;
+  isEditing?: boolean;
   onTogglePrompt?: (index: number) => void;
+  onDeletePrompt?: (index: number) => void;
 }) {
   return (
     <div className="prompts-list animate-m3-fade-in">
@@ -1016,25 +1078,29 @@ function PromptsList({ prompts, selectedPrompts, onTogglePrompt }: {
           index={idx + 1}
           prompt={p}
           isSelected={selectedPrompts?.has(idx)}
+          isEditing={isEditing}
           onToggleSelect={onTogglePrompt ? () => onTogglePrompt(idx) : undefined}
+          onDelete={onDeletePrompt ? () => onDeletePrompt(idx) : undefined}
         />
       ))}
     </div>
   );
 }
 
-function PromptCard({ index, prompt, isSelected, onToggleSelect }: {
+function PromptCard({ index, prompt, isSelected, isEditing, onToggleSelect, onDelete }: {
   index: number;
   prompt: any;
   isSelected?: boolean;
+  isEditing?: boolean;
   onToggleSelect?: () => void;
+  onDelete?: () => void;
 }) {
   return (
     <div className="m3-card prompt-card animate-m3-slide-up">
       <div className="card-blueprint-index">{index}</div>
 
       {/* Checkbox in top-right */}
-      {onToggleSelect && (
+      {onToggleSelect && !isEditing && (
         <label className="prompt-checkbox-wrapper">
           <input
             type="checkbox"
@@ -1044,6 +1110,13 @@ function PromptCard({ index, prompt, isSelected, onToggleSelect }: {
           />
           <span className="checkbox-label">checkbox</span>
         </label>
+      )}
+
+      {/* Delete button when editing */}
+      {isEditing && (
+        <button className="prompt-delete-btn active" onClick={onDelete} title="Delete prompt">
+          <IconTrash />
+        </button>
       )}
 
       <div className="prompt-content">
@@ -1261,12 +1334,13 @@ const IconRefresh = ({ size = 16, className = '' }: { size?: number; className?:
   </svg>
 );
 
-const IconCopy = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-  </svg>
-);
+// TEMP: Disabled - using text actions
+// const IconCopy = () => (
+//   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+//     <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+//     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+//   </svg>
+// );
 
 
 const IconCheck = () => (
@@ -1386,6 +1460,15 @@ const LogoCursor = () => (
 const LogoMetaAI = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 12.5C12 12.5 11 10 10 10C8.5 10 7.5 11.5 7.5 12.5C7.5 13.5 8.5 15 10 15C11 15 12 12.5 12 12.5ZM12 12.5C12 12.5 13 10 14 10C15.5 10 16.5 11.5 16.5 12.5C16.5 13.5 15.5 15 14 15C13 15 12 12.5 12 12.5ZM24 12.5C24 16.5 21 21 16 21C13.5 21 12 19.5 12 19.5C12 19.5 10.5 21 8 21C3 21 0 16.5 0 12.5C0 8.5 3 4 8 4C11 4 12 5.5 12 5.5C12 5.5 13 4 16 4C21 4 24 8.5 24 12.5Z" />
+  </svg>
+);
+
+const IconTrash = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
   </svg>
 );
 
@@ -1668,9 +1751,17 @@ const styles = `
   }
 
   .content-area {
-    padding: 12px;
-    max-width: 100%;
-    margin: 0 auto;
+    padding: 24px 16px;
+    max-width: 94%;
+    margin: 16px auto;
+    background: #ffffff;
+    border-radius: 32px;
+    border: none;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    min-height: 480px;
+    min-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
   }
 
   /* Center content when empty */
@@ -1748,6 +1839,81 @@ const styles = `
   .empty-state-generate-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  /* Result View Elements - Figma Lo-Fi */
+  .result-view {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px;
+  }
+
+  .result-header-controls {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 4px;
+  }
+
+  .text-action-btn {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+  .text-action-btn:hover {
+    background: var(--bg-secondary);
+  }
+
+  .result-footer-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .pill-action-btn {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 120px;
+  }
+
+  .pill-action-btn:hover:not(:disabled) {
+    background: var(--bg-secondary);
+    border-color: var(--text-secondary);
+  }
+
+  .upgrade-full-btn {
+    margin-top: 12px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 24px;
+    border: none;
+    background: #e0e0e0;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    text-align: center;
+  }
+
+  .upgrade-full-btn:hover {
+    background: #d0d0d0;
+    transform: translateY(-1px);
   }
 
   /* PROMPTS LIST */

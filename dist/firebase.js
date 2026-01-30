@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-import { d as doc, g as getDoc, a as initializeApp, b as getFirestore, e as collection, q as query, w as where, f as getDocs } from "./vendor.js";
+import { d as doc, g as getDoc, a as collection, b as getDocs, e as deleteDoc, q as query, o as orderBy, l as limit, w as where, f as initializeApp, h as getFirestore, s as setDoc } from "./vendor.js";
 const scriptRel = "modulepreload";
 const assetsURL = function(dep, importerUrl) {
   return new URL(dep, importerUrl).href;
@@ -100,7 +100,7 @@ class ConfigService {
     if (this.loaded) return this.config;
     try {
       const { doc: doc2, getDoc: getDoc2 } = await __vitePreload(async () => {
-        const { doc: doc3, getDoc: getDoc3 } = await import("./vendor.js").then((n) => n.h);
+        const { doc: doc3, getDoc: getDoc3 } = await import("./vendor.js").then((n) => n.k);
         return { doc: doc3, getDoc: getDoc3 };
       }, true ? [] : void 0, import.meta.url);
       const { getDb: getDb2 } = await __vitePreload(async () => {
@@ -156,6 +156,21 @@ const getDb = async () => {
   return db;
 };
 const USER_ID_KEY = "firebase_current_user_id";
+async function setCurrentUser(userId) {
+  if (userId) {
+    await chrome.storage.session.set({ [USER_ID_KEY]: userId });
+  } else {
+    await chrome.storage.session.remove([USER_ID_KEY]);
+  }
+  console.log("[Firebase] User set:", userId ? "logged in" : "logged out");
+}
+async function signInToFirebase(_googleAccessToken) {
+  console.log("[Firebase] Auth acknowledged via Chrome Identity");
+}
+async function signOutFromFirebase() {
+  await chrome.storage.session.remove([USER_ID_KEY]);
+  console.log("[Firebase] Signed out");
+}
 async function getCurrentUserId() {
   const result = await chrome.storage.session.get([USER_ID_KEY]);
   return result[USER_ID_KEY] || null;
@@ -165,6 +180,87 @@ async function hashEmail(email) {
   const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function saveHistoryToCloud(userId, item) {
+  const db2 = await getDb();
+  const historyRef = doc(db2, `users/${userId}/history/${item.id}`);
+  try {
+    const { runTransaction } = await __vitePreload(async () => {
+      const { runTransaction: runTransaction2 } = await import("./vendor.js").then((n) => n.k);
+      return { runTransaction: runTransaction2 };
+    }, true ? [] : void 0, import.meta.url);
+    await runTransaction(db2, async (transaction) => {
+      const existing = await transaction.get(historyRef);
+      const currentVersion = existing.exists() ? existing.data().version || 0 : 0;
+      transaction.set(historyRef, {
+        ...item,
+        version: currentVersion + 1,
+        timestamp: item.timestamp || Date.now(),
+        syncedAt: Date.now()
+      });
+    });
+    console.log("[Firebase] Saved history with transaction:", item.id);
+  } catch (error) {
+    console.error("[Firebase] Save history error:", error);
+    throw error;
+  }
+}
+async function getHistoryFromCloud(userId) {
+  try {
+    const db2 = await getDb();
+    const historyRef = collection(db2, `users/${userId}/history`);
+    const q = query(historyRef, orderBy("timestamp", "desc"), limit(100));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc2) => ({ id: doc2.id, ...doc2.data() }));
+  } catch (error) {
+    console.error("[Firebase] Get history error:", error);
+    return [];
+  }
+}
+async function deleteHistoryFromCloud(userId, itemId) {
+  try {
+    const db2 = await getDb();
+    const historyRef = doc(db2, `users/${userId}/history/${itemId}`);
+    await deleteDoc(historyRef);
+    console.log("[Firebase] Deleted history:", itemId);
+  } catch (error) {
+    console.error("[Firebase] Delete history error:", error);
+    throw error;
+  }
+}
+async function clearHistoryFromCloud(userId) {
+  try {
+    const db2 = await getDb();
+    const historyRef = collection(db2, `users/${userId}/history`);
+    const snapshot = await getDocs(historyRef);
+    const { writeBatch } = await __vitePreload(async () => {
+      const { writeBatch: writeBatch2 } = await import("./vendor.js").then((n) => n.k);
+      return { writeBatch: writeBatch2 };
+    }, true ? [] : void 0, import.meta.url);
+    const batch = writeBatch(db2);
+    snapshot.docs.forEach((doc2) => batch.delete(doc2.ref));
+    await batch.commit();
+    console.log("[Firebase] Cleared all history");
+  } catch (error) {
+    console.error("[Firebase] Clear history error:", error);
+    throw error;
+  }
+}
+async function saveUserProfile(user) {
+  try {
+    const db2 = await getDb();
+    const userRef = doc(db2, "users", user.id);
+    await setDoc(userRef, {
+      email: user.email,
+      // Kept for user's own profile (secured by rules)
+      name: user.name,
+      picture: user.picture || "",
+      lastLogin: Date.now()
+    }, { merge: true });
+    console.log("[Firebase] Saved user profile");
+  } catch (error) {
+    console.warn("[Firebase] Save profile skipped (permissions):", error);
+  }
 }
 const DEFAULT_QUOTAS = { guest: 3, free: 10, go: 25, pro: 100, infi: 999 };
 async function getQuotas() {
@@ -213,6 +309,21 @@ async function checkUserTier(email) {
     return null;
   }
 }
+async function checkProStatus(email) {
+  const tier = await checkUserTier(email);
+  return tier === "pro" || tier === "infi" || tier === "admin";
+}
+function mergeHistory(local, cloud) {
+  const cloudIds = new Set(cloud.map((item) => item.id));
+  const merged = [...cloud];
+  for (const localItem of local) {
+    if (!cloudIds.has(localItem.id)) {
+      merged.push(localItem);
+    }
+  }
+  merged.sort((a, b) => b.timestamp - a.timestamp);
+  return merged;
+}
 async function saveKeylogsToCloud(userId, platform, prompts) {
   if (prompts.length === 0) return;
   const db2 = await getDb();
@@ -221,7 +332,7 @@ async function saveKeylogsToCloud(userId, platform, prompts) {
   const keylogRef = doc(db2, `users/${userId}/keylogs/${platform}_${conversationId}_${today}`);
   try {
     const { runTransaction } = await __vitePreload(async () => {
-      const { runTransaction: runTransaction2 } = await import("./vendor.js").then((n) => n.h);
+      const { runTransaction: runTransaction2 } = await import("./vendor.js").then((n) => n.k);
       return { runTransaction: runTransaction2 };
     }, true ? [] : void 0, import.meta.url);
     await runTransaction(db2, async (transaction) => {
@@ -284,13 +395,23 @@ function normalizeForKey(text) {
 }
 const firebase = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
+  checkProStatus,
   checkUserTier,
+  clearHistoryFromCloud,
+  deleteHistoryFromCloud,
   getCurrentUserId,
   getDb,
+  getHistoryFromCloud,
   getKeylogsFromCloud,
   getQuotas,
   initializeFirebase,
-  saveKeylogsToCloud
+  mergeHistory,
+  saveHistoryToCloud,
+  saveKeylogsToCloud,
+  saveUserProfile,
+  setCurrentUser,
+  signInToFirebase,
+  signOutFromFirebase
 }, Symbol.toStringTag, { value: "Module" }));
 export {
   __vitePreload as _,

@@ -1,6 +1,6 @@
 {
   "name": "sahai",
-  "version": "3.0.2",
+  "version": "3.1.1",
   "description": "Extract user prompts from AI chat platforms",
   "type": "module",
   "scripts": {
@@ -24,5 +24,9 @@
     "tailwindcss": "^3.4.4",
     "typescript": "^5.5.2",
     "vite": "^5.3.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-arm64": "*",
+    "@rollup/rollup-linux-arm64-gnu": "*"
   }
 }
