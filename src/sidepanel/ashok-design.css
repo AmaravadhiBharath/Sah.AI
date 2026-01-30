@@ -103,7 +103,7 @@ body {
     padding: 4px;
     display: flex;
     flex-shrink: 0;
-    margin-bottom: 4px;
+    margin-bottom: 12px;
 }
 
 .mode-btn {
@@ -132,8 +132,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 16px;
-    margin-bottom: 12px;
+    margin-top: 0;
+    margin-bottom: 16px;
     opacity: 0;
     height: 0;
     overflow: hidden;
@@ -160,7 +160,7 @@ body {
 .prompts-area {
     flex: 1;
     overflow-y: auto;
-    margin: 0 -8px;
+    margin: 16px -8px 0 -8px;
     padding: 0 8px;
     opacity: 1;
     display: flex;
@@ -248,9 +248,10 @@ body {
 }
 
 .action-buttons-container {
-    margin-top: 20px;
+    margin-top: 16px;
+    margin-bottom: 0;
     display: flex;
-    gap: 16px;
+    gap: 12px;
     flex-shrink: 0;
 }
 

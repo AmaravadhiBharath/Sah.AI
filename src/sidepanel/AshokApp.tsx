@@ -232,28 +232,6 @@ export default function AshokApp() {
                 </button>
             </div>
 
-            {/* Stats Bar - Informative Display */}
-            {isExpanded && result && (
-                <div className="stats-bar-ashok">
-                    <div className="stat-item-ashok">
-                        <span className="stat-label-ashok">Prompts</span>
-                        <span className="stat-value-ashok">{result.prompts.length}</span>
-                    </div>
-                    <div className="stat-item-ashok">
-                        <span className="stat-label-ashok">Words</span>
-                        <span className="stat-value-ashok">
-                            {Math.round(result.prompts.reduce((sum, p) => sum + (p.content?.split(/\s+/).length || 0), 0))}
-                        </span>
-                    </div>
-                    <div className="stat-item-ashok">
-                        <span className="stat-label-ashok">Platform</span>
-                        <span className="stat-value-ashok" style={{ textTransform: 'capitalize', fontSize: '13px' }}>
-                            {result.platform || 'Unknown'}
-                        </span>
-                    </div>
-                </div>
-            )}
-
             {/* Prompts List */}
             {isExpanded && (
                 <div className={`prompts-area ${isExpanded ? 'visible' : ''}`}>
