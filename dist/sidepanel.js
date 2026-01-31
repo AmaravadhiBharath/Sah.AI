@@ -4,7 +4,7 @@ var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { en
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import "./index.js";
 import { j as jsxRuntimeExports, r as reactExports, c as client, R as React } from "./vendor.js";
-import { g as getQuotas, _ as __vitePreload, s as setCurrentUser, a as signOutFromFirebase, b as signInToFirebase, c as saveUserProfile, d as getHistoryFromCloud, m as mergeHistory, e as saveHistoryToCloud } from "./firebase.js";
+import { s as setCurrentUser, a as signInToFirebase, b as saveUserProfile, g as getQuotas, _ as __vitePreload, c as signOutFromFirebase, d as saveHistoryToCloud, e as getHistoryFromCloud, m as mergeHistory } from "./firebase.js";
 const STORAGE_KEY = "promptExtractor_user";
 let TIER_LIMITS = {
   guest: 3,
@@ -150,333 +150,96 @@ function LoadingState({ message }) {
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "loading-message", children: message })
   ] });
 }
-function ErrorState({ error, onRetry, onDismiss }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "error-state", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "error-icon", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "10" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "12", y1: "8", x2: "12", y2: "12" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "12", y1: "16", x2: "12.01", y2: "16" })
-    ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "error-message", children: error }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "error-actions", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "error-retry-btn", onClick: onRetry, children: "Try Again" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "error-dismiss-btn", onClick: onDismiss, children: "Dismiss" })
-    ] })
-  ] });
-}
-function Toast({ visible, message }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `toast ${visible ? "visible" : ""}`, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "20 6 9 17 4 12" }) }),
-    message
-  ] });
-}
-function ConfirmDialog({ visible, title, message, confirmLabel = "Delete", onConfirm, onCancel }) {
-  if (!visible) return null;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "confirm-overlay", onClick: onCancel, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "confirm-dialog", onClick: (e) => e.stopPropagation(), children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "confirm-title", children: title }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "confirm-message", children: message }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "confirm-actions", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "confirm-cancel", onClick: onCancel, children: "Cancel" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "confirm-danger", onClick: onConfirm, children: confirmLabel })
-    ] })
-  ] }) });
-}
-function Tooltip({ children }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
-}
-function SelectionToolbar({ selectedCount, totalCount, onSelectAll, onClearAll }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "selection-toolbar", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "button",
-      {
-        className: "toolbar-btn",
-        onClick: onSelectAll,
-        disabled: selectedCount === totalCount,
-        children: "All"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "button",
-      {
-        className: "toolbar-btn",
-        onClick: onClearAll,
-        disabled: selectedCount === 0,
-        children: "Clear"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "toolbar-count", children: [
-      selectedCount,
-      " of ",
-      totalCount,
-      " selected"
-    ] })
-  ] });
-}
-const IconHome = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "9 22 9 12 15 12 15 22" })
+const IconHome = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" }) });
+const IconHistory = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" }) });
+const IconSettings = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "3" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" })
 ] });
-const IconGrid = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "currentColor", children: [
-  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "3", y: "3", width: "8", height: "8", rx: "2" }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "13", y: "3", width: "8", height: "8", rx: "2" }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "3", y: "13", width: "8", height: "8", rx: "2" }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "13", y: "13", width: "8", height: "8", rx: "2" })
-] });
-const IconUser = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+const IconUser = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: [
   /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" }),
   /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "7", r: "4" })
 ] });
-const APP_VERSION = "3.2.0";
-const SUPPORT_URL = "https://sahai.app/support";
-const HistoryView = ({ history, onSelect, currentPlatform }) => {
-  const [filterPlatform, setFilterPlatform] = reactExports.useState("all");
-  const [filterTime, setFilterTime] = reactExports.useState("all");
-  const [searchQuery, setSearchQuery] = reactExports.useState("");
-  const filteredHistory = history.filter((item) => {
-    if (filterPlatform === "current" && currentPlatform) {
-      if (item.platform.toLowerCase() !== currentPlatform.toLowerCase()) return false;
-    }
-    if (filterTime === "today") {
-      const today = /* @__PURE__ */ new Date();
-      const itemDate = new Date(item.timestamp);
-      if (today.setHours(0, 0, 0, 0) !== itemDate.setHours(0, 0, 0, 0)) return false;
-    } else if (filterTime === "week") {
-      const weekAgo = /* @__PURE__ */ new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      if (item.timestamp < weekAgo.getTime()) return false;
-    }
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return item.preview.toLowerCase().includes(query) || item.platform.toLowerCase().includes(query);
-    }
-    return true;
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-inner history-view-root", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-filters", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "filter-row", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "input",
-        {
-          type: "text",
-          placeholder: "Search history...",
-          className: "search-input",
-          value: searchQuery,
-          onChange: (e) => setSearchQuery(e.target.value)
-        }
-      ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "filter-row", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `filter-chip ${filterPlatform === "all" ? "active" : ""}`,
-            onClick: () => setFilterPlatform("all"),
-            children: "All Apps"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `filter-chip ${filterPlatform === "current" ? "active" : ""}`,
-            onClick: () => setFilterPlatform("current"),
-            disabled: !currentPlatform,
-            children: "Current Tab"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "divider-v" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "select",
-          {
-            className: "filter-select",
-            value: filterTime,
-            onChange: (e) => setFilterTime(e.target.value),
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "all", children: "All Time" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "today", children: "Today" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "week", children: "Past Week" })
-            ]
-          }
-        )
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-scroll-area", children: filteredHistory.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "empty-state", children: "No matching history found." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-list", children: filteredHistory.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      "div",
-      {
-        className: "history-item clickable",
-        onClick: () => onSelect(item),
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-meta", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-platform", children: item.platform }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-date", children: new Date(item.timestamp).toLocaleDateString(void 0, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-preview", children: item.preview }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-stats", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-badge", children: item.mode === "raw" ? "Original" : item.mode.charAt(0).toUpperCase() + item.mode.slice(1) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "history-count", children: [
-              item.promptCount,
-              " prompt",
-              item.promptCount !== 1 ? "s" : ""
-            ] })
-          ] })
-        ]
-      },
-      item.id
-    )) }) })
-  ] });
-};
-const SettingsView = ({ theme, onThemeChange, onClearHistory }) => {
-  const themeOptions = ["system", "light", "dark"];
-  const nextTheme = () => {
-    const currentIndex = themeOptions.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themeOptions.length;
-    onThemeChange(themeOptions[nextIndex]);
-  };
-  const openSupport = () => {
-    chrome.tabs.create({ url: SUPPORT_URL });
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-inner", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item clickable", onClick: nextTheme, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Theme" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value", children: theme.charAt(0).toUpperCase() + theme.slice(1) })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "App Version" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value", children: APP_VERSION })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item clickable", onClick: openSupport, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Support" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value link", children: "Get Help" })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item clickable", onClick: onClearHistory, style: { color: "#ef4444" }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Clear History" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value", children: "➔" })
-    ] })
-  ] });
-};
-const ProfileView = ({ user, tier, onSignIn, onSignOut, isAuthLoading }) => {
-  const memberSince = user ? (/* @__PURE__ */ new Date()).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "-";
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-inner", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-hero", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hero-avatar", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "hero-info", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hero-name", children: (user == null ? void 0 : user.name) || "Guest User" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hero-tier", children: tier })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "usage-stats", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-label", children: "Plan" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-value", children: tier === "guest" ? "Free" : tier })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-label", children: "Member Since" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-value", children: memberSince })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "button",
-      {
-        className: "auth-action-btn",
-        onClick: user ? onSignOut : onSignIn,
-        disabled: isAuthLoading,
-        children: isAuthLoading ? "Please wait..." : user ? "Sign Out" : "Sign In with Google"
-      }
-    )
-  ] });
-};
-function AshokApp() {
-  const [view, setView] = reactExports.useState("home");
-  const [configTab, setConfigTab] = reactExports.useState("history");
+const IconBack = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19 12H5M12 19l-7-7 7-7" }) });
+const IconGrid = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "currentColor", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "3", y: "3", width: "7", height: "7", rx: "1.5" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "14", y: "3", width: "7", height: "7", rx: "1.5" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "3", y: "14", width: "7", height: "7", rx: "1.5" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "14", y: "14", width: "7", height: "7", rx: "1.5" })
+] });
+function SeviApp() {
+  const [activeTab, setActiveTab] = reactExports.useState("home");
+  const [user, setUser] = reactExports.useState(null);
+  const [tier, setTier] = reactExports.useState("FREE");
+  const [history, setHistory] = reactExports.useState([]);
   const [mode, setMode] = reactExports.useState("raw");
-  const [isExpanded, setIsExpanded] = reactExports.useState(false);
-  const [isEditing, setIsEditing] = reactExports.useState(false);
-  const [selectedPrompts, setSelectedPrompts] = reactExports.useState(/* @__PURE__ */ new Set());
+  const [extractionResult, setExtractionResult] = reactExports.useState(null);
   const [summary, setSummary] = reactExports.useState(null);
-  const [status, setStatus] = reactExports.useState({ supported: false, platform: null });
-  const [result, setResult] = reactExports.useState(null);
   const [loading, setLoading] = reactExports.useState(false);
   const [error, setError] = reactExports.useState(null);
-  const [user, setUser] = reactExports.useState(null);
-  const [tier, setTier] = reactExports.useState("guest");
-  const [history, setHistory] = reactExports.useState([]);
-  const [loadingMessage, setLoadingMessage] = reactExports.useState("");
-  const [showToast, setShowToast] = reactExports.useState({ visible: false, message: "" });
-  const [showDeleteConfirm, setShowDeleteConfirm] = reactExports.useState(false);
-  const [isStateLoaded, setIsStateLoaded] = reactExports.useState(false);
-  const [theme, setTheme] = reactExports.useState("system");
-  const [isAuthLoading, setIsAuthLoading] = reactExports.useState(false);
+  const [status, setStatus] = reactExports.useState({ supported: false, platform: null });
+  const [historySearchQuery, setHistorySearchQuery] = reactExports.useState("");
+  const [historyFilter, setHistoryFilter] = reactExports.useState("all");
   const portRef = reactExports.useRef(null);
-  const latestResultRef = reactExports.useRef(null);
   reactExports.useEffect(() => {
     const port = chrome.runtime.connect({ name: "sidepanel" });
     portRef.current = port;
-    port.onMessage.addListener((message) => {
-      if (message.action === "EXTRACTION_RESULT" || message.action === "EXTRACTION_FROM_PAGE_RESULT") {
-        const res = message.result;
-        const extractionMode = message.mode || mode;
-        setResult(res);
-        latestResultRef.current = res;
-        if (extractionMode === "summary") {
-          setLoading(true);
-          setLoadingMessage("Processing content...");
-          if (res.prompts.length === 0) {
-            setLoading(false);
-            setError("No prompts found to summarize.");
-            setIsExpanded(true);
-            setView("home");
-          } else {
-            port.postMessage({
-              action: "SUMMARIZE_PROMPTS",
-              prompts: res.prompts
-            });
-          }
-        } else {
-          setLoading(false);
-          setSummary(null);
-          setIsExpanded(true);
-          setView("home");
-          autoSaveToHistory(res, "raw");
-        }
-      } else if (message.action === "SUMMARY_RESULT") {
-        if (message.success) {
-          setSummary(message.result.summary);
-          setLoading(false);
-          setIsExpanded(true);
-          setView("home");
-          if (latestResultRef.current) {
-            autoSaveToHistory(latestResultRef.current, "summary", message.result.summary);
-          }
-          if (message.error) {
-            setShowToast({ visible: true, message: "AI unavailable - showing raw prompts" });
-            setTimeout(() => setShowToast({ visible: false, message: "" }), 3e3);
-          }
-        } else {
-          setLoading(false);
-          setError(message.error || "Summarization failed");
-          setIsExpanded(true);
-        }
-      } else if (message.action === "STATUS_RESULT") {
-        setStatus({ supported: message.supported, platform: message.platform });
-      } else if (message.action === "ERROR") {
+    port.onMessage.addListener((msg) => {
+      var _a;
+      if (msg.action === "STATUS_RESULT") {
+        setStatus({ supported: msg.supported, platform: msg.platform });
+      } else if (msg.action === "EXTRACTION_RESULT") {
+        setExtractionResult(msg.result);
         setLoading(false);
-        setError(message.error);
-        setIsExpanded(true);
+        setError(null);
+        setMode("raw");
+        setSummary(null);
+        const newItem = {
+          id: Date.now().toString(),
+          platform: msg.result.platform,
+          promptCount: msg.result.prompts.length,
+          mode: "raw",
+          timestamp: Date.now(),
+          prompts: msg.result.prompts,
+          preview: ((_a = msg.result.prompts[0]) == null ? void 0 : _a.content.slice(0, 100)) || ""
+        };
+        if (user) {
+          saveHistoryToCloud(user.id, newItem).catch((e) => console.error("Cloud save failed:", e));
+        }
+        setHistory((prev) => [newItem, ...prev].slice(0, 50));
+      } else if (msg.action === "SUMMARY_RESULT") {
+        if (msg.success) {
+          setSummary(msg.result.summary);
+          setMode("summary");
+        } else {
+          setError(msg.error);
+        }
+        setLoading(false);
+      } else if (msg.action === "ERROR") {
+        setError(msg.error);
+        setLoading(false);
       }
     });
     port.postMessage({ action: "GET_STATUS" });
-    chrome.storage.local.get(["promptExtractor_user", "promptExtractor_tier"], (cached) => {
-      if (cached.promptExtractor_user) {
-        setUser(cached.promptExtractor_user);
-      }
-      if (cached.promptExtractor_tier) {
-        setTier(cached.promptExtractor_tier);
+    initializeAuth().then((state) => {
+      var _a;
+      setUser(state.user);
+      setTier(((_a = state.tier) == null ? void 0 : _a.toUpperCase()) || "FREE");
+    });
+    const unsubscribe = subscribeToAuthChanges(async (newUser) => {
+      setUser(newUser);
+      if (newUser) {
+        const newTier = await getUserTier(newUser);
+        setTier(newTier.toUpperCase());
+      } else {
+        setTier("FREE");
       }
     });
-    initializeAuth().then(async (state) => {
-      setUser(state.user);
-      setTier(state.tier);
-      chrome.storage.local.set({ promptExtractor_tier: state.tier });
-      if (state.user) {
+    chrome.storage.local.get(["extractionHistory"], async (res) => {
+      if (res.extractionHistory) setHistory(res.extractionHistory);
+      if (user) {
         try {
-          const cloudHistory = await getHistoryFromCloud(state.user.id);
+          const cloudHistory = await getHistoryFromCloud(user.id);
           if (cloudHistory.length > 0) {
             setHistory((prev) => {
               const merged = mergeHistory(prev, cloudHistory);
@@ -489,439 +252,224 @@ function AshokApp() {
         }
       }
     });
-    const unsubscribeAuth = subscribeToAuthChanges(async (newUser) => {
-      setUser(newUser);
-      if (newUser) {
-        const newTier = await getUserTier(newUser);
-        setTier(newTier);
-        chrome.storage.local.set({ promptExtractor_tier: newTier });
-        try {
-          const cloudHistory = await getHistoryFromCloud(newUser.id);
-          if (cloudHistory.length > 0) {
-            setHistory((prev) => {
-              const merged = mergeHistory(prev, cloudHistory);
-              chrome.storage.local.set({ extractionHistory: merged });
-              return merged;
-            });
-          }
-        } catch (error2) {
-          console.error("Cloud sync on login failed:", error2);
-        }
-      } else {
-        setTier("guest");
-        chrome.storage.local.remove(["promptExtractor_tier"]);
-      }
-    });
-    chrome.storage.local.get(["theme", "extractionHistory", "last_view", "last_config_tab", "last_mode"], (result2) => {
-      if (result2.theme) setTheme(result2.theme);
-      if (result2.extractionHistory) setHistory(result2.extractionHistory);
-      if (result2.last_view === "config" || result2.last_view === "home") {
-        setView(result2.last_view);
-        if (result2.last_view === "config") {
-          setIsExpanded(true);
-        }
-      }
-      if (result2.last_config_tab) {
-        setConfigTab(result2.last_config_tab);
-      }
-      if (result2.last_mode) {
-        setMode(result2.last_mode);
-      }
-      setTimeout(() => {
-        setIsStateLoaded(true);
-      }, 50);
-    });
     return () => {
       port.disconnect();
-      unsubscribeAuth();
+      unsubscribe();
     };
   }, []);
-  reactExports.useEffect(() => {
-    if (isStateLoaded) {
-      chrome.storage.local.set({ last_view: view });
-    }
-  }, [view, isStateLoaded]);
-  reactExports.useEffect(() => {
-    if (isStateLoaded) {
-      chrome.storage.local.set({ last_config_tab: configTab });
-    }
-  }, [configTab, isStateLoaded]);
-  reactExports.useEffect(() => {
-    if (isStateLoaded) {
-      chrome.storage.local.set({ last_mode: mode });
-    }
-  }, [mode, isStateLoaded]);
-  reactExports.useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.setAttribute("data-theme", "dark");
-    } else if (theme === "light") {
-      root.setAttribute("data-theme", "light");
-    } else {
-      root.removeAttribute("data-theme");
-    }
-    chrome.storage.local.set({ theme });
-  }, [theme]);
-  const handleSignIn = async () => {
-    setIsAuthLoading(true);
-    try {
-      const user2 = await signInWithGoogle();
-      setUser(user2);
-      setShowToast({ visible: true, message: "Signed in successfully" });
-      setTimeout(() => setShowToast({ visible: false, message: "" }), 2e3);
-    } catch (err) {
-      setShowToast({ visible: true, message: "Sign in failed" });
-      setTimeout(() => setShowToast({ visible: false, message: "" }), 2e3);
-    } finally {
-      setIsAuthLoading(false);
-    }
-  };
   const handleSignOut = async () => {
-    setIsAuthLoading(true);
-    try {
-      await signOut();
-      setUser(null);
-      setTier("guest");
-      setShowToast({ visible: true, message: "Signed out" });
-      setTimeout(() => setShowToast({ visible: false, message: "" }), 2e3);
-    } catch (err) {
-      setShowToast({ visible: true, message: "Sign out failed" });
-      setTimeout(() => setShowToast({ visible: false, message: "" }), 2e3);
-    } finally {
-      setIsAuthLoading(false);
-    }
+    await signOut();
+    setUser(null);
+    setTier("FREE");
   };
-  const autoSaveToHistory = (res, saveMode, sum) => {
-    var _a, _b;
-    const preview = ((_a = res.prompts[0]) == null ? void 0 : _a.content.slice(0, 60)) + (((_b = res.prompts[0]) == null ? void 0 : _b.content.length) > 60 ? "..." : "") || "No prompts";
-    const historyItem = {
-      id: Date.now().toString(),
-      platform: res.platform,
-      promptCount: res.prompts.length,
-      mode: saveMode,
-      timestamp: Date.now(),
-      prompts: res.prompts,
-      preview,
-      summary: sum
-    };
-    if (user) {
-      saveHistoryToCloud(user.id, historyItem).catch((e) => console.error("Cloud save failed:", e));
-    }
-    setHistory((prev) => {
-      if (prev.length > 0 && prev[0].preview === historyItem.preview && prev[0].platform === historyItem.platform && prev[0].mode === historyItem.mode) {
-        return prev;
-      }
-      const updated = [historyItem, ...prev].slice(0, 50);
-      chrome.storage.local.set({ extractionHistory: updated });
-      return updated;
-    });
-  };
-  const loadHistoryItem = (item) => {
-    setResult({
-      prompts: item.prompts,
-      platform: item.platform,
-      url: "",
-      title: "",
-      extractedAt: item.timestamp
-    });
-    setMode(item.mode);
-    setSummary(item.summary || null);
-    setView("home");
-    setIsExpanded(true);
-  };
-  const handleGenerate = () => {
+  const handleExtraction = () => {
     setLoading(true);
-    setLoadingMessage(mode === "raw" ? "Extracting prompts..." : "Summarizing conversation...");
-    setResult(null);
     setError(null);
-    setIsExpanded(true);
-    setView("home");
     if (portRef.current) {
-      portRef.current.postMessage({ action: "EXTRACT_PROMPTS", mode });
+      portRef.current.postMessage({ action: "EXTRACT_PROMPTS", mode: "raw" });
     }
   };
-  const handleBack = () => {
-    if (view === "config") {
-      setView("home");
-    } else {
-      setIsExpanded(false);
-      setResult(null);
-      setSummary(null);
-      setLoading(false);
-      setError(null);
-      setIsEditing(false);
-      setSelectedPrompts(/* @__PURE__ */ new Set());
-    }
-  };
-  const openConfig = (tab) => {
-    setIsExpanded(true);
-    setView("config");
-    setConfigTab(tab);
-  };
-  const toggleEdit = () => {
-    setIsEditing(!isEditing);
-    setSelectedPrompts(/* @__PURE__ */ new Set());
-  };
-  const toggleSelection = (idx) => {
-    const newSet = new Set(selectedPrompts);
-    if (newSet.has(idx)) newSet.delete(idx);
-    else newSet.add(idx);
-    setSelectedPrompts(newSet);
-  };
-  const handleDeleteClick = () => {
-    if (!result || selectedPrompts.size === 0) return;
-    setShowDeleteConfirm(true);
-  };
-  const handleDeleteConfirm = () => {
-    if (!result) return;
-    const remainingPrompts = result.prompts.filter((_, i) => !selectedPrompts.has(i));
-    setResult({ ...result, prompts: remainingPrompts });
-    setSelectedPrompts(/* @__PURE__ */ new Set());
-    setShowDeleteConfirm(false);
-    if (remainingPrompts.length === 0) {
-      setIsEditing(false);
-    }
-  };
-  const handleClearHistory = () => {
-    if (confirm("Are you sure you want to clear all history? This cannot be undone.")) {
-      setHistory([]);
-      chrome.storage.local.set({ extractionHistory: [] });
-      setShowToast({ visible: true, message: "History cleared" });
-      setTimeout(() => setShowToast({ visible: false, message: "" }), 2e3);
+  const handleSummarize = () => {
+    if (!extractionResult) return;
+    setLoading(true);
+    setError(null);
+    if (portRef.current) {
+      portRef.current.postMessage({
+        action: "SUMMARIZE_PROMPTS",
+        prompts: extractionResult.prompts
+      });
     }
   };
   const handleCopy = async () => {
-    if (!result) return;
-    const promptsToCopy = selectedPrompts.size > 0 ? result.prompts.filter((_, i) => selectedPrompts.has(i)) : result.prompts;
-    const text = promptsToCopy.map((p) => p.content).join("\n\n");
-    await navigator.clipboard.writeText(text);
-    setShowToast({ visible: true, message: "Copied to clipboard" });
-    setTimeout(() => setShowToast({ visible: false, message: "" }), 2e3);
-    if (isEditing) {
-      setIsEditing(false);
-      setSelectedPrompts(/* @__PURE__ */ new Set());
+    const text = summary || (extractionResult == null ? void 0 : extractionResult.prompts.map((p) => p.content).join("\n\n"));
+    if (text) {
+      await navigator.clipboard.writeText(text);
     }
   };
-  const renderToggleRow = () => {
-    if (view === "home") {
-      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toggle-row", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `mode-btn ${mode === "raw" ? "active" : ""} ${isEditing ? "disabled" : ""}`,
-            onClick: () => {
-              if (!loading && !isEditing) setMode("raw");
-            },
-            disabled: isEditing,
-            children: "Extract"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `mode-btn ${mode === "summary" ? "active" : ""} ${isEditing ? "disabled" : ""}`,
-            onClick: () => {
-              if (!loading && !isEditing) setMode("summary");
-            },
-            disabled: isEditing,
-            children: "Summarize"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `toggle-nav-btn ${isEditing ? "disabled" : ""}`,
-            onClick: () => {
-              if (!isEditing) {
-                setView("config");
-                setIsExpanded(true);
-              }
-            },
-            title: "Menu",
-            disabled: isEditing,
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconGrid, {})
-          }
-        )
-      ] });
-    } else {
-      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toggle-row", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: "toggle-nav-btn",
-            onClick: () => setView("home"),
-            title: "Go to Home",
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHome, {})
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `mode-btn ${configTab === "history" ? "active" : ""}`,
-            onClick: () => setConfigTab("history"),
-            children: "History"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `mode-btn ${configTab === "settings" ? "active" : ""}`,
-            onClick: () => setConfigTab("settings"),
-            children: "Settings"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `mode-btn ${configTab === "profile" ? "active" : ""}`,
-            onClick: () => setConfigTab("profile"),
-            children: "Profile"
-          }
-        )
-      ] });
-    }
+  const renderTopBar = () => {
+    var _a;
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "top-bar", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: () => setActiveTab("home"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "user-mini-profile", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mini-avatar", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "avatar" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mini-info", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mini-name", children: ((_a = user == null ? void 0 : user.name) == null ? void 0 : _a.split(" ")[0]) || "Guest" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mini-tier", children: tier })
+        ] })
+      ] })
+    ] });
   };
-  const renderContentArea = () => {
-    let content;
-    if (view === "config") {
-      if (configTab === "history") content = /* @__PURE__ */ jsxRuntimeExports.jsx(HistoryView, { history, onSelect: loadHistoryItem, currentPlatform: status.platform });
-      else if (configTab === "settings") content = /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsView, { theme, onThemeChange: setTheme, onClearHistory: handleClearHistory });
-      else content = /* @__PURE__ */ jsxRuntimeExports.jsx(ProfileView, { user, tier, onSignIn: handleSignIn, onSignOut: handleSignOut, isAuthLoading });
-    } else {
-      content = /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoadingState, { message: loadingMessage }) : error ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-        ErrorState,
-        {
-          error,
-          onRetry: handleGenerate,
-          onDismiss: () => setError(null)
-        }
-      ) : result ? /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: mode === "summary" && summary ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "summary-content-container", children: summary.split("\n").map((line, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "summary-paragraph", children: line }, i)) }) : result.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        "div",
-        {
-          className: `prompt-box 
-                                            ${isEditing ? "selectable" : ""} 
-                                            ${isEditing && selectedPrompts.has(i) ? "selected" : ""} 
-                                            ${isEditing && !selectedPrompts.has(i) && selectedPrompts.size > 0 ? "dimmed" : ""}
-                                        `,
-          onClick: () => isEditing && toggleSelection(i),
-          children: [
-            isEditing && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "selection-indicator", children: selectedPrompts.has(i) ? "✓" : "" }),
-            p.content
-          ]
-        },
-        i
-      )) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "empty-prompt-text", children: status.platform ? `Extract prompts from this ${status.platform} conversation` : "Navigate to a supported AI chat to extract prompts" }) });
-    }
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `view-content-anim 
-                ${view === "home" ? "prompts-area" : ""} 
-                ${view === "home" && isExpanded ? "visible" : ""}
-            `, children: content });
-  };
-  const islandExpanded = isExpanded || view === "config";
-  const showUpgradePill = view === "config" && (configTab === "profile" || configTab === "settings");
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app-container", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: `main-content ${islandExpanded ? "expanded-view" : ""}`, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `action-island ${islandExpanded ? "expanded" : ""} ${showUpgradePill ? "with-upgrade" : ""}`, children: [
-        renderToggleRow(),
-        view === "home" && isExpanded && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "controls-row visible", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "control-btn", onClick: isEditing ? toggleEdit : handleBack, children: isEditing ? "Done" : "Close" }),
-          result ? isEditing ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-            SelectionToolbar,
-            {
-              selectedCount: selectedPrompts.size,
-              totalCount: result.prompts.length,
-              onSelectAll: () => setSelectedPrompts(new Set(result.prompts.map((_, i) => i))),
-              onClearAll: () => setSelectedPrompts(/* @__PURE__ */ new Set())
-            }
-          ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "button",
-            {
-              className: "control-btn",
-              onClick: toggleEdit,
-              children: "Select prompts"
-            }
-          ) : null
-        ] }),
-        islandExpanded && renderContentArea(),
-        view === "home" && islandExpanded && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "action-buttons-container", children: isEditing ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "button",
-            {
-              className: "dual-btn",
-              onClick: handleDeleteClick,
-              style: { color: "#ef4444", borderColor: "#ef4444" },
-              disabled: selectedPrompts.size === 0,
-              children: [
-                "Delete (",
-                selectedPrompts.size,
-                ")"
-              ]
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "dual-btn", onClick: handleCopy, disabled: selectedPrompts.size === 0, children: [
-            "Copy (",
-            selectedPrompts.size,
-            ")"
+  const renderBottomNav = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("nav", { className: "bottom-nav", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: `nav-item ${activeTab === "home" ? "active" : ""}`, onClick: () => setActiveTab("home"), children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "nav-icon", children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHome, {}) }),
+      activeTab === "home" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Home" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: `nav-item ${activeTab === "history" ? "active" : ""}`, onClick: () => setActiveTab("history"), children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "nav-icon", children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHistory, {}) }),
+      activeTab === "history" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "History" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: `nav-item ${activeTab === "settings" ? "active" : ""}`, onClick: () => setActiveTab("settings"), children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "nav-icon", children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconSettings, {}) }),
+      activeTab === "settings" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Settings" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: `nav-item ${activeTab === "profile" ? "active" : ""}`, onClick: () => setActiveTab("profile"), children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "nav-icon", children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
+      activeTab === "profile" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Profile" })
+    ] })
+  ] });
+  const renderContent = () => {
+    switch (activeTab) {
+      case "profile":
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-animate", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sevi-card profile-main-card", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "profile-avatar-lg", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-details", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "profile-name", children: (user == null ? void 0 : user.name) || "Guest User" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "profile-tier-badge", children: tier })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid-stats", style: { marginTop: 16 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-box", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Plan" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: tier })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-box", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Since" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: "Jan 2026" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sign-out-btn", onClick: user ? handleSignOut : signInWithGoogle, children: user ? "Sign Out" : "Sign In" })
+        ] });
+      case "settings":
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-animate", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sevi-card", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { style: { fontSize: 16, marginBottom: 16 }, children: "Preferences" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item", style: { display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--outline)" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Theme" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 600 }, children: "System" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "settings-item", style: { display: "flex", justifyContent: "space-between", padding: "12px 0" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Auto-Sync" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 600, color: "var(--accent)" }, children: "Enabled" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sevi-card", style: { marginTop: 12 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { style: { fontSize: 16, marginBottom: 16 }, children: "Support" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, opacity: 0.7, marginBottom: 12 }, children: "Need help or have a suggestion?" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "overlay-btn", style: { width: "100%", background: "var(--surface-variant)" }, children: "Contact Support" })
           ] })
-        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "button",
-            {
-              className: "dual-btn primary",
-              onClick: handleGenerate,
-              disabled: !status.hasPrompts,
-              children: mode === "raw" ? "Extract Prompts" : "Summarize"
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn", onClick: handleCopy, disabled: !status.hasPrompts, children: "Copy" })
-        ] }) }),
-        view === "home" && !islandExpanded && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: "generate-btn-lg",
-            onClick: handleGenerate,
-            disabled: !status.supported || !status.hasPrompts,
-            children: mode === "raw" ? "Extract" : "Summarize"
-          }
-        ) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { content: "Unlock unlimited extractions and AI summaries", fullWidth: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `upgrade-pill ${showUpgradePill ? "visible" : ""}`, children: "Upgrade" }) })
+        ] });
+      case "history":
+        const filteredHistory = history.filter((item) => {
+          const matchesSearch = item.preview.toLowerCase().includes(historySearchQuery.toLowerCase()) || item.platform.toLowerCase().includes(historySearchQuery.toLowerCase());
+          const matchesTab = historyFilter === "all" || status.platform && item.platform.toLowerCase() === status.platform.toLowerCase();
+          return matchesSearch && matchesTab;
+        });
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-animate", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "search-bar", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", style: { opacity: 0.5 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "11", cy: "11", r: "8" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 21l-4.35-4.35" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                type: "text",
+                placeholder: "Search history...",
+                value: historySearchQuery,
+                onChange: (e) => setHistorySearchQuery(e.target.value)
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "filter-chips", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                className: `chip ${historyFilter === "all" ? "active" : ""}`,
+                onClick: () => setHistoryFilter("all"),
+                children: "All Apps"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                className: `chip ${historyFilter === "tab" ? "active" : ""}`,
+                onClick: () => setHistoryFilter("tab"),
+                disabled: !status.platform,
+                children: "Current Tab"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chip", children: "All Time" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-list", style: { marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }, children: filteredHistory.length > 0 ? filteredHistory.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sevi-card", style: { padding: 16 }, onClick: () => {
+            setExtractionResult({ prompts: item.prompts, platform: item.platform, url: "", title: "", extractedAt: item.timestamp });
+            setSummary(item.summary || null);
+            setMode(item.mode);
+            setActiveTab("home");
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 11, fontWeight: 700, opacity: 0.7 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { textTransform: "uppercase" }, children: item.platform }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, lineHeight: 1.5, marginBottom: 12 }, children: item.preview }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 8 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "profile-tier-badge", style: { fontSize: 9, padding: "2px 8px" }, children: item.mode }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 11, opacity: 0.6 }, children: [
+                item.promptCount,
+                " prompts"
+              ] })
+            ] })
+          ] }, item.id)) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { textAlign: "center", padding: 40, opacity: 0.5 }, children: "No history found." }) })
+        ] });
+      case "home":
+      default:
+        if (loading) return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "view-animate", style: { display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoadingState, { message: "Processing content..." }) });
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-animate", children: [
+          error && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sevi-card", style: { borderColor: "#FCA5A5", background: "#FEF2F2", color: "#B91C1C", fontSize: 13, marginBottom: 16 }, children: error }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sevi-card full-height", style: { background: "white" }, children: !extractionResult ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.5 }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontWeight: 600 }, children: "Ready to extract" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 12 }, children: status.platform || "No platform detected" })
+          ] }) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--outline)" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, textTransform: "uppercase", opacity: 0.6 }, children: extractionResult.platform }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 12, opacity: 0.6 }, children: [
+                extractionResult.prompts.length,
+                " prompts"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompts-list-container", children: mode === "summary" && summary ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 12, background: "var(--accent-soft)", borderRadius: 12, fontSize: 14, lineHeight: 1.6 }, children: summary }) : extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-box", children: p.content }, i)) })
+          ] }) }),
+          extractionResult && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 12, marginTop: 16 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "overlay-btn", style: { background: "white", border: "1px solid var(--outline)" }, onClick: handleExtraction, children: "Re-extract" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "overlay-btn", style: { background: "white", border: "1px solid var(--outline)" }, onClick: handleCopy, children: "Copy All" })
+          ] })
+        ] });
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sevi-app", children: [
+    renderTopBar(),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "content-area", children: renderContent() }),
+    activeTab === "home" && !loading && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "action-overlay", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          className: `overlay-btn ${mode === "raw" ? "active" : ""}`,
+          onClick: handleExtraction,
+          children: "Extract"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          className: `overlay-btn ${mode === "summary" ? "active" : ""}`,
+          onClick: handleSummarize,
+          disabled: !extractionResult,
+          children: "Summarize"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "overlay-icon-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconGrid, {}) })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("footer", { className: "app-footer", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "footer-profile-btn", onClick: () => openConfig("profile"), children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "footer-avatar-sm", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "footer-user-stack", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "footer-name-min", children: (user == null ? void 0 : user.name) || "Guest" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "footer-badge-min", children: tier })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "footer-status-area", children: result && isExpanded ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "footer-prompt-count", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "footer-count-text", children: [
-          result.prompts.length,
-          " prompt",
-          result.prompts.length !== 1 ? "s" : ""
-        ] }),
-        status.platform && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "footer-count-platform", children: [
-          "from ",
-          status.platform
-        ] })
-      ] }) : status.platform ? /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { content: `Connected to ${status.platform}`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "status-pill-active", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "status-dot" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "platform-name", children: status.platform })
-      ] }) }) : null })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Toast, { visible: showToast.visible, message: showToast.message }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      ConfirmDialog,
-      {
-        visible: showDeleteConfirm,
-        title: "Delete prompts?",
-        message: `Delete ${selectedPrompts.size} prompt${selectedPrompts.size !== 1 ? "s" : ""}? This cannot be undone.`,
-        confirmLabel: "Delete",
-        onConfirm: handleDeleteConfirm,
-        onCancel: () => setShowDeleteConfirm(false)
-      }
-    )
+    renderBottomNav()
   ] });
 }
 class TelemetryService {
@@ -1073,5 +621,5 @@ class ErrorBoundary extends reactExports.Component {
   }
 }
 client.createRoot(document.getElementById("root")).render(
-  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(AshokApp, {}) }) })
+  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(SeviApp, {}) }) })
 );

@@ -147,7 +147,8 @@ body {
 .mini-avatar img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    -o-object-fit: cover;
+       object-fit: cover;
 }
 
 .mini-info {
@@ -411,7 +412,8 @@ body {
 .profile-avatar-lg img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    -o-object-fit: cover;
+       object-fit: cover;
 }
 
 .profile-name {

@@ -375,7 +375,7 @@ export default function SeviApp() {
                             </div>
                         )}
 
-                        <div className="sevi-card" style={{ minHeight: resultAreaHeight, display: 'flex', flexDirection: 'column', background: 'white' }}>
+                        <div className="sevi-card full-height" style={{ background: 'white' }}>
                             {!extractionResult ? (
                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
                                     <div style={{ textAlign: 'center' }}>
@@ -384,23 +384,25 @@ export default function SeviApp() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="prompts-list" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                <>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--outline)' }}>
                                         <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', opacity: 0.6 }}>{extractionResult.platform}</span>
                                         <span style={{ fontSize: 12, opacity: 0.6 }}>{extractionResult.prompts.length} prompts</span>
                                     </div>
-                                    {mode === 'summary' && summary ? (
-                                        <div style={{ padding: 12, background: 'var(--accent-soft)', borderRadius: 12, fontSize: 14, lineHeight: 1.6 }}>
-                                            {summary}
-                                        </div>
-                                    ) : (
-                                        extractionResult.prompts.map((p, i) => (
-                                            <div key={i} className="prompt-box" style={{ background: 'var(--surface-variant)', border: 'none', borderRadius: 12 }}>
-                                                {p.content}
+                                    <div className="prompts-list-container">
+                                        {mode === 'summary' && summary ? (
+                                            <div style={{ padding: 12, background: 'var(--accent-soft)', borderRadius: 12, fontSize: 14, lineHeight: 1.6 }}>
+                                                {summary}
                                             </div>
-                                        ))
-                                    )}
-                                </div>
+                                        ) : (
+                                            extractionResult.prompts.map((p, i) => (
+                                                <div key={i} className="prompt-box">
+                                                    {p.content}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </>
                             )}
                         </div>
 
@@ -414,8 +416,6 @@ export default function SeviApp() {
                 );
         }
     };
-
-    const resultAreaHeight = extractionResult ? 'auto' : 320;
 
     return (
         <div className="sevi-app">
