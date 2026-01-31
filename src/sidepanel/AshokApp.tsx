@@ -324,20 +324,24 @@ export default function SeviApp() {
                         </div>
                         <div className="history-list" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {filteredHistory.length > 0 ? filteredHistory.map(item => (
-                                <div key={item.id} className="sevi-card" style={{ padding: 16 }} onClick={() => {
+                                <div key={item.id} className="history-card-polished" onClick={() => {
                                     setExtractionResult({ prompts: item.prompts, platform: item.platform, url: '', title: '', extractedAt: item.timestamp });
                                     setSummary(item.summary || null);
                                     setMode(item.mode);
                                     setActiveTab('home');
                                 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 11, fontWeight: 700, opacity: 0.7 }}>
-                                        <span style={{ textTransform: 'uppercase' }}>{item.platform}</span>
-                                        <span>{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    <div className="h-card-header">
+                                        <div className="h-card-title">{item.platform}</div>
+                                        <div className="h-card-date">
+                                            {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toUpperCase()}, {new Date(item.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                        </div>
                                     </div>
-                                    <p style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 12 }}>{item.preview}</p>
-                                    <div style={{ display: 'flex', gap: 8 }}>
-                                        <span className="profile-tier-badge" style={{ fontSize: 9, padding: '2px 8px' }}>{item.mode}</span>
-                                        <span style={{ fontSize: 11, opacity: 0.6 }}>{item.promptCount} prompts</span>
+                                    <div className="h-card-preview">{item.preview}</div>
+                                    <div className="h-card-footer">
+                                        <div className={item.mode === 'raw' ? 'badge-raw' : 'badge-summary'}>
+                                            {item.mode === 'raw' ? 'RAW' : 'SUMMARY'}
+                                        </div>
+                                        <div className="h-card-count">{item.promptCount} prompt{item.promptCount !== 1 ? 's' : ''}</div>
                                     </div>
                                 </div>
                             )) : (

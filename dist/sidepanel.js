@@ -145,9 +145,19 @@ async function initializeAuth() {
   };
 }
 function LoadingState({ message }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "loading-state", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "loader-minimal" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "loading-message", children: message })
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "loading-container-polished", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "loader-ring", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "loader-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "loader-center-icon" }) }) }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "loading-text-stack", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: message || "Loading." }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "loading-stats-row", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "loading-stat-item", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "loading-stat-value", children: "2.3" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "loading-stat-label", children: "seconds" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "loading-stat-item", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "loading-stat-value", children: "--" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "loading-stat-label", children: "prompts" })
+      ] })
+    ] })
   ] });
 }
 const IconHome = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" }) });
@@ -385,22 +395,27 @@ function SeviApp() {
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chip", children: "All Time" })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-list", style: { marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }, children: filteredHistory.length > 0 ? filteredHistory.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sevi-card", style: { padding: 16 }, onClick: () => {
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-list", style: { marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }, children: filteredHistory.length > 0 ? filteredHistory.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-card-polished", onClick: () => {
             setExtractionResult({ prompts: item.prompts, platform: item.platform, url: "", title: "", extractedAt: item.timestamp });
             setSummary(item.summary || null);
             setMode(item.mode);
             setActiveTab("home");
           }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 11, fontWeight: 700, opacity: 0.7 }, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { textTransform: "uppercase" }, children: item.platform }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-card-header", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-card-title", children: item.platform }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-card-date", children: [
+                new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).toUpperCase(),
+                ", ",
+                new Date(item.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })
+              ] })
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, lineHeight: 1.5, marginBottom: 12 }, children: item.preview }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 8 }, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "profile-tier-badge", style: { fontSize: 9, padding: "2px 8px" }, children: item.mode }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 11, opacity: 0.6 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-card-preview", children: item.preview }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-card-footer", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: item.mode === "raw" ? "badge-raw" : "badge-summary", children: item.mode === "raw" ? "RAW" : "SUMMARY" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-card-count", children: [
                 item.promptCount,
-                " prompts"
+                " prompt",
+                item.promptCount !== 1 ? "s" : ""
               ] })
             ] })
           ] }, item.id)) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { textAlign: "center", padding: 40, opacity: 0.5 }, children: "No history found." }) })

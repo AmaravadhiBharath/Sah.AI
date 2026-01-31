@@ -8,15 +8,43 @@ import type { Mode } from '../types';
 // LOADING STATE
 // ═══════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════
+// LOADING STATE (POLISHED)
+// ═══════════════════════════════════════════════════
+
 interface LoadingStateProps {
     message: string;
 }
 
 export function LoadingState({ message }: LoadingStateProps) {
+
+
     return (
-        <div className="loading-state">
-            <div className="loader-minimal"></div>
-            <div className="loading-message">{message}</div>
+        <div className="loading-container-polished">
+            <div className="loader-ring">
+                <div className="loader-center">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                        <div className="loader-center-icon"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="loading-text-stack">
+                <div>{message || 'Loading.'}</div>
+                {/* <div>Extracting.</div>
+                <div>Drafting...</div> */}
+            </div>
+
+            <div className="loading-stats-row">
+                <div className="loading-stat-item">
+                    <span className="loading-stat-value">2.3</span>
+                    <span className="loading-stat-label">seconds</span>
+                </div>
+                <div className="loading-stat-item">
+                    <span className="loading-stat-value">--</span>
+                    <span className="loading-stat-label">prompts</span>
+                </div>
+            </div>
         </div>
     );
 }

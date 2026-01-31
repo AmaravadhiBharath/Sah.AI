@@ -553,3 +553,189 @@ body {
 .view-animate {
     animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ═══════════════════════════════════════════════════
+   POLISHED COMPONENTS (MOCKUP MATCHING)
+   ═══════════════════════════════════════════════════ */
+
+/* --- Loading State (Circular Ring) --- */
+
+.loading-container-polished {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    gap: 32px;
+}
+
+.loader-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 6px solid var(--outline);
+    border-top-color: var(--on-surface);
+    animation: spin 1s linear infinite;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader-center {
+    width: 48px;
+    height: 48px;
+    background: #FF5252;
+    /* Match the red square in reference */
+    opacity: 0.1;
+    border-radius: 12px;
+    /* Optional: inner icon or just the color from reference */
+}
+
+.loader-center-icon {
+    width: 16px;
+    height: 16px;
+    background: #FF5252;
+    border-radius: 2px;
+}
+
+.loading-text-stack {
+    text-align: center;
+    font-family: var(--font-family);
+    color: var(--on-surface);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.loading-stats-row {
+    display: flex;
+    gap: 48px;
+    margin-top: 16px;
+}
+
+.loading-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.loading-stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.loading-stat-label {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Prompt Cards (Clean List) --- */
+
+.prompt-box {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--on-surface);
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s;
+}
+
+.prompt-box:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* --- History Cards (Detailed) --- */
+
+.history-card-polished {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.history-card-polished:hover {
+    border-color: var(--on-surface-variant);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.h-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.h-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--on-surface);
+    margin-bottom: 4px;
+}
+
+.h-card-date {
+    font-size: 11px;
+    color: var(--on-surface-variant);
+    font-weight: 500;
+}
+
+.h-card-preview {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--on-surface);
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.h-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-raw {
+    background: #F3F4F6;
+    color: #374151;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-summary {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.h-card-count {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+}
