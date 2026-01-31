@@ -85,7 +85,8 @@ body {
 }
 .main-content.expanded-view {
     justify-content: flex-start;
-    /* Anchors to top with 16px gap when expanded */
+    padding-top: var(--content-gap);
+    /* Explicit top gap */
 }
 /* ═══════════════════════════════════════════════════
    THE ISLAND
@@ -109,8 +110,8 @@ body {
 }
 .action-island.expanded {
     flex: 1;
-    max-height: calc(100vh - var(--footer-height) - 20px);
-    /* Fill available height */
+    max-height: calc(100vh - var(--footer-height) - (var(--content-gap) * 2));
+    /* Total height - Footer - Top Gap - Bottom Gap */
     padding-bottom: 20px;
     transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -202,14 +203,16 @@ body {
 .prompts-area {
     flex: 1;
     overflow-y: auto;
-    margin: 0 -8px;
-    padding: 0 8px;
+    margin: 12px -8px 0 -8px;
+    padding: 4px 8px;
     opacity: 1;
     display: flex;
     flex-direction: column;
     gap: 12px;
     scrollbar-width: thin;
     scrollbar-color: #E5E7EB transparent;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 .action-island:not(.expanded) .prompts-area {
     display: none;
@@ -268,7 +271,7 @@ body {
     margin: 40px auto;
 }
 .action-buttons-container {
-    margin-top: 20px;
+    margin-top: 12px;
     display: flex;
     gap: 12px;
     flex-shrink: 0;
