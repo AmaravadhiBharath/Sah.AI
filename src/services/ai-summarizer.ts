@@ -1,5 +1,6 @@
 import type { ScrapedPrompt, SummaryResult } from '../types';
 import { resilientFetch } from './resilient-api';
+import { localSummarizer } from './local-summarizer';
 
 // Cloudflare Worker URL - API keys stored server-side
 const BACKEND_URL = 'https://tai-backend.amaravadhibharath.workers.dev';
@@ -393,24 +394,40 @@ export class AISummarizer {
 
       console.log(`[AISummarizer] Sending ${content.length} chars (from ${prompts.length} prompts, filtered to ${filtered.length})`);
 
+      console.log(`[AISummarizer] Sending request to ${BACKEND_URL}`);
+      const payload = {
+        content,
+        additionalInfo: CONSOLIDATION_RULES,
+        provider: 'auto',
+        options: {
+          format: options.format || 'paragraph',
+          tone: options.tone || 'normal',
+          includeAI: options.includeAI || false,
+          mode: 'consolidate',
+        },
+      };
+
+      // Log payload summary (avoid huge logs)
+      console.log('[AISummarizer] Request payload options:', JSON.stringify(payload.options));
+
       const response = await resilientFetch(BACKEND_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content,
-          additionalInfo: CONSOLIDATION_RULES,
-          provider: 'auto',
-          options: {
-            format: options.format || 'paragraph',
-            tone: options.tone || 'normal',
-            includeAI: options.includeAI || false,
-            mode: 'consolidate',
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        console.error(`[AISummarizer] Response Error: ${response.status} ${response.statusText}`);
+        console.error(`[AISummarizer] Error Body: ${errorText}`);
+
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: `HTTP ${response.status}: ${errorText}` };
+        }
+
         throw new Error(errorData.error || `Worker Error: ${response.status}`);
       }
 
@@ -428,9 +445,19 @@ export class AISummarizer {
           after: filtered.length,
         },
       };
-    } catch (error) {
-      console.error('[AISummarizer] Error:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('[AISummarizer] Cloud AI failed, falling back to local summarization:', error);
+
+      // Fallback to local client-side summarization
+      try {
+        const localResult = await localSummarizer.summarize(prompts);
+        console.log('[AISummarizer] Local summarization successful');
+        return localResult;
+      } catch (localError) {
+        console.error('[AISummarizer] Local summarization also failed:', localError);
+        // Final fallback: just join prompts
+        throw error;
+      }
     }
   }
 }

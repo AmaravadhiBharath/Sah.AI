@@ -415,10 +415,17 @@ const firebase = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProp
 }, Symbol.toStringTag, { value: "Module" }));
 export {
   __vitePreload as _,
-  getCurrentUserId as a,
-  getKeylogsFromCloud as b,
-  getDb as c,
-  firebase as f,
+  signOutFromFirebase as a,
+  signInToFirebase as b,
+  saveUserProfile as c,
+  getHistoryFromCloud as d,
+  saveHistoryToCloud as e,
+  getCurrentUserId as f,
   getQuotas as g,
-  saveKeylogsToCloud as s
+  getKeylogsFromCloud as h,
+  getDb as i,
+  saveKeylogsToCloud as j,
+  firebase as k,
+  mergeHistory as m,
+  setCurrentUser as s
 };

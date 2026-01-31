@@ -3,7 +3,7 @@ var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 var _a;
-import { _ as __vitePreload, a as getCurrentUserId, b as getKeylogsFromCloud, c as getDb, s as saveKeylogsToCloud } from "./firebase.js";
+import { _ as __vitePreload, f as getCurrentUserId, h as getKeylogsFromCloud, i as getDb, j as saveKeylogsToCloud } from "./firebase.js";
 import { d as doc, i as increment } from "./vendor.js";
 class CircuitBreaker {
   constructor(config) {
@@ -427,23 +427,34 @@ class AISummarizer {
       const filtered = filterPrompts(prompts);
       const content = filtered.map((p, i) => `${i + 1}. ${p.content}`).join("\n\n");
       console.log(`[AISummarizer] Sending ${content.length} chars (from ${prompts.length} prompts, filtered to ${filtered.length})`);
+      console.log(`[AISummarizer] Sending request to ${BACKEND_URL}`);
+      const payload = {
+        content,
+        additionalInfo: CONSOLIDATION_RULES,
+        provider: "auto",
+        options: {
+          format: options.format || "paragraph",
+          tone: options.tone || "normal",
+          includeAI: options.includeAI || false,
+          mode: "consolidate"
+        }
+      };
+      console.log("[AISummarizer] Request payload options:", JSON.stringify(payload.options));
       const response = await resilientFetch(BACKEND_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content,
-          additionalInfo: CONSOLIDATION_RULES,
-          provider: "auto",
-          options: {
-            format: options.format || "paragraph",
-            tone: options.tone || "normal",
-            includeAI: options.includeAI || false,
-            mode: "consolidate"
-          }
-        })
+        body: JSON.stringify(payload)
       });
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        console.error(`[AISummarizer] Response Error: ${response.status} ${response.statusText}`);
+        console.error(`[AISummarizer] Error Body: ${errorText}`);
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: `HTTP ${response.status}: ${errorText}` };
+        }
         throw new Error(errorData.error || `Worker Error: ${response.status}`);
       }
       const data = await response.json();
@@ -461,6 +472,7 @@ class AISummarizer {
       };
     } catch (error) {
       console.error("[AISummarizer] Error:", error);
+      if (error.stack) console.error("[AISummarizer] Stack:", error.stack);
       throw error;
     }
   }
@@ -519,7 +531,7 @@ async function fetchRemoteConfigUpdates(currentVersion) {
       return { doc: doc3, getDoc: getDoc2 };
     }, true ? [] : void 0, import.meta.url);
     const { getDb: getDb2 } = await __vitePreload(async () => {
-      const { getDb: getDb3 } = await import("./firebase.js").then((n) => n.f);
+      const { getDb: getDb3 } = await import("./firebase.js").then((n) => n.k);
       return { getDb: getDb3 };
     }, true ? __vite__mapDeps([0,1]) : void 0, import.meta.url);
     const db = await getDb2();

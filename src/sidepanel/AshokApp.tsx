@@ -1,9 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
-import type { ExtractionResult, Mode } from '../types';
+import type { ExtractionResult, Mode, HistoryItem } from '../types';
 import {
     initializeAuth,
+    signInWithGoogle,
+    signOut,
+    subscribeToAuthChanges,
     type ChromeUser,
+    getUserTier,
 } from '../services/auth';
+import {
+    saveHistoryToCloud,
+    getHistoryFromCloud,
+    mergeHistory,
+    type CloudHistoryItem,
+} from '../services/firebase';
+import {
+    LoadingState,
+    ErrorState,
+    Toast,
+    ConfirmDialog,
+    Tooltip,
+    SelectionToolbar,
+    PromptCountHeader,
+} from './AshokComponents';
 import './ashok-design.css';
 
 // ═══════════════════════════════════════════════════
@@ -17,12 +36,6 @@ const IconHome = () => (
     </svg>
 );
 
-const IconSettings = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-        <circle cx="12" cy="12" r="3" />
-    </svg>
-);
 
 const IconUser = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -40,68 +53,212 @@ interface StatusInfo {
     platform: string | null;
 }
 
+type ThemeMode = 'system' | 'light' | 'dark';
+
+const APP_VERSION = '3.2.2';
+const SUPPORT_URL = 'https://sahai.app/support';
+
 // ═══════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════
 
-const HistoryView = () => (
-    <div className="view-inner">
-        <div className="section-title">Past Extractions</div>
-        <div className="empty-state">No history available yet.</div>
-    </div>
-);
+interface HistoryViewProps {
+    history: HistoryItem[];
+    onSelect: (item: HistoryItem) => void;
+    currentPlatform: string | null;
+}
 
-const SettingsView = () => (
-    <div className="view-inner">
-        <div className="section-title">Settings</div>
-        <div className="settings-item">
-            <span>Theme</span>
-            <span className="value">System</span>
-        </div>
-        <div className="settings-item">
-            <span>App Version</span>
-            <span className="value">3.1.2</span>
-        </div>
-        <div className="settings-item">
-            <span>Support</span>
-            <span className="value link">Get Help</span>
-        </div>
-        <div className="settings-item">
-            <span>Account</span>
-            <span className="value">Active</span>
-        </div>
-    </div>
-);
+const HistoryView = ({ history, onSelect, currentPlatform }: HistoryViewProps) => {
+    const [filterPlatform, setFilterPlatform] = useState<'all' | 'current'>('all');
+    const [filterTime, setFilterTime] = useState<'all' | 'today' | 'week'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
 
-const ProfileView = ({ user, tier }: { user: ChromeUser | null, tier: string }) => (
-    <div className="view-inner">
-        <div className="section-title">Account Detail</div>
-        <div className="profile-hero">
-            <div className="hero-avatar">
-                {user?.picture ? <img src={user.picture} alt="u" /> : <IconUser />}
+    const filteredHistory = history.filter(item => {
+        // Platform Filter
+        if (filterPlatform === 'current' && currentPlatform) {
+            if (item.platform.toLowerCase() !== currentPlatform.toLowerCase()) return false;
+        }
+
+        // Time Filter
+        if (filterTime === 'today') {
+            const today = new Date();
+            const itemDate = new Date(item.timestamp);
+            if (today.setHours(0, 0, 0, 0) !== itemDate.setHours(0, 0, 0, 0)) return false;
+        } else if (filterTime === 'week') {
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            if (item.timestamp < weekAgo.getTime()) return false;
+        }
+
+        // Search Filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            return (
+                item.preview.toLowerCase().includes(query) ||
+                item.platform.toLowerCase().includes(query)
+            );
+        }
+
+        return true;
+    });
+
+    return (
+        <div className="view-inner history-view-root">
+            <div className="history-filters">
+                <div className="filter-row">
+                    <input
+                        type="text"
+                        placeholder="Search history..."
+                        className="search-input"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                <div className="filter-row">
+                    <button
+                        className={`filter-chip ${filterPlatform === 'all' ? 'active' : ''}`}
+                        onClick={() => setFilterPlatform('all')}
+                    >
+                        All Apps
+                    </button>
+                    <button
+                        className={`filter-chip ${filterPlatform === 'current' ? 'active' : ''}`}
+                        onClick={() => setFilterPlatform('current')}
+                        disabled={!currentPlatform}
+                    >
+                        Current Tab
+                    </button>
+                    <div className="divider-v"></div>
+                    <select
+                        className="filter-select"
+                        value={filterTime}
+                        onChange={(e) => setFilterTime(e.target.value as any)}
+                    >
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">Past Week</option>
+                    </select>
+                </div>
             </div>
-            <div className="hero-info">
-                <div className="hero-name">{user?.name || 'Guest User'}</div>
-                <div className="hero-tier">{tier}</div>
+
+            <div className="history-scroll-area">
+                {filteredHistory.length === 0 ? (
+                    <div className="empty-state">No matching history found.</div>
+                ) : (
+                    <div className="history-list">
+                        {filteredHistory.map((item) => (
+                            <div
+                                key={item.id}
+                                className="history-item clickable"
+                                onClick={() => onSelect(item)}
+                            >
+                                <div className="history-meta">
+                                    <span className="history-platform">{item.platform}</span>
+                                    <span className="history-date">
+                                        {new Date(item.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+                                <div className="history-preview">
+                                    {item.preview}
+                                </div>
+                                <div className="history-stats">
+                                    <span className="history-badge">{item.mode}</span>
+                                    <span className="history-count">{item.promptCount} prompt{item.promptCount !== 1 ? 's' : ''}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
+    );
+};
 
-        <div className="usage-stats">
-            <div className="stat-card">
-                <div className="stat-label">Daily Usage</div>
-                <div className="stat-value">24 / 50</div>
+interface SettingsViewProps {
+    theme: ThemeMode;
+    onThemeChange: (theme: ThemeMode) => void;
+    onClearHistory: () => void;
+}
+
+const SettingsView = ({ theme, onThemeChange, onClearHistory }: SettingsViewProps) => {
+    const themeOptions: ThemeMode[] = ['system', 'light', 'dark'];
+    const nextTheme = () => {
+        const currentIndex = themeOptions.indexOf(theme);
+        const nextIndex = (currentIndex + 1) % themeOptions.length;
+        onThemeChange(themeOptions[nextIndex]);
+    };
+
+    const openSupport = () => {
+        chrome.tabs.create({ url: SUPPORT_URL });
+    };
+
+    return (
+        <div className="view-inner">
+            <div className="settings-item clickable" onClick={nextTheme}>
+                <span>Theme</span>
+                <span className="value">{theme.charAt(0).toUpperCase() + theme.slice(1)}</span>
             </div>
-            <div className="stat-card">
-                <div className="stat-label">Member Since</div>
-                <div className="stat-value">Jan 2026</div>
+            <div className="settings-item">
+                <span>App Version</span>
+                <span className="value">{APP_VERSION}</span>
+            </div>
+            <div className="settings-item clickable" onClick={openSupport}>
+                <span>Support</span>
+                <span className="value link">Get Help</span>
+            </div>
+            <div className="settings-item clickable" onClick={onClearHistory} style={{ color: '#ef4444' }}>
+                <span>Clear History</span>
+                <span className="value">➔</span>
             </div>
         </div>
+    );
+};
 
-        <button className="auth-action-btn">
-            {user ? 'Sign Out' : 'Sign In with Google'}
-        </button>
-    </div>
-);
+interface ProfileViewProps {
+    user: ChromeUser | null;
+    tier: string;
+    onSignIn: () => void;
+    onSignOut: () => void;
+    isAuthLoading: boolean;
+}
+
+const ProfileView = ({ user, tier, onSignIn, onSignOut, isAuthLoading }: ProfileViewProps) => {
+    const memberSince = user ? new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '-';
+
+
+    return (
+        <div className="view-inner">
+            <div className="profile-hero">
+                <div className="hero-avatar">
+                    {user?.picture ? <img src={user.picture} alt="u" /> : <IconUser />}
+                </div>
+                <div className="hero-info">
+                    <div className="hero-name">{user?.name || 'Guest User'}</div>
+                    <div className="hero-tier">{tier}</div>
+                </div>
+            </div>
+
+            <div className="usage-stats">
+                <div className="stat-card">
+                    <div className="stat-label">Plan</div>
+                    <div className="stat-value">{tier === 'guest' ? 'Free' : tier}</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Member Since</div>
+                    <div className="stat-value">{memberSince}</div>
+                </div>
+            </div>
+
+            <button
+                className="auth-action-btn"
+                onClick={user ? onSignOut : onSignIn}
+                disabled={isAuthLoading}
+            >
+                {isAuthLoading ? 'Please wait...' : (user ? 'Sign Out' : 'Sign In with Google')}
+            </button>
+        </div>
+    );
+};
 
 
 // ═══════════════════════════════════════════════════
@@ -116,6 +273,7 @@ export default function AshokApp() {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedPrompts, setSelectedPrompts] = useState<Set<number>>(new Set());
+    const [summary, setSummary] = useState<string | null>(null);
 
     const [status, setStatus] = useState<StatusInfo>({ supported: false, platform: null });
     const [result, setResult] = useState<ExtractionResult | null>(null);
@@ -124,6 +282,16 @@ export default function AshokApp() {
 
     const [user, setUser] = useState<ChromeUser | null>(null);
     const [tier, setTier] = useState<string>('guest');
+    const [history, setHistory] = useState<HistoryItem[]>([]);
+
+    // UX Enhancement State
+    const [loadingMessage, setLoadingMessage] = useState('');
+    const [showToast, setShowToast] = useState<{ visible: boolean; message: string }>({ visible: false, message: '' });
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Settings State
+    const [theme, setTheme] = useState<ThemeMode>('system');
+    const [isAuthLoading, setIsAuthLoading] = useState(false);
 
     const portRef = useRef<chrome.runtime.Port | null>(null);
 
@@ -134,10 +302,54 @@ export default function AshokApp() {
         port.onMessage.addListener((message: any) => {
             if (message.action === 'EXTRACTION_RESULT' || message.action === 'EXTRACTION_FROM_PAGE_RESULT') {
                 const res = message.result;
+                const extractionMode = message.mode || mode;
+
                 setResult(res);
-                setLoading(false);
-                setIsExpanded(true);
-                setView('home');
+                if (message.mode) setMode(message.mode);
+
+                if (extractionMode === 'summary') {
+                    // Start summarization
+                    setLoading(true);
+                    setLoadingMessage('Processing content...');
+                    if (res.prompts.length === 0) {
+                        setLoading(false);
+                        setError('No prompts found to summarize.');
+                        setIsExpanded(true);
+                        setView('home');
+                    } else {
+                        // Send for summarization
+                        port.postMessage({
+                            action: 'SUMMARIZE_PROMPTS',
+                            prompts: res.prompts
+                        });
+                    }
+                } else {
+                    // Raw mode - done
+                    setLoading(false);
+                    setSummary(null);
+                    setIsExpanded(true);
+                    setView('home');
+                    autoSaveToHistory(res, 'raw');
+                }
+            } else if (message.action === 'SUMMARY_RESULT') {
+                if (message.success) {
+                    setSummary(message.result.summary);
+                    setLoading(false);
+                    setIsExpanded(true);
+                    setView('home');
+                    if (result) {
+                        autoSaveToHistory(result, 'summary', message.result.summary);
+                    }
+                    // Show warning if AI failed but fallback was used
+                    if (message.error) {
+                        setShowToast({ visible: true, message: 'AI unavailable - showing raw prompts' });
+                        setTimeout(() => setShowToast({ visible: false, message: '' }), 3000);
+                    }
+                } else {
+                    setLoading(false);
+                    setError(message.error || 'Summarization failed');
+                    setIsExpanded(true);
+                }
             } else if (message.action === 'STATUS_RESULT') {
                 setStatus({ supported: message.supported, platform: message.platform });
             } else if (message.action === 'ERROR') {
@@ -149,16 +361,159 @@ export default function AshokApp() {
 
         port.postMessage({ action: 'GET_STATUS' });
 
-        initializeAuth().then(state => {
+        initializeAuth().then(async (state) => {
             setUser(state.user);
             setTier(state.tier);
+
+            // Initial cloud sync if logged in
+            if (state.user) {
+                try {
+                    const cloudHistory = await getHistoryFromCloud(state.user.id);
+                    if (cloudHistory.length > 0) {
+                        setHistory(prev => {
+                            const merged = mergeHistory(prev as CloudHistoryItem[], cloudHistory);
+                            chrome.storage.local.set({ extractionHistory: merged });
+                            return merged as HistoryItem[];
+                        });
+                    }
+                } catch (error) {
+                    console.error('Cloud sync failed:', error);
+                }
+            }
         });
 
-        return () => { port.disconnect(); };
+        // Subscribe to auth changes
+        const unsubscribeAuth = subscribeToAuthChanges(async (newUser) => {
+            setUser(newUser);
+            if (newUser) {
+                const newTier = await getUserTier(newUser);
+                setTier(newTier);
+
+                // Sync history on login
+                try {
+                    const cloudHistory = await getHistoryFromCloud(newUser.id);
+                    if (cloudHistory.length > 0) {
+                        setHistory(prev => {
+                            const merged = mergeHistory(prev as CloudHistoryItem[], cloudHistory);
+                            chrome.storage.local.set({ extractionHistory: merged });
+                            return merged as HistoryItem[];
+                        });
+                    }
+                } catch (error) {
+                    console.error('Cloud sync on login failed:', error);
+                }
+            } else {
+                setTier('guest');
+            }
+        });
+
+        // Load saved theme and history
+        chrome.storage.local.get(['theme', 'extractionHistory'], (result) => {
+            if (result.theme) {
+                setTheme(result.theme);
+            }
+            if (result.extractionHistory) {
+                setHistory(result.extractionHistory);
+            }
+        });
+
+        return () => {
+            port.disconnect();
+            unsubscribeAuth();
+        };
     }, []);
+
+    // Apply theme to document
+    useEffect(() => {
+        const root = document.documentElement;
+        if (theme === 'dark') {
+            root.setAttribute('data-theme', 'dark');
+        } else if (theme === 'light') {
+            root.setAttribute('data-theme', 'light');
+        } else {
+            root.removeAttribute('data-theme');
+        }
+        // Save theme preference
+        chrome.storage.local.set({ theme });
+    }, [theme]);
+
+    const handleSignIn = async () => {
+        setIsAuthLoading(true);
+        try {
+            const user = await signInWithGoogle();
+            setUser(user);
+            setShowToast({ visible: true, message: 'Signed in successfully' });
+            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
+        } catch (err) {
+            setShowToast({ visible: true, message: 'Sign in failed' });
+            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
+        } finally {
+            setIsAuthLoading(false);
+        }
+    };
+
+    const handleSignOut = async () => {
+        setIsAuthLoading(true);
+        try {
+            await signOut();
+            setUser(null);
+            setTier('guest');
+            setShowToast({ visible: true, message: 'Signed out' });
+            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
+        } catch (err) {
+            setShowToast({ visible: true, message: 'Sign out failed' });
+            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
+        } finally {
+            setIsAuthLoading(false);
+        }
+    };
+
+    const autoSaveToHistory = (res: ExtractionResult, saveMode: Mode, sum?: string) => {
+        const preview = res.prompts[0]?.content.slice(0, 60) + (res.prompts[0]?.content.length > 60 ? '...' : '') || 'No prompts';
+        const historyItem: HistoryItem = {
+            id: Date.now().toString(),
+            platform: res.platform,
+            promptCount: res.prompts.length,
+            mode: saveMode,
+            timestamp: Date.now(),
+            prompts: res.prompts,
+            preview,
+            summary: sum,
+        };
+
+        // Save to cloud if logged in
+        if (user) {
+            saveHistoryToCloud(user.id, historyItem as CloudHistoryItem).catch(e => console.error('Cloud save failed:', e));
+        }
+
+        setHistory(prev => {
+            // Avoid duplicate consecutive saves
+            if (prev.length > 0 && prev[0].preview === historyItem.preview && prev[0].platform === historyItem.platform && prev[0].mode === historyItem.mode) {
+                return prev;
+            }
+            const updated = [historyItem, ...prev].slice(0, 50); // Keep last 50
+            chrome.storage.local.set({ extractionHistory: updated });
+            return updated;
+        });
+    };
+
+    const loadHistoryItem = (item: HistoryItem) => {
+        setResult({
+            prompts: item.prompts,
+            platform: item.platform,
+            url: '',
+            title: '',
+            extractedAt: item.timestamp
+        });
+        setMode(item.mode);
+        setSummary(item.summary || null);
+        setView('home');
+        setIsExpanded(true);
+    };
 
     const handleGenerate = () => {
         setLoading(true);
+        setLoadingMessage(mode === 'raw' ? 'Extracting prompts...' : 'Summarizing conversation...');
         setResult(null);
         setError(null);
         setIsExpanded(true);
@@ -175,6 +530,7 @@ export default function AshokApp() {
         } else {
             setIsExpanded(false);
             setResult(null);
+            setSummary(null);
             setLoading(false);
             setError(null);
             setIsEditing(false);
@@ -200,12 +556,29 @@ export default function AshokApp() {
         setSelectedPrompts(newSet);
     };
 
-    const handleDelete = () => {
+    const handleDeleteClick = () => {
+        if (!result || selectedPrompts.size === 0) return;
+        setShowDeleteConfirm(true);
+    };
+
+    const handleDeleteConfirm = () => {
         if (!result) return;
-        if (selectedPrompts.size === 0) return;
         const remainingPrompts = result.prompts.filter((_, i) => !selectedPrompts.has(i));
         setResult({ ...result, prompts: remainingPrompts });
         setSelectedPrompts(new Set());
+        setShowDeleteConfirm(false);
+        if (remainingPrompts.length === 0) {
+            setIsEditing(false);
+        }
+    };
+
+    const handleClearHistory = () => {
+        if (confirm('Are you sure you want to clear all history? This cannot be undone.')) {
+            setHistory([]);
+            chrome.storage.local.set({ extractionHistory: [] });
+            setShowToast({ visible: true, message: 'History cleared' });
+            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
+        }
     };
 
     const handleCopy = async () => {
@@ -216,6 +589,10 @@ export default function AshokApp() {
 
         const text = promptsToCopy.map(p => p.content).join('\n\n');
         await navigator.clipboard.writeText(text);
+
+        // Show toast notification
+        setShowToast({ visible: true, message: 'Copied to clipboard' });
+        setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
 
         if (isEditing) {
             setIsEditing(false);
@@ -237,46 +614,15 @@ export default function AshokApp() {
                         className={`mode-btn ${mode === 'summary' ? 'active' : ''}`}
                         onClick={() => { if (!loading) setMode('summary'); }}
                     >
-                        summarize
-                    </button>
-                    <button
-                        className="toggle-nav-btn"
-                        onClick={() => openConfig('history')}
-                        title="Go to Config"
-                    >
-                        <IconSettings />
+                        Summarize
                     </button>
                 </div>
             );
         } else {
+            // For config views (History, Settings, Profile), show simple title
             return (
-                <div className="toggle-row">
-                    <button
-                        className="toggle-nav-btn"
-                        onClick={() => setView('home')}
-                        title="Go to Home"
-                        style={{ marginRight: 4 }}
-                    >
-                        <IconHome />
-                    </button>
-                    <button
-                        className={`mode-btn ${configTab === 'history' ? 'active' : ''}`}
-                        onClick={() => setConfigTab('history')}
-                    >
-                        History
-                    </button>
-                    <button
-                        className={`mode-btn ${configTab === 'settings' ? 'active' : ''}`}
-                        onClick={() => setConfigTab('settings')}
-                    >
-                        Settings
-                    </button>
-                    <button
-                        className={`mode-btn ${configTab === 'profile' ? 'active' : ''}`}
-                        onClick={() => setConfigTab('profile')}
-                    >
-                        Profile
-                    </button>
+                <div className="toggle-row centered-title">
+                    <span className="section-title-text">{configTab.charAt(0).toUpperCase() + configTab.slice(1)}</span>
                 </div>
             );
         }
@@ -285,37 +631,56 @@ export default function AshokApp() {
     const renderContentArea = () => {
         let content;
         if (view === 'config') {
-            if (configTab === 'history') content = <HistoryView />;
-            else if (configTab === 'settings') content = <SettingsView />;
-            else content = <ProfileView user={user} tier={tier} />;
+            if (configTab === 'history') content = <HistoryView history={history} onSelect={loadHistoryItem} currentPlatform={status.platform} />;
+            else if (configTab === 'settings') content = <SettingsView theme={theme} onThemeChange={setTheme} onClearHistory={handleClearHistory} />;
+            else content = <ProfileView user={user} tier={tier} onSignIn={handleSignIn} onSignOut={handleSignOut} isAuthLoading={isAuthLoading} />;
         } else {
             content = (
                 <>
                     {loading ? (
-                        <div className="loader-minimal"></div>
+                        <LoadingState message={loadingMessage} />
                     ) : error ? (
-                        <div style={{ padding: 20, textAlign: 'center', color: 'red' }}>{error}</div>
+                        <ErrorState
+                            error={error}
+                            onRetry={handleGenerate}
+                            onDismiss={() => setError(null)}
+                        />
                     ) : result ? (
-                        result.prompts.map((p, i) => (
-                            <div
-                                key={i}
-                                className={`prompt-box 
-                                    ${isEditing ? 'selectable' : ''} 
-                                    ${isEditing && selectedPrompts.has(i) ? 'selected' : ''} 
-                                    ${isEditing && !selectedPrompts.has(i) && selectedPrompts.size > 0 ? 'dimmed' : ''}
-                                `}
-                                onClick={() => isEditing && toggleSelection(i)}
-                            >
-                                {isEditing && (
-                                    <div className="selection-indicator">
-                                        {selectedPrompts.has(i) ? '✓' : ''}
+                        <>
+                            <PromptCountHeader
+                                count={result.prompts.length}
+                                platform={status.platform}
+                                mode={mode}
+                            />
+                            {mode === 'summary' && summary ? (
+                                <div className="summary-content-container">
+                                    {summary.split('\n').map((line, i) => (
+                                        <p key={i} className="summary-paragraph">{line}</p>
+                                    ))}
+                                </div>
+                            ) : (
+                                result.prompts.map((p, i) => (
+                                    <div
+                                        key={i}
+                                        className={`prompt-box 
+                                            ${isEditing ? 'selectable' : ''} 
+                                            ${isEditing && selectedPrompts.has(i) ? 'selected' : ''} 
+                                            ${isEditing && !selectedPrompts.has(i) && selectedPrompts.size > 0 ? 'dimmed' : ''}
+                                        `}
+                                        onClick={() => isEditing && toggleSelection(i)}
+                                    >
+                                        {isEditing && (
+                                            <div className="selection-indicator">
+                                                {selectedPrompts.has(i) ? '✓' : ''}
+                                            </div>
+                                        )}
+                                        {p.content}
                                     </div>
-                                )}
-                                {p.content}
-                            </div>
-                        ))
+                                ))
+                            )}
+                        </>
                     ) : (
-                        <div style={{ padding: 20, textAlign: 'center', opacity: 0.5 }}>...</div>
+                        <div className="empty-prompt-text">Click Generate to extract prompts</div>
                     )}
                 </>
             );
@@ -338,36 +703,57 @@ export default function AshokApp() {
             <main className={`main-content ${islandExpanded ? 'expanded-view' : ''}`}>
                 <div className={`action-island ${islandExpanded ? 'expanded' : ''}`}>
                     {renderToggleRow()}
-                    <div className={`controls-row ${islandExpanded ? 'visible' : ''}`}>
-                        <button className="control-btn" onClick={handleBack}>
-                            Back
-                        </button>
-                        {view === 'home' && result ? (
-                            <button
-                                className={`control-btn ${isEditing ? 'primary' : ''}`}
-                                onClick={toggleEdit}
-                            >
-                                {isEditing ? 'Done' : 'Edit'}
+                    {view === 'home' && isExpanded && (
+                        <div className="controls-row visible">
+                            <button className="control-btn" onClick={handleBack}>
+                                <span style={{ marginRight: 4 }}>←</span> Back
                             </button>
-                        ) : view === 'config' ? (
-                            <button className="control-btn primary" onClick={handleBack}>
-                                Save
-                            </button>
-                        ) : null}
-                    </div>
+                            {result ? (
+                                isEditing ? (
+                                    <SelectionToolbar
+                                        selectedCount={selectedPrompts.size}
+                                        totalCount={result.prompts.length}
+                                        onSelectAll={() => setSelectedPrompts(new Set(result.prompts.map((_, i) => i)))}
+                                        onClearAll={() => setSelectedPrompts(new Set())}
+                                    />
+                                ) : (
+                                    <button
+                                        className="control-btn"
+                                        onClick={toggleEdit}
+                                    >
+                                        Edit
+                                    </button>
+                                )
+                            ) : null}
+                        </div>
+                    )}
                     {islandExpanded && renderContentArea()}
                     {view === 'home' && islandExpanded && (
                         <div className="action-buttons-container">
-                            <button
-                                className="dual-btn"
-                                onClick={isEditing ? handleDelete : handleGenerate}
-                                style={isEditing ? { color: '#ef4444', borderColor: '#ef4444' } : {}}
-                            >
-                                {isEditing ? `Delete (${selectedPrompts.size})` : 'Re-Generate'}
-                            </button>
-                            <button className="dual-btn" onClick={handleCopy}>
-                                {isEditing ? `Copy (${selectedPrompts.size})` : 'Copy'}
-                            </button>
+                            {isEditing ? (
+                                <>
+                                    <button
+                                        className="dual-btn"
+                                        onClick={handleDeleteClick}
+                                        style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                                        disabled={selectedPrompts.size === 0}
+                                    >
+                                        Delete ({selectedPrompts.size})
+                                    </button>
+                                    <button className="dual-btn" onClick={handleCopy}>
+                                        Copy ({selectedPrompts.size})
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button className="dual-btn primary" onClick={handleGenerate}>
+                                        Generate
+                                    </button>
+                                    <button className="dual-btn" onClick={handleCopy}>
+                                        Copy
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
                     {view === 'home' && !islandExpanded && (
@@ -376,31 +762,65 @@ export default function AshokApp() {
                         </button>
                     )}
                 </div>
-                <button className={`upgrade-pill ${islandExpanded ? 'visible' : ''}`}>
-                    Upgrade
-                </button>
+                <Tooltip content="Unlock unlimited extractions and AI summaries" fullWidth>
+                    <button className={`upgrade-pill ${islandExpanded ? 'visible' : ''}`}>
+                        Upgrade
+                    </button>
+                </Tooltip>
             </main>
 
             <footer className="app-footer">
-                <button className="footer-profile-btn" onClick={() => openConfig('profile')}>
-                    <div className="footer-avatar-sm">
-                        {user?.picture ? <img src={user.picture} alt="u" /> : <IconUser />}
-                    </div>
-                    <div className="footer-user-stack">
-                        <span className="footer-name-min">{user?.name || 'Guest'}</span>
-                        <span className="footer-badge-min">{tier}</span>
+                <button
+                    className={`footer-icon-btn ${view === 'home' && !islandExpanded ? 'active' : ''}`}
+                    onClick={() => {
+                        setView('home');
+                        setIsExpanded(false);
+                    }}
+                    title="Home"
+                >
+                    <IconHome />
+                </button>
+                <button
+                    className={`footer-icon-btn ${configTab === 'history' && islandExpanded ? 'active' : ''}`}
+                    onClick={() => openConfig('history')}
+                    title="History"
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                </button>
+                <button
+                    className={`footer-icon-btn ${configTab === 'settings' && islandExpanded ? 'active' : ''}`}
+                    onClick={() => openConfig('settings')}
+                    title="Settings"
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+                    </svg>
+                </button>
+                <button
+                    className={`footer-icon-btn ${configTab === 'profile' && islandExpanded ? 'active' : ''}`}
+                    onClick={() => openConfig('profile')}
+                    title="Profile"
+                >
+                    <div className="footer-avatar-mini">
+                        {user?.picture ? <img src={user.picture} alt="u" style={{ width: '100%', height: '100%', borderRadius: '50%' }} /> : <IconUser />}
                     </div>
                 </button>
-
-                <div className="footer-status-area">
-                    {status.platform && (
-                        <div className="status-pill-active" title={`Connected to ${status.platform}`}>
-                            <span className="status-dot"></span>
-                            <span className="platform-name">{status.platform}</span>
-                        </div>
-                    )}
-                </div>
             </footer>
+
+            <Toast visible={showToast.visible} message={showToast.message} />
+
+            <ConfirmDialog
+                visible={showDeleteConfirm}
+                title="Delete prompts?"
+                message={`Delete ${selectedPrompts.size} prompt${selectedPrompts.size !== 1 ? 's' : ''}? This cannot be undone.`}
+                confirmLabel="Delete"
+                onConfirm={handleDeleteConfirm}
+                onCancel={() => setShowDeleteConfirm(false)}
+            />
         </div >
     );
 }

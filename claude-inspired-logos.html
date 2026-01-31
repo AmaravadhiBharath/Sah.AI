@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SahAI - Claude Inspired Logos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            padding: 60px 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #1A1A1A;
+            margin-bottom: 15px;
+            font-size: 40px;
+            font-weight: 700;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6B7280;
+            margin-bottom: 60px;
+            font-size: 16px;
+        }
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 48px;
+            margin-bottom: 80px;
+        }
+        .logo-card {
+            background: white;
+            border-radius: 24px;
+            padding: 48px 40px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            transition: all 0.3s ease;
+            border: 1px solid #E5E7EB;
+        }
+        .logo-card:hover {
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transform: translateY(-8px);
+        }
+        .logo-display {
+            width: 160px;
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #FAFAFA 0%, #F3F4F6 100%);
+            border-radius: 20px;
+            border: 2px solid #E5E7EB;
+        }
+        .logo-display svg {
+            width: 100%;
+            height: 100%;
+            padding: 24px;
+        }
+        .logo-info h3 {
+            color: #1A1A1A;
+            font-size: 20px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .logo-info p {
+            color: #6B7280;
+            font-size: 15px;
+            text-align: center;
+            line-height: 1.7;
+        }
+        .size-showcase {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .size-item {
+            text-align: center;
+            background: #F9FAFB;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #E5E7EB;
+        }
+        .size-item svg {
+            margin-bottom: 8px;
+        }
+        .size-item small {
+            color: #9CA3AF;
+            font-size: 12px;
+            display: block;
+        }
+        .hero {
+            background: white;
+            border-radius: 28px;
+            padding: 80px 60px;
+            text-align: center;
+            margin-bottom: 80px;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .hero h2 {
+            color: #1A1A1A;
+            font-size: 28px;
+            margin-bottom: 48px;
+            font-weight: 700;
+        }
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin: 40px 0;
+        }
+        .showcase-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .showcase-item-label {
+            font-size: 13px;
+            color: #9CA3AF;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .showcase-logo {
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .showcase-logo svg {
+            width: 85%;
+            height: 85%;
+        }
+        .color-guide {
+            background: #F9FAFB;
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 60px;
+        }
+        .color-guide h3 {
+            color: #1A1A1A;
+            font-size: 18px;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 20px;
+        }
+        .color-box {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #E5E7EB;
+        }
+        .color-sample {
+            width: 100%;
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #E5E7EB;
+        }
+        .color-name {
+            color: #1A1A1A;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .color-value {
+            color: #9CA3AF;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SahAI Logo Designs</h1>
+        <p class="subtitle">Claude-inspired minimalist aesthetic with modern elegance</p>
+
+        <div class="logo-grid">
+            <!-- Logo 1: Elegant Curve -->
+            <div class="logo-card">
+                <div class="logo-display">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Elegant curved flow -->
+                        <defs>
+                            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1A1A1A;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#1A1A1A;stop-opacity:0.8" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Primary curve -->
+                        <path d="M 60 160 Q 100 40 140 80" fill="none" stroke="url(#grad1)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <!-- Secondary accent curve -->
+                        <path d="M 50 140 Q 100 100 150 120" fill="none" stroke="url(#grad1)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+                        <!-- Accent dot -->
+                        <circle cx="140" cy="80" r="4" fill="url(#grad1)"/>
+                    </svg>
+                </div>
+                <div class="logo-info">
+                    <h3>Elegant Flow</h3>
+                    <p>Minimalist curves representing prompt extraction and data flow. Claude-inspired smooth aesthetic.</p>
+                </div>
+                <div class="size-showcase">
+                    <div class="size-item">
+                        <svg width="40" height="40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="g1"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <path d="M 60 160 Q 100 40 140 80" fill="none" stroke="url(#g1)" stroke-width="8" stroke-linecap="round"/><path d="M 50 140 Q 100 100 150 120" fill="none" stroke="url(#g1)" stroke-width="5" stroke-linecap="round" opacity="0.6"/><circle cx="140" cy="80" r="4" fill="url(#g1)"/>
+                        </svg>
+                        <small>40x40</small>
+                    </div>
+                    <div class="size-item">
+                        <svg width="80" height="80" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="g1"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <path d="M 60 160 Q 100 40 140 80" fill="none" stroke="url(#g1)" stroke-width="8" stroke-linecap="round"/><path d="M 50 140 Q 100 100 150 120" fill="none" stroke="url(#g1)" stroke-width="5" stroke-linecap="round" opacity="0.6"/><circle cx="140" cy="80" r="4" fill="url(#g1)"/>
+                        </svg>
+                        <small>80x80</small>
+                    </div>
+                    <div class="size-item">
+                        <svg width="128" height="128" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="g1"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <path d="M 60 160 Q 100 40 140 80" fill="none" stroke="url(#g1)" stroke-width="8" stroke-linecap="round"/><path d="M 50 140 Q 100 100 150 120" fill="none" stroke="url(#g1)" stroke-width="5" stroke-linecap="round" opacity="0.6"/><circle cx="140" cy="80" r="4" fill="url(#g1)"/>
+                        </svg>
+                        <small>128x128</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logo 2: Abstract Layers -->
+            <div class="logo-card">
+                <div class="logo-display">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Layered circles representing data extraction -->
+                        <defs>
+                            <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1A1A1A;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#1A1A1A;stop-opacity:0.7" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Outer circle -->
+                        <circle cx="100" cy="100" r="60" fill="none" stroke="url(#grad2)" stroke-width="4" opacity="1"/>
+                        <!-- Middle circle -->
+                        <circle cx="100" cy="100" r="45" fill="none" stroke="url(#grad2)" stroke-width="3" opacity="0.7"/>
+                        <!-- Inner circle -->
+                        <circle cx="100" cy="100" r="28" fill="none" stroke="url(#grad2)" stroke-width="2.5" opacity="0.5"/>
+                        <!-- Center accent -->
+                        <circle cx="100" cy="100" r="6" fill="url(#grad2)"/>
+                        <!-- Extraction arrow -->
+                        <path d="M 100 160 L 100 180" stroke="url(#grad2)" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M 94 174 L 100 180 L 106 174" fill="url(#grad2)"/>
+                    </svg>
+                </div>
+                <div class="logo-info">
+                    <h3>Nested Layers</h3>
+                    <p>Concentric circles symbolizing data organization and hierarchical extraction. Clean and modern.</p>
+                </div>
+                <div class="size-showcase">
+                    <div class="size-item">
+                        <svg width="40" height="40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="g2"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <circle cx="100" cy="100" r="60" fill="none" stroke="url(#g2)" stroke-width="4"/><circle cx="100" cy="100" r="45" fill="none" stroke="url(#g2)" stroke-width="3" opacity="0.7"/><circle cx="100" cy="100" r="28" fill="none" stroke="url(#g2)" stroke-width="2.5" opacity="0.5"/><circle cx="100" cy="100" r="6" fill="url(#g2)"/><path d="M 100 160 L 100 180" stroke="url(#g2)" stroke-width="2.5" stroke-linecap="round"/><path d="M 94 174 L 100 180 L 106 174" fill="url(#g2)"/>
+                        </svg>
+                        <small>40x40</small>
+                    </div>
+                    <div class="size-item">
+                        <svg width="80" height="80" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="g2"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <circle cx="100" cy="100" r="60" fill="none" stroke="url(#g2)" stroke-width="4"/><circle cx="100" cy="100" r="45" fill="none" stroke="url(#g2)" stroke-width="3" opacity="0.7"/><circle cx="100" cy="100" r="28" fill="none" stroke="url(#g2)" stroke-width="2.5" opacity="0.5"/><circle cx="100" cy="100" r="6" fill="url(#g2)"/><path d="M 100 160 L 100 180" stroke="url(#g2)" stroke-width="2.5" stroke-linecap="round"/><path d="M 94 174 L 100 180 L 106 174" fill="url(#g2)"/>
+                        </svg>
+                        <small>80x80</small>
+                    </div>
+                    <div class="size-item">
+                        <svg width="128" height="128" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="g2"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <circle cx="100" cy="100" r="60" fill="none" stroke="url(#g2)" stroke-width="4"/><circle cx="100" cy="100" r="45" fill="none" stroke="url(#g2)" stroke-width="3" opacity="0.7"/><circle cx="100" cy="100" r="28" fill="none" stroke="url(#g2)" stroke-width="2.5" opacity="0.5"/><circle cx="100" cy="100" r="6" fill="url(#g2)"/><path d="M 100 160 L 100 180" stroke="url(#g2)" stroke-width="2.5" stroke-linecap="round"/><path d="M 94 174 L 100 180 L 106 174" fill="url(#g2)"/>
+                        </svg>
+                        <small>128x128</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logo 3: Ascending Steps -->
+            <div class="logo-card">
+                <div class="logo-display">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Ascending geometric steps -->
+                        <defs>
+                            <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#1A1A1A;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#1A1A1A;stop-opacity:0.75" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Step 1 (bottom) -->
+                        <rect x="50" y="140" width="30" height="30" rx="2" fill="url(#grad3)" opacity="0.4"/>
+                        <!-- Step 2 (middle) -->
+                        <rect x="85" y="110" width="30" height="30" rx="2" fill="url(#grad3)" opacity="0.6"/>
+                        <!-- Step 3 (top) -->
+                        <rect x="120" y="80" width="30" height="30" rx="2" fill="url(#grad3)" opacity="0.8"/>
+                        <!-- Step 4 (highest) -->
+                        <rect x="155" y="50" width="25" height="25" rx="2" fill="url(#grad3)"/>
+                        <!-- Connection lines -->
+                        <path d="M 80 140 L 85 110" stroke="url(#grad3)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                        <path d="M 115 110 L 120 80" stroke="url(#grad3)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                    </svg>
+                </div>
+                <div class="logo-info">
+                    <h3>Progress Steps</h3>
+                    <p>Ascending blocks representing data extraction progression and continuous improvement.</p>
+                </div>
+                <div class="size-showcase">
+                    <div class="size-item">
+                        <svg width="40" height="40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="g3"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <rect x="50" y="140" width="30" height="30" rx="2" fill="url(#g3)" opacity="0.4"/><rect x="85" y="110" width="30" height="30" rx="2" fill="url(#g3)" opacity="0.6"/><rect x="120" y="80" width="30" height="30" rx="2" fill="url(#g3)" opacity="0.8"/><rect x="155" y="50" width="25" height="25" rx="2" fill="url(#g3)"/><path d="M 80 140 L 85 110" stroke="url(#g3)" stroke-width="2" stroke-linecap="round" opacity="0.5"/><path d="M 115 110 L 120 80" stroke="url(#g3)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                        </svg>
+                        <small>40x40</small>
+                    </div>
+                    <div class="size-item">
+                        <svg width="80" height="80" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="g3"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <rect x="50" y="140" width="30" height="30" rx="2" fill="url(#g3)" opacity="0.4"/><rect x="85" y="110" width="30" height="30" rx="2" fill="url(#g3)" opacity="0.6"/><rect x="120" y="80" width="30" height="30" rx="2" fill="url(#g3)" opacity="0.8"/><rect x="155" y="50" width="25" height="25" rx="2" fill="url(#g3)"/><path d="M 80 140 L 85 110" stroke="url(#g3)" stroke-width="2" stroke-linecap="round" opacity="0.5"/><path d="M 115 110 L 120 80" stroke="url(#g3)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                        </svg>
+                        <small>80x80</small>
+                    </div>
+                    <div class="size-item">
+                        <svg width="128" height="128" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="g3"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <rect x="50" y="140" width="30" height="30" rx="2" fill="url(#g3)" opacity="0.4"/><rect x="85" y="110" width="30" height="30" rx="2" fill="url(#g3)" opacity="0.6"/><rect x="120" y="80" width="30" height="30" rx="2" fill="url(#g3)" opacity="0.8"/><rect x="155" y="50" width="25" height="25" rx="2" fill="url(#g3)"/><path d="M 80 140 L 85 110" stroke="url(#g3)" stroke-width="2" stroke-linecap="round" opacity="0.5"/><path d="M 115 110 L 120 80" stroke="url(#g3)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                        </svg>
+                        <small>128x128</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Examples -->
+        <div class="hero">
+            <h2>Logo Usage Examples</h2>
+            <div class="showcase-grid">
+                <div class="showcase-item">
+                    <div class="showcase-item-label">Chrome Extension</div>
+                    <div class="showcase-logo">
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="use1"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <path d="M 60 160 Q 100 40 140 80" fill="none" stroke="url(#use1)" stroke-width="8" stroke-linecap="round"/><path d="M 50 140 Q 100 100 150 120" fill="none" stroke="url(#use1)" stroke-width="5" stroke-linecap="round" opacity="0.6"/><circle cx="140" cy="80" r="4" fill="url(#use1)"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="showcase-item">
+                    <div class="showcase-item-label">Favicon</div>
+                    <div class="showcase-logo" style="width: 100px; height: 100px;">
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs><linearGradient id="use2"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                            <path d="M 60 160 Q 100 40 140 80" fill="none" stroke="url(#use2)" stroke-width="8" stroke-linecap="round"/><path d="M 50 140 Q 100 100 150 120" fill="none" stroke="url(#use2)" stroke-width="5" stroke-linecap="round" opacity="0.6"/><circle cx="140" cy="80" r="4" fill="url(#use2)"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="showcase-item">
+                    <div class="showcase-item-label">Website Logo</div>
+                    <div class="showcase-logo">
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 0 12px;">
+                            <svg width="56" height="56" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <defs><linearGradient id="use3"><stop offset="0%" style="stop-color:#1A1A1A"/><stop offset="100%" style="stop-color:#1A1A1A"/></linearGradient></defs>
+                                <path d="M 60 160 Q 100 40 140 80" fill="none" stroke="url(#use3)" stroke-width="8" stroke-linecap="round"/><path d="M 50 140 Q 100 100 150 120" fill="none" stroke="url(#use3)" stroke-width="5" stroke-linecap="round" opacity="0.6"/><circle cx="140" cy="80" r="4" fill="url(#use3)"/>
+                            </svg>
+                            <span style="font-size: 16px; font-weight: 700; color: #1A1A1A;">SahAI</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-guide">
+                <h3>Official Colors</h3>
+                <div class="color-palette">
+                    <div class="color-box">
+                        <div class="color-sample" style="background: #1A1A1A;"></div>
+                        <div class="color-name">Primary Black</div>
+                        <div class="color-value">#1A1A1A</div>
+                    </div>
+                    <div class="color-box">
+                        <div class="color-sample" style="background: #374151;"></div>
+                        <div class="color-name">Dark Grey</div>
+                        <div class="color-value">#374151</div>
+                    </div>
+                    <div class="color-box">
+                        <div class="color-sample" style="background: #6B7280;"></div>
+                        <div class="color-name">Medium Grey</div>
+                        <div class="color-value">#6B7280</div>
+                    </div>
+                    <div class="color-box">
+                        <div class="color-sample" style="background: #E5E7EB;"></div>
+                        <div class="color-name">Light Grey</div>
+                        <div class="color-value">#E5E7EB</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
