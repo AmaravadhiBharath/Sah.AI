@@ -235,48 +235,99 @@ body {
    BOTTOM NAV
    ═══════════════════════════════════════════════════ */
 
-.bottom-nav {
+/* ═══════════════════════════════════════════════════
+   BOTTOM NAV / FOOTER
+   ═══════════════════════════════════════════════════ */
+
+.app-footer-layout {
     position: fixed;
     bottom: 20px;
-    left: 20px;
-    right: 20px;
-    height: 64px;
-    background: var(--surface);
-    border-radius: 100px;
+    left: 16px;
+    right: 16px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: space-around;
-    padding: 0 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    border: 1px solid var(--outline);
+    gap: 12px;
     z-index: 100;
 }
 
-.nav-item {
+.profile-pill {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 100px;
+    padding: 6px 12px 6px 6px;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.profile-pill:active {
+    transform: scale(0.96);
+}
+
+.profile-pill-avatar img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-pill-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-pill-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--on-surface);
+    line-height: 1.1;
+}
+
+.profile-pill-badge {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+}
+
+.nav-pill {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--outline);
     border-radius: 100px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.nav-item {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     border: none;
     background: transparent;
     color: var(--on-surface-variant);
-    font-family: var(--font-family);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.nav-item.active {
-    background: var(--accent-soft);
-    color: var(--accent);
-}
-
-.nav-icon {
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-item.active {
+    background: var(--on-surface);
+    color: var(--surface);
+}
+
+.nav-item:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 /* ═══════════════════════════════════════════════════

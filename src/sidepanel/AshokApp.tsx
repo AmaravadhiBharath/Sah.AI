@@ -53,14 +53,7 @@ const IconBack = () => (
     </svg>
 );
 
-const IconGrid = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="3" y="3" width="7" height="7" rx="1.5" />
-        <rect x="14" y="3" width="7" height="7" rx="1.5" />
-        <rect x="3" y="14" width="7" height="7" rx="1.5" />
-        <rect x="14" y="14" width="7" height="7" rx="1.5" />
-    </svg>
-);
+
 
 // ═══════════════════════════════════════════════════
 
@@ -213,42 +206,30 @@ export default function SeviApp() {
     };
 
     // Sub-renders
-    const renderTopBar = () => (
-        <div className="top-bar">
-            <button className="icon-btn" onClick={() => setActiveTab('home')}>
-                <IconBack />
-            </button>
-            <div className="user-mini-profile">
-                <div className="mini-avatar">
-                    {user?.picture ? <img src={user.picture} alt="avatar" /> : <IconUser />}
-                </div>
-                <div className="mini-info">
-                    <div className="mini-name">{user?.name?.split(' ')[0] || 'Guest'}</div>
-                    <div className="mini-tier">{tier}</div>
-                </div>
-            </div>
-        </div>
-    );
-
     const renderBottomNav = () => (
-        <nav className="bottom-nav">
-            <button className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
-                <div className="nav-icon"><IconHome /></div>
-                {activeTab === 'home' && <span>Home</span>}
+        <div className="app-footer-layout">
+            <button className="profile-pill" onClick={() => setActiveTab('profile')}>
+                <div className="profile-pill-avatar">
+                    {user?.picture ? <img src={user.picture} alt="u" /> : <IconUser />}
+                </div>
+                <div className="profile-pill-info">
+                    <span className="profile-pill-name">{user?.name?.split(' ')[0] || 'Guest'}</span>
+                    <span className="profile-pill-badge">{tier}</span>
+                </div>
             </button>
-            <button className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
-                <div className="nav-icon"><IconHistory /></div>
-                {activeTab === 'history' && <span>History</span>}
-            </button>
-            <button className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-                <div className="nav-icon"><IconSettings /></div>
-                {activeTab === 'settings' && <span>Settings</span>}
-            </button>
-            <button className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
-                <div className="nav-icon"><IconUser /></div>
-                {activeTab === 'profile' && <span>Profile</span>}
-            </button>
-        </nav>
+
+            <nav className="nav-pill">
+                <button className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+                    <IconHome />
+                </button>
+                <button className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
+                    <IconHistory />
+                </button>
+                <button className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+                    <IconSettings />
+                </button>
+            </nav>
+        </div>
     );
 
     const renderContent = () => {
@@ -373,6 +354,23 @@ export default function SeviApp() {
                     </div>
                 );
 
+                // STICKY LOGIC: Show extraction result if available, otherwise show Connect state
+                // If we have an extraction result, we show it regardless of status.platform connection
+                // This allows viewing results even if user navigates away
+
+                if (!extractionResult) {
+                    return (
+                        <div className="view-animate">
+                            <div className="sevi-card full-height" style={{ background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <p style={{ fontWeight: 600 }}>Ready to extract</p>
+                                    <p style={{ fontSize: 12 }}>{status.platform ? `Connected to ${status.platform}` : 'Navigate to a supported AI chat'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
                 return (
                     <div className="view-animate">
                         {error && (
@@ -382,40 +380,35 @@ export default function SeviApp() {
                         )}
 
                         <div className="sevi-card full-height" style={{ background: 'white' }}>
-                            {!extractionResult ? (
-                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
-                                    <div style={{ textAlign: 'center' }}>
-                                        <p style={{ fontWeight: 600 }}>Ready to extract</p>
-                                        <p style={{ fontSize: 12 }}>{status.platform || 'No platform detected'}</p>
-                                    </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--outline)' }}>
+                                <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', opacity: 0.6 }}>{extractionResult.platform}</span>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button className="icon-btn-sm" onClick={handleCopy} title="Copy All">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    </button>
                                 </div>
-                            ) : (
-                                <>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--outline)' }}>
-                                        <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', opacity: 0.6 }}>{extractionResult.platform}</span>
-                                        <span style={{ fontSize: 12, opacity: 0.6 }}>{extractionResult.prompts.length} prompts</span>
+                            </div>
+                            <div className="prompts-list-container">
+                                {mode === 'summary' && summary ? (
+                                    <div style={{ padding: 12, background: 'var(--accent-soft)', borderRadius: 12, fontSize: 14, lineHeight: 1.6 }}>
+                                        {summary}
                                     </div>
-                                    <div className="prompts-list-container">
-                                        {mode === 'summary' && summary ? (
-                                            <div style={{ padding: 12, background: 'var(--accent-soft)', borderRadius: 12, fontSize: 14, lineHeight: 1.6 }}>
-                                                {summary}
-                                            </div>
-                                        ) : (
-                                            extractionResult.prompts.map((p, i) => (
-                                                <div key={i} className="prompt-box">
-                                                    {p.content}
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </>
-                            )}
+                                ) : (
+                                    extractionResult.prompts.map((p, i) => (
+                                        <div key={i} className="prompt-box">
+                                            {p.content}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
 
                         {extractionResult && (
                             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
                                 <button className="overlay-btn" style={{ background: 'white', border: '1px solid var(--outline)' }} onClick={handleExtraction}>Re-extract</button>
-                                <button className="overlay-btn" style={{ background: 'white', border: '1px solid var(--outline)' }} onClick={handleCopy}>Copy All</button>
+                                {mode === 'raw' && (
+                                    <button className="overlay-btn" style={{ background: 'white', border: '1px solid var(--outline)' }} onClick={handleSummarize}>Summarize</button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -425,33 +418,29 @@ export default function SeviApp() {
 
     return (
         <div className="sevi-app">
-            {renderTopBar()}
+            {activeTab !== 'home' ? (
+                <div className="top-bar">
+                    <button className="icon-btn" onClick={() => setActiveTab('home')}>
+                        <IconBack />
+                    </button>
+                    <span style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{activeTab}</span>
+                    <div style={{ width: 24 }}></div>
+                </div>
+            ) : (
+                <div className="top-bar">
+                    <button className="icon-btn" onClick={() => setActiveTab('home')} style={{ opacity: 0 }}>
+                        <IconBack />
+                    </button>
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>Ashok</span>
+                    <button className="icon-btn" onClick={() => {/* Edit toggle logic if needed */ }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    </button>
+                </div>
+            )}
 
             <main className="content-area">
                 {renderContent()}
             </main>
-
-            {/* Contextual Action Overlay */}
-            {activeTab === 'home' && !loading && (
-                <div className="action-overlay">
-                    <button
-                        className={`overlay-btn ${mode === 'raw' ? 'active' : ''}`}
-                        onClick={handleExtraction}
-                    >
-                        Extract
-                    </button>
-                    <button
-                        className={`overlay-btn ${mode === 'summary' ? 'active' : ''}`}
-                        onClick={handleSummarize}
-                        disabled={!extractionResult}
-                    >
-                        Summarize
-                    </button>
-                    <button className="overlay-icon-btn">
-                        <IconGrid />
-                    </button>
-                </div>
-            )}
 
             {renderBottomNav()}
         </div>
