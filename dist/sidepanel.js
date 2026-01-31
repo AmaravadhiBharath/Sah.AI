@@ -453,16 +453,8 @@ function SeviApp() {
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: () => setActiveTab("home"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 600, fontSize: 14, textTransform: "capitalize" }, children: activeTab }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 24 } })
-    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "top-bar", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: () => setActiveTab("home"), style: { opacity: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 600, fontSize: 14 }, children: "SahAI" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: () => {
-      }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 20h9" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" })
-      ] }) })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "content-area", children: renderContent() }),
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "top-bar", style: { display: "none" } }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "content-area", style: { paddingTop: 20 }, children: renderContent() }),
     renderBottomNav()
   ] });
 }
