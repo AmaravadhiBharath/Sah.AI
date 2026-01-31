@@ -188,6 +188,10 @@ function SeviApp() {
       var _a;
       if (msg.action === "STATUS_RESULT") {
         setStatus({ supported: msg.supported, platform: msg.platform });
+        if (msg.supported && !extractionResult) {
+          setLoading(true);
+          port.postMessage({ action: "EXTRACT_PROMPTS", mode: "raw" });
+        }
       } else if (msg.action === "EXTRACTION_RESULT") {
         setExtractionResult(msg.result);
         setLoading(false);

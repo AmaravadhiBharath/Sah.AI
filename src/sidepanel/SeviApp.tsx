@@ -92,6 +92,12 @@ export default function SeviApp() {
         port.onMessage.addListener((msg) => {
             if (msg.action === 'STATUS_RESULT') {
                 setStatus({ supported: msg.supported, platform: msg.platform });
+
+                // Auto-extract if supported and we don't have results yet
+                if (msg.supported && !extractionResult) {
+                    setLoading(true);
+                    port.postMessage({ action: 'EXTRACT_PROMPTS', mode: 'raw' });
+                }
             } else if (msg.action === 'EXTRACTION_RESULT') {
                 setExtractionResult(msg.result);
                 setLoading(false);
