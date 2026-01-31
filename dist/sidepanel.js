@@ -751,7 +751,6 @@ function AshokApp() {
             className: "toggle-nav-btn",
             onClick: () => setView("home"),
             title: "Go to Home",
-            style: { marginRight: 4 },
             children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHome, {})
           }
         ),

@@ -927,6 +927,14 @@ body {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
+.toggle-row .toggle-nav-btn:first-child {
+    margin-right: 4px;
+}
+
+.toggle-row .toggle-nav-btn:last-child {
+    margin-left: 4px;
+}
+
 .toggle-nav-btn:hover {
     background: white;
     color: var(--m3-on-surface);
