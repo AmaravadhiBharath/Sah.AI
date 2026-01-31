@@ -21,7 +21,6 @@ import {
     ConfirmDialog,
     Tooltip,
     SelectionToolbar,
-    PromptCountHeader,
 } from './AshokComponents';
 import './ashok-design.css';
 
@@ -36,6 +35,14 @@ const IconHome = () => (
     </svg>
 );
 
+const IconGrid = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="3" y="3" width="8" height="8" rx="2" />
+        <rect x="13" y="3" width="8" height="8" rx="2" />
+        <rect x="3" y="13" width="8" height="8" rx="2" />
+        <rect x="13" y="13" width="8" height="8" rx="2" />
+    </svg>
+);
 
 const IconUser = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -55,7 +62,7 @@ interface StatusInfo {
 
 type ThemeMode = 'system' | 'light' | 'dark';
 
-const APP_VERSION = '3.2.2';
+const APP_VERSION = '3.1.2';
 const SUPPORT_URL = 'https://sahai.app/support';
 
 // ═══════════════════════════════════════════════════
@@ -162,7 +169,9 @@ const HistoryView = ({ history, onSelect, currentPlatform }: HistoryViewProps) =
                                     {item.preview}
                                 </div>
                                 <div className="history-stats">
-                                    <span className="history-badge">{item.mode}</span>
+                                    <span className="history-badge">
+                                        {item.mode === 'raw' ? 'Original' : item.mode.charAt(0).toUpperCase() + item.mode.slice(1)}
+                                    </span>
                                     <span className="history-count">{item.promptCount} prompt{item.promptCount !== 1 ? 's' : ''}</span>
                                 </div>
                             </div>
@@ -294,6 +303,7 @@ export default function AshokApp() {
     const [isAuthLoading, setIsAuthLoading] = useState(false);
 
     const portRef = useRef<chrome.runtime.Port | null>(null);
+    const latestResultRef = useRef<ExtractionResult | null>(null);
 
     useEffect(() => {
         const port = chrome.runtime.connect({ name: 'sidepanel' });
@@ -305,7 +315,7 @@ export default function AshokApp() {
                 const extractionMode = message.mode || mode;
 
                 setResult(res);
-                if (message.mode) setMode(message.mode);
+                latestResultRef.current = res;
 
                 if (extractionMode === 'summary') {
                     // Start summarization
@@ -337,8 +347,8 @@ export default function AshokApp() {
                     setLoading(false);
                     setIsExpanded(true);
                     setView('home');
-                    if (result) {
-                        autoSaveToHistory(result, 'summary', message.result.summary);
+                    if (latestResultRef.current) {
+                        autoSaveToHistory(latestResultRef.current, 'summary', message.result.summary);
                     }
                     // Show warning if AI failed but fallback was used
                     if (message.error) {
@@ -361,9 +371,21 @@ export default function AshokApp() {
 
         port.postMessage({ action: 'GET_STATUS' });
 
+        // Immediately load cached user and tier to prevent flash
+        chrome.storage.local.get(['promptExtractor_user', 'promptExtractor_tier'], (cached) => {
+            if (cached.promptExtractor_user) {
+                setUser(cached.promptExtractor_user);
+            }
+            if (cached.promptExtractor_tier) {
+                setTier(cached.promptExtractor_tier);
+            }
+        });
+
         initializeAuth().then(async (state) => {
             setUser(state.user);
             setTier(state.tier);
+            // Cache the tier for next load
+            chrome.storage.local.set({ promptExtractor_tier: state.tier });
 
             // Initial cloud sync if logged in
             if (state.user) {
@@ -388,6 +410,8 @@ export default function AshokApp() {
             if (newUser) {
                 const newTier = await getUserTier(newUser);
                 setTier(newTier);
+                // Cache tier for next load
+                chrome.storage.local.set({ promptExtractor_tier: newTier });
 
                 // Sync history on login
                 try {
@@ -404,6 +428,8 @@ export default function AshokApp() {
                 }
             } else {
                 setTier('guest');
+                // Clear cached tier on sign out
+                chrome.storage.local.remove(['promptExtractor_tier']);
             }
         });
 
@@ -605,24 +631,58 @@ export default function AshokApp() {
             return (
                 <div className="toggle-row">
                     <button
-                        className={`mode-btn ${mode === 'raw' ? 'active' : ''}`}
-                        onClick={() => { if (!loading) setMode('raw'); }}
+                        className={`mode-btn ${mode === 'raw' ? 'active' : ''} ${isEditing ? 'disabled' : ''}`}
+                        onClick={() => { if (!loading && !isEditing) setMode('raw'); }}
+                        disabled={isEditing}
                     >
                         Extract
                     </button>
                     <button
-                        className={`mode-btn ${mode === 'summary' ? 'active' : ''}`}
-                        onClick={() => { if (!loading) setMode('summary'); }}
+                        className={`mode-btn ${mode === 'summary' ? 'active' : ''} ${isEditing ? 'disabled' : ''}`}
+                        onClick={() => { if (!loading && !isEditing) setMode('summary'); }}
+                        disabled={isEditing}
                     >
                         Summarize
+                    </button>
+                    <button
+                        className={`toggle-nav-btn ${isEditing ? 'disabled' : ''}`}
+                        onClick={() => { if (!isEditing) openConfig('settings'); }}
+                        title="Menu"
+                        disabled={isEditing}
+                    >
+                        <IconGrid />
                     </button>
                 </div>
             );
         } else {
-            // For config views (History, Settings, Profile), show simple title
             return (
-                <div className="toggle-row centered-title">
-                    <span className="section-title-text">{configTab.charAt(0).toUpperCase() + configTab.slice(1)}</span>
+                <div className="toggle-row">
+                    <button
+                        className="toggle-nav-btn"
+                        onClick={() => setView('home')}
+                        title="Go to Home"
+                        style={{ marginRight: 4 }}
+                    >
+                        <IconHome />
+                    </button>
+                    <button
+                        className={`mode-btn ${configTab === 'history' ? 'active' : ''}`}
+                        onClick={() => setConfigTab('history')}
+                    >
+                        History
+                    </button>
+                    <button
+                        className={`mode-btn ${configTab === 'settings' ? 'active' : ''}`}
+                        onClick={() => setConfigTab('settings')}
+                    >
+                        Settings
+                    </button>
+                    <button
+                        className={`mode-btn ${configTab === 'profile' ? 'active' : ''}`}
+                        onClick={() => setConfigTab('profile')}
+                    >
+                        Profile
+                    </button>
                 </div>
             );
         }
@@ -647,11 +707,6 @@ export default function AshokApp() {
                         />
                     ) : result ? (
                         <>
-                            <PromptCountHeader
-                                count={result.prompts.length}
-                                platform={status.platform}
-                                mode={mode}
-                            />
                             {mode === 'summary' && summary ? (
                                 <div className="summary-content-container">
                                     {summary.split('\n').map((line, i) => (
@@ -680,7 +735,11 @@ export default function AshokApp() {
                             )}
                         </>
                     ) : (
-                        <div className="empty-prompt-text">Click Generate to extract prompts</div>
+                        <div className="empty-prompt-text">
+                            {status.platform
+                                ? `Extract prompts from this ${status.platform} conversation`
+                                : 'Navigate to a supported AI chat to extract prompts'}
+                        </div>
                     )}
                 </>
             );
@@ -697,16 +756,17 @@ export default function AshokApp() {
     };
 
     const islandExpanded = isExpanded || view === 'config';
+    const showUpgradePill = view === 'config' && (configTab === 'profile' || configTab === 'settings');
 
     return (
         <div className="app-container">
             <main className={`main-content ${islandExpanded ? 'expanded-view' : ''}`}>
-                <div className={`action-island ${islandExpanded ? 'expanded' : ''}`}>
+                <div className={`action-island ${islandExpanded ? 'expanded' : ''} ${showUpgradePill ? 'with-upgrade' : ''}`}>
                     {renderToggleRow()}
                     {view === 'home' && isExpanded && (
                         <div className="controls-row visible">
-                            <button className="control-btn" onClick={handleBack}>
-                                <span style={{ marginRight: 4 }}>←</span> Back
+                            <button className="control-btn" onClick={isEditing ? toggleEdit : handleBack}>
+                                {isEditing ? 'Done' : 'Close'}
                             </button>
                             {result ? (
                                 isEditing ? (
@@ -721,7 +781,7 @@ export default function AshokApp() {
                                         className="control-btn"
                                         onClick={toggleEdit}
                                     >
-                                        Edit
+                                        Select prompts
                                     </button>
                                 )
                             ) : null}
@@ -740,14 +800,14 @@ export default function AshokApp() {
                                     >
                                         Delete ({selectedPrompts.size})
                                     </button>
-                                    <button className="dual-btn" onClick={handleCopy}>
+                                    <button className="dual-btn" onClick={handleCopy} disabled={selectedPrompts.size === 0}>
                                         Copy ({selectedPrompts.size})
                                     </button>
                                 </>
                             ) : (
                                 <>
                                     <button className="dual-btn primary" onClick={handleGenerate}>
-                                        Generate
+                                        {mode === 'raw' ? 'Extract Prompts' : 'Summarize'}
                                     </button>
                                     <button className="dual-btn" onClick={handleCopy}>
                                         Copy
@@ -757,58 +817,50 @@ export default function AshokApp() {
                         </div>
                     )}
                     {view === 'home' && !islandExpanded && (
-                        <button className="generate-btn-lg" onClick={handleGenerate} disabled={!status.supported}>
-                            Generate
-                        </button>
+                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                            <button className="generate-btn-lg" onClick={handleGenerate} disabled={!status.supported}>
+                                {mode === 'raw' ? 'Extract' : 'Summarize'}
+                            </button>
+                        </div>
                     )}
                 </div>
                 <Tooltip content="Unlock unlimited extractions and AI summaries" fullWidth>
-                    <button className={`upgrade-pill ${islandExpanded ? 'visible' : ''}`}>
+                    <button className={`upgrade-pill ${showUpgradePill ? 'visible' : ''}`}>
                         Upgrade
                     </button>
                 </Tooltip>
             </main>
 
             <footer className="app-footer">
-                <button
-                    className={`footer-icon-btn ${view === 'home' && !islandExpanded ? 'active' : ''}`}
-                    onClick={() => {
-                        setView('home');
-                        setIsExpanded(false);
-                    }}
-                    title="Home"
-                >
-                    <IconHome />
-                </button>
-                <button
-                    className={`footer-icon-btn ${configTab === 'history' && islandExpanded ? 'active' : ''}`}
-                    onClick={() => openConfig('history')}
-                    title="History"
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                </button>
-                <button
-                    className={`footer-icon-btn ${configTab === 'settings' && islandExpanded ? 'active' : ''}`}
-                    onClick={() => openConfig('settings')}
-                    title="Settings"
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="3" />
-                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
-                    </svg>
-                </button>
-                <button
-                    className={`footer-icon-btn ${configTab === 'profile' && islandExpanded ? 'active' : ''}`}
-                    onClick={() => openConfig('profile')}
-                    title="Profile"
-                >
-                    <div className="footer-avatar-mini">
-                        {user?.picture ? <img src={user.picture} alt="u" style={{ width: '100%', height: '100%', borderRadius: '50%' }} /> : <IconUser />}
+                <button className="footer-profile-btn" onClick={() => openConfig('profile')}>
+                    <div className="footer-avatar-sm">
+                        {user?.picture ? <img src={user.picture} alt="u" /> : <IconUser />}
+                    </div>
+                    <div className="footer-user-stack">
+                        <span className="footer-name-min">{user?.name || 'Guest'}</span>
+                        <span className="footer-badge-min">{tier}</span>
                     </div>
                 </button>
+
+                <div className="footer-status-area">
+                    {result && isExpanded ? (
+                        <div className="footer-prompt-count">
+                            <span className="footer-count-text">
+                                {result.prompts.length} prompt{result.prompts.length !== 1 ? 's' : ''}
+                            </span>
+                            {status.platform && (
+                                <span className="footer-count-platform">from {status.platform}</span>
+                            )}
+                        </div>
+                    ) : status.platform ? (
+                        <Tooltip content={`Connected to ${status.platform}`}>
+                            <div className="status-pill-active">
+                                <span className="status-dot"></span>
+                                <span className="platform-name">{status.platform}</span>
+                            </div>
+                        </Tooltip>
+                    ) : null}
+                </div>
             </footer>
 
             <Toast visible={showToast.visible} message={showToast.message} />

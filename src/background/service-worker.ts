@@ -1,5 +1,6 @@
 import type { ExtractionResult, Message, Mode, ExtractionResultMessage } from '../types';
 import { aiSummarizer, initializeAISummarizer } from '../services/ai-summarizer';
+import { localSummarizer } from '../services/local-summarizer';
 import { saveKeylogsToCloud, getCurrentUserId, CloudKeylogItem, getKeylogsFromCloud } from '../services/firebase';
 import { doc, increment } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
@@ -500,21 +501,35 @@ async function handleSidePanelMessage(message: Message) {
           success: true,
         });
       } catch (error) {
-        console.error('[SahAI] Summarization error:', error);
+        console.error('[SahAI] AI Summarization error, falling back to local:', error);
 
-        // Fallback: Just join the prompts if AI fails
-        const fallbackSummary = prompts.map(p => p.content).join('\n\n');
+        try {
+          // Use the LocalSummarizer created by the user
+          const result = await localSummarizer.summarize(prompts);
 
-        broadcastToSidePanels({
-          action: 'SUMMARY_RESULT',
-          result: {
-            original: prompts,
-            summary: fallbackSummary,
-            promptCount: { before: prompts.length, after: prompts.length },
-          },
-          success: true, // Mark as success so UI displays the fallback
-          error: error instanceof Error ? error.message : 'AI Summarization failed, showing raw prompts.',
-        });
+          broadcastToSidePanels({
+            action: 'SUMMARY_RESULT',
+            result,
+            success: true,
+            error: error instanceof Error ? error.message : 'AI Backend unavailable. Using local summarization.'
+          });
+        } catch (localError) {
+          console.error('[SahAI] Local summarization also failed:', localError);
+
+          // Absolute last resort: raw join
+          const fallbackSummary = prompts.map(p => p.content).join('\n\n');
+
+          broadcastToSidePanels({
+            action: 'SUMMARY_RESULT',
+            result: {
+              original: prompts,
+              summary: fallbackSummary,
+              promptCount: { before: prompts.length, after: prompts.length },
+            },
+            success: true,
+            error: 'Summarization failed. Showing raw content.',
+          });
+        }
       }
       break;
     }

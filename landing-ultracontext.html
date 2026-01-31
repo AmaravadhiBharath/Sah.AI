@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Extractor - Extract & Summarize AI Prompts</title>
+    <meta name="description" content="One-click prompt extraction and summarization for any website. A Chrome extension for developers and creators.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0e1a;
+            --bg-light: #141829;
+            --text: #e4e6eb;
+            --text-muted: #8b92a0;
+            --accent: #00d9ff;
+            --accent-dark: #0099cc;
+            --border: #1e2333;
+            --glow: #00d9ff;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            font-size: 16px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -20%;
+            width: 150%;
+            height: 150%;
+            background: linear-gradient(110deg, transparent 0%, rgba(0, 150, 200, 0.15) 25%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+            animation: lightBeam1 15s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            right: -40%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(125deg, transparent 20%, rgba(0, 217, 255, 0.1) 50%, transparent 80%);
+            pointer-events: none;
+            z-index: 1;
+            animation: lightBeam2 20s ease-in-out infinite;
+        }
+
+        @keyframes lightBeam1 {
+            0%, 100% { transform: rotate(0deg) translateX(0); }
+            50% { transform: rotate(1deg) translateX(30px); }
+        }
+
+        @keyframes lightBeam2 {
+            0%, 100% { transform: rotate(0deg) translateX(0); }
+            50% { transform: rotate(-1deg) translateX(-40px); }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 2rem;
+            background: rgba(10, 14, 26, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 2000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            color: var(--text);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .btn-nav {
+            padding: 0.6rem 1.5rem;
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            border-radius: 0.3rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-nav:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+        }
+
+        /* Hero */
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 150px 2rem 100px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .hero::before,
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(135deg, transparent 30%, rgba(0, 217, 255, 0.2) 50%, transparent 70%);
+            animation: beamShift 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .hero::after {
+            animation: beamShift 10s ease-in-out infinite reverse;
+            top: -30%;
+            right: -30%;
+            width: 150%;
+            height: 150%;
+            background: linear-gradient(110deg, transparent 20%, rgba(0, 217, 255, 0.15) 45%, transparent 80%);
+        }
+
+        @keyframes beamShift {
+            0%, 100% {
+                transform: translateX(0) translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateX(50px) translateY(-50px) rotate(2deg);
+            }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 .accent {
+            color: var(--accent);
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            gap: 1rem;
+            margin-bottom: 4rem;
+        }
+
+        .btn-primary {
+            padding: 0.9rem 2rem;
+            background: var(--accent);
+            color: var(--bg);
+            border: 1px solid var(--accent);
+            border-radius: 0.3rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark);
+            border-color: var(--accent-dark);
+            box-shadow: 0 0 25px rgba(0, 217, 255, 0.4);
+        }
+
+        .btn-secondary {
+            padding: 0.9rem 2rem;
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            border-radius: 0.3rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+        }
+
+        /* Code Block */
+        .hero-code {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(20, 24, 41, 0.5);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 217, 255, 0.25), inset 0 0 50px rgba(0, 217, 255, 0.05);
+            backdrop-filter: blur(10px);
+            z-index: 2;
+        }
+
+        .hero-code::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            right: -100%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(135deg, transparent 0%, rgba(0, 217, 255, 0.15) 25%, transparent 50%, rgba(0, 217, 255, 0.1) 75%, transparent 100%);
+            animation: shimmer 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0%, 100% {
+                transform: translateX(-100%) translateY(-100%);
+            }
+            50% {
+                transform: translateX(0) translateY(0);
+            }
+        }
+
+        .code-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+
+        .code-dot.red { background: #ff6b6b; }
+        .code-dot.yellow { background: #ffd93d; }
+        .code-dot.green { background: #51cf66; }
+
+        .code-tabs {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .code-tab.active {
+            color: var(--accent);
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        .code-content {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.02), transparent);
+            padding: 1rem;
+            margin: -1rem;
+        }
+
+        .code-line {
+            color: var(--text-muted);
+        }
+
+        .code-keyword {
+            color: #ff6b9d;
+        }
+
+        .code-function {
+            color: var(--accent);
+        }
+
+        .code-string {
+            color: #51cf66;
+        }
+
+        .code-comment {
+            color: #5a6578;
+        }
+
+        /* Features Section */
+        .features {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 2rem;
+        }
+
+        .feature-block {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin-bottom: 120px;
+            padding: 80px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .feature-block.reverse {
+            grid-template-columns: 1fr 1fr;
+            direction: rtl;
+        }
+
+        .feature-block.reverse > * {
+            direction: ltr;
+        }
+
+        .feature-content h2 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .feature-content p {
+            font-size: 1rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .feature-visual {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-visual::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0, 217, 255, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .feature-visual-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            width: 100%;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto;
+            transition: all 0.3s;
+        }
+
+        .icon-box:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+        }
+
+        .diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .diagram-node {
+            width: 100px;
+            height: 60px;
+            background: var(--bg);
+            border: 1px solid var(--accent);
+            border-radius: 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 0.85rem;
+            position: relative;
+        }
+
+        .diagram-arrow {
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, var(--accent), transparent);
+        }
+
+        .code-mini {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 0.3rem;
+            padding: 1rem;
+            font-family: 'Monaco', monospace;
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-align: left;
+            margin-top: 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 4rem 2rem;
+            background: var(--bg-light);
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h3 {
+            color: var(--text);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .footer-section a {
+            display: block;
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+            }
+
+            .feature-block {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                margin-bottom: 60px;
+                padding: 40px 0;
+            }
+
+            .feature-block.reverse {
+                direction: ltr;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .icon-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Animations */
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 217, 255, 0.5);
+            }
+        }
+
+        .btn-primary {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-block {
+            animation: slideIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">[ • ] PROMPT EXTRACTOR</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how">How It Works</a></li>
+                <li><a href="https://docs.github.com">Docs</a></li>
+            </ul>
+            <button class="btn-nav">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Extract & <span class="accent">Summarize</span> AI Prompts Instantly</h1>
+            <p class="hero-subtitle">One-click extraction for any website. No setup required. Local processing. Zero tracking.</p>
+
+            <div class="hero-cta">
+                <button class="btn-primary">Add to Chrome</button>
+                <button class="btn-secondary">View GitHub</button>
+            </div>
+        </div>
+
+        <div class="hero-code">
+            <div class="code-header">
+                <div class="code-dot red"></div>
+                <div class="code-dot yellow"></div>
+                <div class="code-dot green"></div>
+            </div>
+            <div class="code-tabs">
+                <span class="code-tab active">prompt-extractor.js</span>
+                <span class="code-tab">config.json</span>
+            </div>
+            <div class="code-content">
+                <div class="code-line"><span class="code-keyword">import</span> { <span class="code-function">extractPrompt</span> } <span class="code-keyword">from</span> <span class="code-string">'prompt-extractor'</span></div>
+                <div class="code-line" style="margin: 0.5rem 0;"></div>
+                <div class="code-line"><span class="code-keyword">const</span> result = <span class="code-keyword">await</span> <span class="code-function">extractPrompt</span>({</div>
+                <div class="code-line">&nbsp;&nbsp;mode: <span class="code-string">'summarize'</span>,</div>
+                <div class="code-line">&nbsp;&nbsp;privacy: <span class="code-string">'local'</span></div>
+                <div class="code-line">})</div>
+                <div class="code-line" style="margin: 0.5rem 0;"></div>
+                <div class="code-line"><span class="code-comment">// Copy to clipboard</span></div>
+                <div class="code-line"><span class="code-function">navigator.clipboard</span>.<span class="code-function">writeText</span>(result.text)</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <!-- Feature 1 -->
+        <div class="feature-block">
+            <div class="feature-content">
+                <h2>One-Click Extraction</h2>
+                <p>Click the extension icon on any page and instantly capture prompts. Works with ChatGPT, Claude, and any website with text content.</p>
+                <p>No setup required. No API keys. No friction. Just click and extract.</p>
+            </div>
+            <div class="feature-visual">
+                <div class="feature-visual-content">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
+                    <p style="color: var(--text-muted);">Extract in milliseconds</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-block reverse">
+            <div class="feature-content">
+                <h2>Smart Summarization</h2>
+                <p>Toggle between full text and automatic summarization. Get the key points without the fluff.</p>
+                <p>Toggle modes with a single click. Perfect for quick captures and detailed reviews.</p>
+            </div>
+            <div class="feature-visual">
+                <div class="feature-visual-content">
+                    <div class="icon-grid">
+                        <div class="icon-box">📄</div>
+                        <div class="icon-box">→</div>
+                        <div class="icon-box">📝</div>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Full text to summary</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-block">
+            <div class="feature-content">
+                <h2>Complete Privacy</h2>
+                <p>Everything happens in your browser. Zero cloud processing. Zero tracking. Your data never leaves your device.</p>
+                <p>Open source and auditable. Complete transparency on how your data is processed.</p>
+            </div>
+            <div class="feature-visual">
+                <div class="feature-visual-content">
+                    <div class="diagram">
+                        <div class="diagram-node">Browser</div>
+                        <div class="diagram-arrow"></div>
+                        <div class="diagram-node" style="border-color: #51cf66;">Local Storage</div>
+                    </div>
+                    <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">No external servers</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-block reverse">
+            <div class="feature-content">
+                <h2>Smart History</h2>
+                <p>All your extractions saved locally in organized history. Search and revisit any extraction anytime.</p>
+                <p>Filter by date, source, or keyword. Never lose an important prompt again.</p>
+            </div>
+            <div class="feature-visual">
+                <div class="feature-visual-content">
+                    <div class="code-mini">
+                        <div>history.search("prompt")</div>
+                        <div style="margin-top: 0.5rem; opacity: 0.6;">→ 24 results</div>
+                    </div>
+                    <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">Fast local search</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Product</h3>
+                <a href="#">Features</a>
+                <a href="#">Chrome Web Store</a>
+                <a href="#">Changelog</a>
+            </div>
+            <div class="footer-section">
+                <h3>Developer</h3>
+                <a href="#">GitHub</a>
+                <a href="#">Documentation</a>
+                <a href="#">API Reference</a>
+            </div>
+            <div class="footer-section">
+                <h3>Company</h3>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>© 2026 Prompt Extractor</div>
+            <div>Built for developers. Privacy first.</div>
+        </div>
+    </footer>
+</body>
+</html>

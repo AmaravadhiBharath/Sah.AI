@@ -394,40 +394,24 @@ export class AISummarizer {
 
       console.log(`[AISummarizer] Sending ${content.length} chars (from ${prompts.length} prompts, filtered to ${filtered.length})`);
 
-      console.log(`[AISummarizer] Sending request to ${BACKEND_URL}`);
-      const payload = {
-        content,
-        additionalInfo: CONSOLIDATION_RULES,
-        provider: 'auto',
-        options: {
-          format: options.format || 'paragraph',
-          tone: options.tone || 'normal',
-          includeAI: options.includeAI || false,
-          mode: 'consolidate',
-        },
-      };
-
-      // Log payload summary (avoid huge logs)
-      console.log('[AISummarizer] Request payload options:', JSON.stringify(payload.options));
-
       const response = await resilientFetch(BACKEND_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          content,
+          additionalInfo: CONSOLIDATION_RULES,
+          provider: 'auto',
+          options: {
+            format: options.format || 'paragraph',
+            tone: options.tone || 'normal',
+            includeAI: options.includeAI || false,
+            mode: 'consolidate',
+          },
+        }),
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[AISummarizer] Response Error: ${response.status} ${response.statusText}`);
-        console.error(`[AISummarizer] Error Body: ${errorText}`);
-
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: `HTTP ${response.status}: ${errorText}` };
-        }
-
+        const errorData = await response.json();
         throw new Error(errorData.error || `Worker Error: ${response.status}`);
       }
 

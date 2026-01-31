@@ -118,13 +118,9 @@ interface TooltipProps {
     fullWidth?: boolean;
 }
 
-export function Tooltip({ content, children, fullWidth }: TooltipProps) {
-    return (
-        <div className={`tooltip-wrapper ${fullWidth ? 'full-width' : ''}`}>
-            {children}
-            <div className="tooltip-popup">{content}</div>
-        </div>
-    );
+export function Tooltip({ children }: TooltipProps) {
+    // Tooltips disabled per user request
+    return <>{children}</>;
 }
 
 // ═══════════════════════════════════════════════════
@@ -141,15 +137,15 @@ interface SelectionToolbarProps {
 export function SelectionToolbar({ selectedCount, totalCount, onSelectAll, onClearAll }: SelectionToolbarProps) {
     return (
         <div className="selection-toolbar">
-            <button 
-                className="toolbar-btn" 
+            <button
+                className="toolbar-btn"
                 onClick={onSelectAll}
                 disabled={selectedCount === totalCount}
             >
-                Select All
+                All
             </button>
-            <button 
-                className="toolbar-btn" 
+            <button
+                className="toolbar-btn"
                 onClick={onClearAll}
                 disabled={selectedCount === 0}
             >
@@ -174,7 +170,7 @@ interface PromptCountHeaderProps {
 
 export function PromptCountHeader({ count, platform, mode }: PromptCountHeaderProps) {
     const modeLabel = mode === 'raw' ? 'Extracted' : 'Summarized';
-    
+
     return (
         <div className="prompt-count-header">
             <span className="count-text">

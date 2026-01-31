@@ -118,6 +118,148 @@ async function resilientFetch(url, options = {}) {
     });
   });
 }
+class LocalSummarizer {
+  /**
+   * Smart deduplication: removes similar prompts
+   */
+  deduplicatePrompts(prompts) {
+    if (prompts.length <= 1) return prompts;
+    const result = [];
+    const normalized = /* @__PURE__ */ new Set();
+    for (const prompt of prompts) {
+      const norm = this.normalizeText(prompt.content);
+      if (normalized.has(norm)) continue;
+      let isSimilar = false;
+      for (const existing of result) {
+        if (this.calculateSimilarity(norm, this.normalizeText(existing.content)) > 0.85) {
+          isSimilar = true;
+          break;
+        }
+      }
+      if (!isSimilar) {
+        normalized.add(norm);
+        result.push(prompt);
+      }
+    }
+    return result;
+  }
+  /**
+   * Normalize text for comparison
+   */
+  normalizeText(text) {
+    return text.toLowerCase().trim().replace(/\s+/g, " ").replace(/[^\w\s]/g, "");
+  }
+  /**
+   * Calculate similarity between two strings (0-1)
+   */
+  calculateSimilarity(a, b) {
+    if (a === b) return 1;
+    if (!a.length || !b.length) return 0;
+    if (a.includes(b) || b.includes(a)) {
+      const shorter = Math.min(a.length, b.length);
+      const longer = Math.max(a.length, b.length);
+      return shorter / longer;
+    }
+    const wordsA = new Set(a.split(" ").filter((w) => w.length > 2));
+    const wordsB = new Set(b.split(" ").filter((w) => w.length > 2));
+    if (!wordsA.size || !wordsB.size) return 0;
+    let overlap = 0;
+    for (const word of wordsA) {
+      if (wordsB.has(word)) overlap++;
+    }
+    return overlap / Math.max(wordsA.size, wordsB.size);
+  }
+  /**
+   * Categorize prompts by type
+   */
+  categorizePrompts(prompts) {
+    const categories = /* @__PURE__ */ new Map();
+    for (const prompt of prompts) {
+      const text = prompt.content.toLowerCase();
+      let category = "Other";
+      if (text.includes("code") || text.includes("function") || text.includes("script")) {
+        category = "Code & Development";
+      } else if (text.includes("design") || text.includes("style") || text.includes("color")) {
+        category = "Design & UI";
+      } else if (text.includes("question") || text.match(/^(what|how|why|when|where)/)) {
+        category = "Questions";
+      } else if (text.includes("create") || text.includes("write") || text.includes("generate")) {
+        category = "Creation Tasks";
+      } else if (text.includes("fix") || text.includes("debug") || text.includes("error")) {
+        category = "Debugging";
+      } else if (text.includes("explain") || text.includes("help") || text.includes("guide")) {
+        category = "Help & Explanation";
+      }
+      if (!categories.has(category)) {
+        categories.set(category, []);
+      }
+      categories.get(category).push(prompt);
+    }
+    return categories;
+  }
+  /**
+   * Format summary output
+   */
+  formatSummary(prompts) {
+    const deduped = this.deduplicatePrompts(prompts);
+    const categories = this.categorizePrompts(deduped);
+    const parts = [];
+    parts.push(`📋 Extraction Summary`);
+    parts.push(`Total Prompts: ${prompts.length}`);
+    parts.push(`Unique Prompts: ${deduped.length}`);
+    parts.push(`Duplicates Removed: ${prompts.length - deduped.length}`);
+    parts.push("");
+    parts.push(`📊 Prompts by Category:`);
+    parts.push("");
+    for (const [category, items] of categories) {
+      parts.push(`🔹 ${category} (${items.length})`);
+      for (const item of items.slice(0, 2)) {
+        const preview = item.content.substring(0, 80);
+        parts.push(`   • ${preview}${item.content.length > 80 ? "..." : ""}`);
+      }
+      if (items.length > 2) {
+        parts.push(`   • +${items.length - 2} more...`);
+      }
+      parts.push("");
+    }
+    parts.push(`💡 Key Insights:`);
+    parts.push(`• You worked on ${categories.size} different categories`);
+    const avgLength = Math.round(deduped.reduce((sum, p) => sum + p.content.length, 0) / deduped.length);
+    parts.push(`• Average prompt length: ${avgLength} characters`);
+    if (prompts.length > deduped.length) {
+      const dupRate = Math.round((prompts.length - deduped.length) / prompts.length * 100);
+      parts.push(`• ${dupRate}% of prompts were duplicates`);
+    }
+    parts.push("");
+    parts.push("─────────────────────────────────");
+    parts.push("📱 Summarized by SahAI (Client-Side)");
+    return parts.join("\n");
+  }
+  /**
+   * Main summarization method
+   */
+  async summarize(prompts) {
+    if (prompts.length === 0) {
+      throw new Error("No prompts to summarize");
+    }
+    try {
+      const summary = this.formatSummary(prompts);
+      const deduped = this.deduplicatePrompts(prompts);
+      return {
+        original: prompts,
+        summary,
+        promptCount: {
+          before: prompts.length,
+          after: deduped.length
+        }
+      };
+    } catch (error) {
+      console.error("[LocalSummarizer] Error:", error);
+      throw error;
+    }
+  }
+}
+const localSummarizer = new LocalSummarizer();
 const BACKEND_URL = "https://tai-backend.amaravadhibharath.workers.dev";
 const CONSOLIDATION_RULES = `[INTENT COMPILATION PROTOCOL v5.0 - ENTERPRISE]
 
@@ -427,34 +569,23 @@ class AISummarizer {
       const filtered = filterPrompts(prompts);
       const content = filtered.map((p, i) => `${i + 1}. ${p.content}`).join("\n\n");
       console.log(`[AISummarizer] Sending ${content.length} chars (from ${prompts.length} prompts, filtered to ${filtered.length})`);
-      console.log(`[AISummarizer] Sending request to ${BACKEND_URL}`);
-      const payload = {
-        content,
-        additionalInfo: CONSOLIDATION_RULES,
-        provider: "auto",
-        options: {
-          format: options.format || "paragraph",
-          tone: options.tone || "normal",
-          includeAI: options.includeAI || false,
-          mode: "consolidate"
-        }
-      };
-      console.log("[AISummarizer] Request payload options:", JSON.stringify(payload.options));
       const response = await resilientFetch(BACKEND_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          content,
+          additionalInfo: CONSOLIDATION_RULES,
+          provider: "auto",
+          options: {
+            format: options.format || "paragraph",
+            tone: options.tone || "normal",
+            includeAI: options.includeAI || false,
+            mode: "consolidate"
+          }
+        })
       });
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[AISummarizer] Response Error: ${response.status} ${response.statusText}`);
-        console.error(`[AISummarizer] Error Body: ${errorText}`);
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: `HTTP ${response.status}: ${errorText}` };
-        }
+        const errorData = await response.json();
         throw new Error(errorData.error || `Worker Error: ${response.status}`);
       }
       const data = await response.json();
@@ -471,9 +602,15 @@ class AISummarizer {
         }
       };
     } catch (error) {
-      console.error("[AISummarizer] Error:", error);
-      if (error.stack) console.error("[AISummarizer] Stack:", error.stack);
-      throw error;
+      console.error("[AISummarizer] Cloud AI failed, falling back to local summarization:", error);
+      try {
+        const localResult = await localSummarizer.summarize(prompts);
+        console.log("[AISummarizer] Local summarization successful");
+        return localResult;
+      } catch (localError) {
+        console.error("[AISummarizer] Local summarization also failed:", localError);
+        throw error;
+      }
     }
   }
 }
@@ -914,19 +1051,29 @@ async function handleSidePanelMessage(message) {
           success: true
         });
       } catch (error) {
-        console.error("[SahAI] Summarization error:", error);
-        const fallbackSummary = prompts.map((p) => p.content).join("\n\n");
-        broadcastToSidePanels({
-          action: "SUMMARY_RESULT",
-          result: {
-            original: prompts,
-            summary: fallbackSummary,
-            promptCount: { before: prompts.length, after: prompts.length }
-          },
-          success: true,
-          // Mark as success so UI displays the fallback
-          error: error instanceof Error ? error.message : "AI Summarization failed, showing raw prompts."
-        });
+        console.error("[SahAI] AI Summarization error, falling back to local:", error);
+        try {
+          const result = await localSummarizer.summarize(prompts);
+          broadcastToSidePanels({
+            action: "SUMMARY_RESULT",
+            result,
+            success: true,
+            error: error instanceof Error ? error.message : "AI Backend unavailable. Using local summarization."
+          });
+        } catch (localError) {
+          console.error("[SahAI] Local summarization also failed:", localError);
+          const fallbackSummary = prompts.map((p) => p.content).join("\n\n");
+          broadcastToSidePanels({
+            action: "SUMMARY_RESULT",
+            result: {
+              original: prompts,
+              summary: fallbackSummary,
+              promptCount: { before: prompts.length, after: prompts.length }
+            },
+            success: true,
+            error: "Summarization failed. Showing raw content."
+          });
+        }
       }
       break;
     }

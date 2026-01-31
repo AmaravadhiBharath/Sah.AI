@@ -78,19 +78,6 @@ export class LocalSummarizer {
     return overlap / Math.max(wordsA.size, wordsB.size);
   }
 
-  /**
-   * Extract key sentences from prompt
-   */
-  private extractKeyPoints(text: string): string[] {
-    // Split by sentences
-    const sentences = text
-      .split(/[.!?]+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 10)
-      .slice(0, 3); // Take first 3 sentences
-
-    return sentences;
-  }
 
   /**
    * Categorize prompts by type

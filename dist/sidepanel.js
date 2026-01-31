@@ -181,11 +181,8 @@ function ConfirmDialog({ visible, title, message, confirmLabel = "Delete", onCon
     ] })
   ] }) });
 }
-function Tooltip({ content, children, fullWidth }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `tooltip-wrapper ${fullWidth ? "full-width" : ""}`, children: [
-    children,
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "tooltip-popup", children: content })
-  ] });
+function Tooltip({ children }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
 }
 function SelectionToolbar({ selectedCount, totalCount, onSelectAll, onClearAll }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "selection-toolbar", children: [
@@ -195,7 +192,7 @@ function SelectionToolbar({ selectedCount, totalCount, onSelectAll, onClearAll }
         className: "toolbar-btn",
         onClick: onSelectAll,
         disabled: selectedCount === totalCount,
-        children: "Select All"
+        children: "All"
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -215,31 +212,21 @@ function SelectionToolbar({ selectedCount, totalCount, onSelectAll, onClearAll }
     ] })
   ] });
 }
-function PromptCountHeader({ count, platform, mode }) {
-  const modeLabel = mode === "raw" ? "Extracted" : "Summarized";
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prompt-count-header", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "count-text", children: [
-      count,
-      " prompt",
-      count !== 1 ? "s" : "",
-      " ",
-      modeLabel.toLowerCase()
-    ] }),
-    platform && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "count-platform", children: [
-      "from ",
-      platform
-    ] })
-  ] });
-}
 const IconHome = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
   /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" }),
   /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "9 22 9 12 15 12 15 22" })
+] });
+const IconGrid = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "currentColor", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "3", y: "3", width: "8", height: "8", rx: "2" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "13", y: "3", width: "8", height: "8", rx: "2" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "3", y: "13", width: "8", height: "8", rx: "2" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "13", y: "13", width: "8", height: "8", rx: "2" })
 ] });
 const IconUser = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
   /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" }),
   /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "7", r: "4" })
 ] });
-const APP_VERSION = "3.2.2";
+const APP_VERSION = "3.1.2";
 const SUPPORT_URL = "https://sahai.app/support";
 const HistoryView = ({ history, onSelect, currentPlatform }) => {
   const [filterPlatform, setFilterPlatform] = reactExports.useState("all");
@@ -322,7 +309,7 @@ const HistoryView = ({ history, onSelect, currentPlatform }) => {
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-preview", children: item.preview }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-stats", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-badge", children: item.mode }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-badge", children: item.mode === "raw" ? "Original" : item.mode.charAt(0).toUpperCase() + item.mode.slice(1) }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "history-count", children: [
               item.promptCount,
               " prompt",
@@ -416,6 +403,7 @@ function AshokApp() {
   const [theme, setTheme] = reactExports.useState("system");
   const [isAuthLoading, setIsAuthLoading] = reactExports.useState(false);
   const portRef = reactExports.useRef(null);
+  const latestResultRef = reactExports.useRef(null);
   reactExports.useEffect(() => {
     const port = chrome.runtime.connect({ name: "sidepanel" });
     portRef.current = port;
@@ -424,7 +412,7 @@ function AshokApp() {
         const res = message.result;
         const extractionMode = message.mode || mode;
         setResult(res);
-        if (message.mode) setMode(message.mode);
+        latestResultRef.current = res;
         if (extractionMode === "summary") {
           setLoading(true);
           setLoadingMessage("Processing content...");
@@ -452,8 +440,8 @@ function AshokApp() {
           setLoading(false);
           setIsExpanded(true);
           setView("home");
-          if (result) {
-            autoSaveToHistory(result, "summary", message.result.summary);
+          if (latestResultRef.current) {
+            autoSaveToHistory(latestResultRef.current, "summary", message.result.summary);
           }
           if (message.error) {
             setShowToast({ visible: true, message: "AI unavailable - showing raw prompts" });
@@ -473,9 +461,18 @@ function AshokApp() {
       }
     });
     port.postMessage({ action: "GET_STATUS" });
+    chrome.storage.local.get(["promptExtractor_user", "promptExtractor_tier"], (cached) => {
+      if (cached.promptExtractor_user) {
+        setUser(cached.promptExtractor_user);
+      }
+      if (cached.promptExtractor_tier) {
+        setTier(cached.promptExtractor_tier);
+      }
+    });
     initializeAuth().then(async (state) => {
       setUser(state.user);
       setTier(state.tier);
+      chrome.storage.local.set({ promptExtractor_tier: state.tier });
       if (state.user) {
         try {
           const cloudHistory = await getHistoryFromCloud(state.user.id);
@@ -496,6 +493,7 @@ function AshokApp() {
       if (newUser) {
         const newTier = await getUserTier(newUser);
         setTier(newTier);
+        chrome.storage.local.set({ promptExtractor_tier: newTier });
         try {
           const cloudHistory = await getHistoryFromCloud(newUser.id);
           if (cloudHistory.length > 0) {
@@ -510,6 +508,7 @@ function AshokApp() {
         }
       } else {
         setTier("guest");
+        chrome.storage.local.remove(["promptExtractor_tier"]);
       }
     });
     chrome.storage.local.get(["theme", "extractionHistory"], (result2) => {
@@ -682,26 +681,75 @@ function AshokApp() {
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           "button",
           {
-            className: `mode-btn ${mode === "raw" ? "active" : ""}`,
+            className: `mode-btn ${mode === "raw" ? "active" : ""} ${isEditing ? "disabled" : ""}`,
             onClick: () => {
-              if (!loading) setMode("raw");
+              if (!loading && !isEditing) setMode("raw");
             },
+            disabled: isEditing,
             children: "Extract"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           "button",
           {
-            className: `mode-btn ${mode === "summary" ? "active" : ""}`,
+            className: `mode-btn ${mode === "summary" ? "active" : ""} ${isEditing ? "disabled" : ""}`,
             onClick: () => {
-              if (!loading) setMode("summary");
+              if (!loading && !isEditing) setMode("summary");
             },
+            disabled: isEditing,
             children: "Summarize"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `toggle-nav-btn ${isEditing ? "disabled" : ""}`,
+            onClick: () => {
+              if (!isEditing) openConfig("settings");
+            },
+            title: "Menu",
+            disabled: isEditing,
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconGrid, {})
           }
         )
       ] });
     } else {
-      return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toggle-row centered-title", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "section-title-text", children: configTab.charAt(0).toUpperCase() + configTab.slice(1) }) });
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "toggle-row", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: "toggle-nav-btn",
+            onClick: () => setView("home"),
+            title: "Go to Home",
+            style: { marginRight: 4 },
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHome, {})
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `mode-btn ${configTab === "history" ? "active" : ""}`,
+            onClick: () => setConfigTab("history"),
+            children: "History"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `mode-btn ${configTab === "settings" ? "active" : ""}`,
+            onClick: () => setConfigTab("settings"),
+            children: "Settings"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `mode-btn ${configTab === "profile" ? "active" : ""}`,
+            onClick: () => setConfigTab("profile"),
+            children: "Profile"
+          }
+        )
+      ] });
     }
   };
   const renderContentArea = () => {
@@ -718,32 +766,22 @@ function AshokApp() {
           onRetry: handleGenerate,
           onDismiss: () => setError(null)
         }
-      ) : result ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          PromptCountHeader,
-          {
-            count: result.prompts.length,
-            platform: status.platform,
-            mode
-          }
-        ),
-        mode === "summary" && summary ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "summary-content-container", children: summary.split("\n").map((line, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "summary-paragraph", children: line }, i)) }) : result.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "div",
-          {
-            className: `prompt-box 
+      ) : result ? /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: mode === "summary" && summary ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "summary-content-container", children: summary.split("\n").map((line, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "summary-paragraph", children: line }, i)) }) : result.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: `prompt-box 
                                             ${isEditing ? "selectable" : ""} 
                                             ${isEditing && selectedPrompts.has(i) ? "selected" : ""} 
                                             ${isEditing && !selectedPrompts.has(i) && selectedPrompts.size > 0 ? "dimmed" : ""}
                                         `,
-            onClick: () => isEditing && toggleSelection(i),
-            children: [
-              isEditing && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "selection-indicator", children: selectedPrompts.has(i) ? "✓" : "" }),
-              p.content
-            ]
-          },
-          i
-        ))
-      ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "empty-prompt-text", children: "Click Generate to extract prompts" }) });
+          onClick: () => isEditing && toggleSelection(i),
+          children: [
+            isEditing && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "selection-indicator", children: selectedPrompts.has(i) ? "✓" : "" }),
+            p.content
+          ]
+        },
+        i
+      )) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "empty-prompt-text", children: status.platform ? `Extract prompts from this ${status.platform} conversation` : "Navigate to a supported AI chat to extract prompts" }) });
     }
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `view-content-anim 
                 ${view === "home" ? "prompts-area" : ""} 
@@ -751,15 +789,13 @@ function AshokApp() {
             `, children: content });
   };
   const islandExpanded = isExpanded || view === "config";
+  const showUpgradePill = view === "config" && (configTab === "profile" || configTab === "settings");
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app-container", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: `main-content ${islandExpanded ? "expanded-view" : ""}`, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `action-island ${islandExpanded ? "expanded" : ""}`, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `action-island ${islandExpanded ? "expanded" : ""} ${showUpgradePill ? "with-upgrade" : ""}`, children: [
         renderToggleRow(),
         view === "home" && isExpanded && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "controls-row visible", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "control-btn", onClick: handleBack, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { marginRight: 4 }, children: "←" }),
-            " Back"
-          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "control-btn", onClick: isEditing ? toggleEdit : handleBack, children: isEditing ? "Done" : "Close" }),
           result ? isEditing ? /* @__PURE__ */ jsxRuntimeExports.jsx(
             SelectionToolbar,
             {
@@ -773,7 +809,7 @@ function AshokApp() {
             {
               className: "control-btn",
               onClick: toggleEdit,
-              children: "Edit"
+              children: "Select prompts"
             }
           ) : null
         ] }),
@@ -793,65 +829,41 @@ function AshokApp() {
               ]
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "dual-btn", onClick: handleCopy, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "dual-btn", onClick: handleCopy, disabled: selectedPrompts.size === 0, children: [
             "Copy (",
             selectedPrompts.size,
             ")"
           ] })
         ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn primary", onClick: handleGenerate, children: "Generate" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn primary", onClick: handleGenerate, children: mode === "raw" ? "Extract Prompts" : "Summarize" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn", onClick: handleCopy, children: "Copy" })
         ] }) }),
-        view === "home" && !islandExpanded && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "generate-btn-lg", onClick: handleGenerate, disabled: !status.supported, children: "Generate" })
+        view === "home" && !islandExpanded && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "generate-btn-lg", onClick: handleGenerate, disabled: !status.supported, children: mode === "raw" ? "Extract" : "Summarize" }) })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { content: "Unlock unlimited extractions and AI summaries", fullWidth: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `upgrade-pill ${islandExpanded ? "visible" : ""}`, children: "Upgrade" }) })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { content: "Unlock unlimited extractions and AI summaries", fullWidth: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `upgrade-pill ${showUpgradePill ? "visible" : ""}`, children: "Upgrade" }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("footer", { className: "app-footer", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "button",
-        {
-          className: `footer-icon-btn ${view === "home" && !islandExpanded ? "active" : ""}`,
-          onClick: () => {
-            setView("home");
-            setIsExpanded(false);
-          },
-          title: "Home",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHome, {})
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "button",
-        {
-          className: `footer-icon-btn ${configTab === "history" && islandExpanded ? "active" : ""}`,
-          onClick: () => openConfig("history"),
-          title: "History",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "10" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "12 6 12 12 16 14" })
-          ] })
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "button",
-        {
-          className: `footer-icon-btn ${configTab === "settings" && islandExpanded ? "active" : ""}`,
-          onClick: () => openConfig("settings"),
-          title: "Settings",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "3" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" })
-          ] })
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "button",
-        {
-          className: `footer-icon-btn ${configTab === "profile" && islandExpanded ? "active" : ""}`,
-          onClick: () => openConfig("profile"),
-          title: "Profile",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "footer-avatar-mini", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u", style: { width: "100%", height: "100%", borderRadius: "50%" } }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) })
-        }
-      )
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "footer-profile-btn", onClick: () => openConfig("profile"), children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "footer-avatar-sm", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "footer-user-stack", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "footer-name-min", children: (user == null ? void 0 : user.name) || "Guest" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "footer-badge-min", children: tier })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "footer-status-area", children: result && isExpanded ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "footer-prompt-count", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "footer-count-text", children: [
+          result.prompts.length,
+          " prompt",
+          result.prompts.length !== 1 ? "s" : ""
+        ] }),
+        status.platform && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "footer-count-platform", children: [
+          "from ",
+          status.platform
+        ] })
+      ] }) : status.platform ? /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { content: `Connected to ${status.platform}`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "status-pill-active", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "status-dot" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "platform-name", children: status.platform })
+      ] }) }) : null })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Toast, { visible: showToast.visible, message: showToast.message }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
