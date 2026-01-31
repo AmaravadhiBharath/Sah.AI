@@ -169,6 +169,11 @@ export class LocalSummarizer {
       parts.push(`• ${dupRate}% of prompts were duplicates`);
     }
 
+    // Add signature
+    parts.push('');
+    parts.push('─────────────────────────────────');
+    parts.push('📱 Summarized by SahAI (Client-Side)');
+
     return parts.join('\n');
   }
 
