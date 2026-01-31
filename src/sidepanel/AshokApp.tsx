@@ -300,6 +300,7 @@ export default function AshokApp() {
     const [loadingMessage, setLoadingMessage] = useState('');
     const [showToast, setShowToast] = useState<{ visible: boolean; message: string }>({ visible: false, message: '' });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isStateLoaded, setIsStateLoaded] = useState(false);
 
     // Settings State
     const [theme, setTheme] = useState<ThemeMode>('system');
@@ -450,6 +451,8 @@ export default function AshokApp() {
             if (result.last_view === 'config') {
                 setIsExpanded(true);
             }
+
+            setIsStateLoaded(true);
         });
 
         return () => {
@@ -463,16 +466,22 @@ export default function AshokApp() {
     // ═══════════════════════════════════════════════════
 
     useEffect(() => {
-        chrome.storage.local.set({ last_view: view });
-    }, [view]);
+        if (isStateLoaded) {
+            chrome.storage.local.set({ last_view: view });
+        }
+    }, [view, isStateLoaded]);
 
     useEffect(() => {
-        chrome.storage.local.set({ last_config_tab: configTab });
-    }, [configTab]);
+        if (isStateLoaded) {
+            chrome.storage.local.set({ last_config_tab: configTab });
+        }
+    }, [configTab, isStateLoaded]);
 
     useEffect(() => {
-        chrome.storage.local.set({ last_mode: mode });
-    }, [mode]);
+        if (isStateLoaded) {
+            chrome.storage.local.set({ last_mode: mode });
+        }
+    }, [mode, isStateLoaded]);
 
     // Apply theme to document
     useEffect(() => {

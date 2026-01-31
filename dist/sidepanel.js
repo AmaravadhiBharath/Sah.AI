@@ -400,6 +400,7 @@ function AshokApp() {
   const [loadingMessage, setLoadingMessage] = reactExports.useState("");
   const [showToast, setShowToast] = reactExports.useState({ visible: false, message: "" });
   const [showDeleteConfirm, setShowDeleteConfirm] = reactExports.useState(false);
+  const [isStateLoaded, setIsStateLoaded] = reactExports.useState(false);
   const [theme, setTheme] = reactExports.useState("system");
   const [isAuthLoading, setIsAuthLoading] = reactExports.useState(false);
   const portRef = reactExports.useRef(null);
@@ -520,6 +521,7 @@ function AshokApp() {
       if (result2.last_view === "config") {
         setIsExpanded(true);
       }
+      setIsStateLoaded(true);
     });
     return () => {
       port.disconnect();
@@ -527,14 +529,20 @@ function AshokApp() {
     };
   }, []);
   reactExports.useEffect(() => {
-    chrome.storage.local.set({ last_view: view });
-  }, [view]);
+    if (isStateLoaded) {
+      chrome.storage.local.set({ last_view: view });
+    }
+  }, [view, isStateLoaded]);
   reactExports.useEffect(() => {
-    chrome.storage.local.set({ last_config_tab: configTab });
-  }, [configTab]);
+    if (isStateLoaded) {
+      chrome.storage.local.set({ last_config_tab: configTab });
+    }
+  }, [configTab, isStateLoaded]);
   reactExports.useEffect(() => {
-    chrome.storage.local.set({ last_mode: mode });
-  }, [mode]);
+    if (isStateLoaded) {
+      chrome.storage.local.set({ last_mode: mode });
+    }
+  }, [mode, isStateLoaded]);
   reactExports.useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
