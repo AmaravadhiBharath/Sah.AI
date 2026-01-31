@@ -14,389 +14,152 @@ import {
     mergeHistory,
     type CloudHistoryItem,
 } from '../services/firebase';
-import {
-    LoadingState,
-    ErrorState,
-    Toast,
-    ConfirmDialog,
-    Tooltip,
-    SelectionToolbar,
-} from './AshokComponents';
-import './ashok-design.css';
+import { LoadingState } from './AshokComponents';
+import './sevi-design.css';
 
 // ═══════════════════════════════════════════════════
-// ICONS
+// ICONS (Clean & Modern)
 // ═══════════════════════════════════════════════════
 
 const IconHome = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-        <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
 );
 
-const IconGrid = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="3" y="3" width="8" height="8" rx="2" />
-        <rect x="13" y="3" width="8" height="8" rx="2" />
-        <rect x="3" y="13" width="8" height="8" rx="2" />
-        <rect x="13" y="13" width="8" height="8" rx="2" />
+const IconHistory = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+const IconSettings = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
     </svg>
 );
 
 const IconUser = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
         <circle cx="12" cy="7" r="4" />
     </svg>
 );
 
-// ═══════════════════════════════════════════════════
-// TYPES
-// ═══════════════════════════════════════════════════
+const IconBack = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+);
 
-interface StatusInfo {
-    supported: boolean;
-    platform: string | null;
-    hasPrompts?: boolean;
-}
-
-type ThemeMode = 'system' | 'light' | 'dark';
-
-const APP_VERSION = '3.2.0';
-const SUPPORT_URL = 'https://sahai.app/support';
-
-// ═══════════════════════════════════════════════════
-
+const IconGrid = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+);
 
 // ═══════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════
 
-interface HistoryViewProps {
-    history: HistoryItem[];
-    onSelect: (item: HistoryItem) => void;
-    currentPlatform: string | null;
-}
+type AppTab = 'home' | 'history' | 'settings' | 'profile';
 
-const HistoryView = ({ history, onSelect, currentPlatform }: HistoryViewProps) => {
-    const [filterPlatform, setFilterPlatform] = useState<'all' | 'current'>('all');
-    const [filterTime, setFilterTime] = useState<'all' | 'today' | 'week'>('all');
-    const [searchQuery, setSearchQuery] = useState('');
-
-    const filteredHistory = history.filter(item => {
-        // Platform Filter
-        if (filterPlatform === 'current' && currentPlatform) {
-            if (item.platform.toLowerCase() !== currentPlatform.toLowerCase()) return false;
-        }
-
-        // Time Filter
-        if (filterTime === 'today') {
-            const today = new Date();
-            const itemDate = new Date(item.timestamp);
-            if (today.setHours(0, 0, 0, 0) !== itemDate.setHours(0, 0, 0, 0)) return false;
-        } else if (filterTime === 'week') {
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            if (item.timestamp < weekAgo.getTime()) return false;
-        }
-
-        // Search Filter
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            return (
-                item.preview.toLowerCase().includes(query) ||
-                item.platform.toLowerCase().includes(query)
-            );
-        }
-
-        return true;
-    });
-
-    return (
-        <div className="view-inner history-view-root">
-            <div className="history-filters">
-                <div className="filter-row">
-                    <input
-                        type="text"
-                        placeholder="Search history..."
-                        className="search-input"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
-                <div className="filter-row">
-                    <button
-                        className={`filter-chip ${filterPlatform === 'all' ? 'active' : ''}`}
-                        onClick={() => setFilterPlatform('all')}
-                    >
-                        All Apps
-                    </button>
-                    <button
-                        className={`filter-chip ${filterPlatform === 'current' ? 'active' : ''}`}
-                        onClick={() => setFilterPlatform('current')}
-                        disabled={!currentPlatform}
-                    >
-                        Current Tab
-                    </button>
-                    <div className="divider-v"></div>
-                    <select
-                        className="filter-select"
-                        value={filterTime}
-                        onChange={(e) => setFilterTime(e.target.value as any)}
-                    >
-                        <option value="all">All Time</option>
-                        <option value="today">Today</option>
-                        <option value="week">Past Week</option>
-                    </select>
-                </div>
-            </div>
-
-            <div className="history-scroll-area">
-                {filteredHistory.length === 0 ? (
-                    <div className="empty-state">No matching history found.</div>
-                ) : (
-                    <div className="history-list">
-                        {filteredHistory.map((item) => (
-                            <div
-                                key={item.id}
-                                className="history-item clickable"
-                                onClick={() => onSelect(item)}
-                            >
-                                <div className="history-meta">
-                                    <span className="history-platform">{item.platform}</span>
-                                    <span className="history-date">
-                                        {new Date(item.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                </div>
-                                <div className="history-preview">
-                                    {item.preview}
-                                </div>
-                                <div className="history-stats">
-                                    <span className="history-badge">
-                                        {item.mode === 'raw' ? 'Original' : item.mode.charAt(0).toUpperCase() + item.mode.slice(1)}
-                                    </span>
-                                    <span className="history-count">{item.promptCount} prompt{item.promptCount !== 1 ? 's' : ''}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
-interface SettingsViewProps {
-    theme: ThemeMode;
-    onThemeChange: (theme: ThemeMode) => void;
-    onClearHistory: () => void;
-}
-
-const SettingsView = ({ theme, onThemeChange, onClearHistory }: SettingsViewProps) => {
-    const themeOptions: ThemeMode[] = ['system', 'light', 'dark'];
-    const nextTheme = () => {
-        const currentIndex = themeOptions.indexOf(theme);
-        const nextIndex = (currentIndex + 1) % themeOptions.length;
-        onThemeChange(themeOptions[nextIndex]);
-    };
-
-    const openSupport = () => {
-        chrome.tabs.create({ url: SUPPORT_URL });
-    };
-
-    return (
-        <div className="view-inner">
-            <div className="settings-item clickable" onClick={nextTheme}>
-                <span>Theme</span>
-                <span className="value">{theme.charAt(0).toUpperCase() + theme.slice(1)}</span>
-            </div>
-            <div className="settings-item">
-                <span>App Version</span>
-                <span className="value">{APP_VERSION}</span>
-            </div>
-            <div className="settings-item clickable" onClick={openSupport}>
-                <span>Support</span>
-                <span className="value link">Get Help</span>
-            </div>
-            <div className="settings-item clickable" onClick={onClearHistory} style={{ color: '#ef4444' }}>
-                <span>Clear History</span>
-                <span className="value">➔</span>
-            </div>
-        </div>
-    );
-};
-
-interface ProfileViewProps {
-    user: ChromeUser | null;
-    tier: string;
-    onSignIn: () => void;
-    onSignOut: () => void;
-    isAuthLoading: boolean;
-}
-
-const ProfileView = ({ user, tier, onSignIn, onSignOut, isAuthLoading }: ProfileViewProps) => {
-    const memberSince = user ? new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '-';
-
-
-    return (
-        <div className="view-inner">
-            <div className="profile-hero">
-                <div className="hero-avatar">
-                    {user?.picture ? <img src={user.picture} alt="u" /> : <IconUser />}
-                </div>
-                <div className="hero-info">
-                    <div className="hero-name">{user?.name || 'Guest User'}</div>
-                    <div className="hero-tier">{tier}</div>
-                </div>
-            </div>
-
-            <div className="usage-stats">
-                <div className="stat-card">
-                    <div className="stat-label">Plan</div>
-                    <div className="stat-value">{tier === 'guest' ? 'Free' : tier}</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label">Member Since</div>
-                    <div className="stat-value">{memberSince}</div>
-                </div>
-            </div>
-
-            <button
-                className="auth-action-btn"
-                onClick={user ? onSignOut : onSignIn}
-                disabled={isAuthLoading}
-            >
-                {isAuthLoading ? 'Please wait...' : (user ? 'Sign Out' : 'Sign In with Google')}
-            </button>
-        </div>
-    );
-};
-
-
-// ═══════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════
-
-export default function AshokApp() {
-    const [view, setView] = useState<'home' | 'config'>('home');
-    const [configTab, setConfigTab] = useState<'history' | 'settings' | 'profile'>('history');
-
-    const [mode, setMode] = useState<Mode>('raw');
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [selectedPrompts, setSelectedPrompts] = useState<Set<number>>(new Set());
-    const [summary, setSummary] = useState<string | null>(null);
-
-    const [status, setStatus] = useState<StatusInfo>({ supported: false, platform: null });
-    const [result, setResult] = useState<ExtractionResult | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
+export default function SeviApp() {
+    const [activeTab, setActiveTab] = useState<AppTab>('home');
     const [user, setUser] = useState<ChromeUser | null>(null);
-    const [tier, setTier] = useState<string>('guest');
+    const [tier, setTier] = useState<string>('FREE');
     const [history, setHistory] = useState<HistoryItem[]>([]);
 
-    // UX Enhancement State
-    const [loadingMessage, setLoadingMessage] = useState('');
-    const [showToast, setShowToast] = useState<{ visible: boolean; message: string }>({ visible: false, message: '' });
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [isStateLoaded, setIsStateLoaded] = useState(false);
-    const [viewingHistoryItem, setViewingHistoryItem] = useState<HistoryItem | null>(null);
+    const [mode, setMode] = useState<Mode>('raw');
+    const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null);
+    const [summary, setSummary] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [status, setStatus] = useState({ supported: false, platform: null as string | null });
 
-    // Settings State
-    const [theme, setTheme] = useState<ThemeMode>('system');
-    const [isAuthLoading, setIsAuthLoading] = useState(false);
+    const [historySearchQuery, setHistorySearchQuery] = useState('');
+    const [historyFilter, setHistoryFilter] = useState<'all' | 'tab'>('all');
 
     const portRef = useRef<chrome.runtime.Port | null>(null);
-    const latestResultRef = useRef<ExtractionResult | null>(null);
 
+    // Initialization & Auth
     useEffect(() => {
         const port = chrome.runtime.connect({ name: 'sidepanel' });
         portRef.current = port;
 
-        port.onMessage.addListener((message: any) => {
-            if (message.action === 'EXTRACTION_RESULT' || message.action === 'EXTRACTION_FROM_PAGE_RESULT') {
-                const res = message.result;
-                const extractionMode = message.mode || mode;
+        port.onMessage.addListener((msg) => {
+            if (msg.action === 'STATUS_RESULT') {
+                setStatus({ supported: msg.supported, platform: msg.platform });
 
-                setResult(res);
-                latestResultRef.current = res;
-
-                if (extractionMode === 'summary') {
-                    // Start summarization
+                // Auto-extract if supported and we don't have results yet
+                if (msg.supported && !extractionResult) {
                     setLoading(true);
-                    setLoadingMessage('Processing content...');
-                    if (res.prompts.length === 0) {
-                        setLoading(false);
-                        setError('No prompts found to summarize.');
-                        setIsExpanded(true);
-                        setView('home');
-                    } else {
-                        // Send for summarization
-                        port.postMessage({
-                            action: 'SUMMARIZE_PROMPTS',
-                            prompts: res.prompts
-                        });
-                    }
-                } else {
-                    // Raw mode - done
-                    setLoading(false);
-                    setSummary(null);
-                    setIsExpanded(true);
-                    setView('home');
-                    autoSaveToHistory(res, 'raw');
+                    port.postMessage({ action: 'EXTRACT_PROMPTS', mode: 'raw' });
                 }
-            } else if (message.action === 'SUMMARY_RESULT') {
-                if (message.success) {
-                    setSummary(message.result.summary);
-                    setLoading(false);
-                    setIsExpanded(true);
-                    setView('home');
-                    if (latestResultRef.current) {
-                        autoSaveToHistory(latestResultRef.current, 'summary', message.result.summary);
-                    }
-                    // Show warning if AI failed but fallback was used
-                    if (message.error) {
-                        setShowToast({ visible: true, message: 'AI unavailable - showing raw prompts' });
-                        setTimeout(() => setShowToast({ visible: false, message: '' }), 3000);
-                    }
-                } else {
-                    setLoading(false);
-                    setError(message.error || 'Summarization failed');
-                    setIsExpanded(true);
-                }
-            } else if (message.action === 'STATUS_RESULT') {
-                setStatus({ supported: message.supported, platform: message.platform });
-            } else if (message.action === 'ERROR') {
+            } else if (msg.action === 'EXTRACTION_RESULT') {
+                setExtractionResult(msg.result);
                 setLoading(false);
-                setError(message.error);
-                setIsExpanded(true);
+                setError(null);
+                setMode('raw');
+                setSummary(null);
+
+                // Auto save
+                const newItem: HistoryItem = {
+                    id: Date.now().toString(),
+                    platform: msg.result.platform,
+                    promptCount: msg.result.prompts.length,
+                    mode: 'raw',
+                    timestamp: Date.now(),
+                    prompts: msg.result.prompts,
+                    preview: msg.result.prompts[0]?.content.slice(0, 100) || '',
+                };
+
+                // Sync to cloud if user is logged in
+                if (user) {
+                    saveHistoryToCloud(user.id, newItem as CloudHistoryItem).catch(e => console.error('Cloud save failed:', e));
+                }
+
+                setHistory(prev => [newItem, ...prev].slice(0, 50));
+            } else if (msg.action === 'SUMMARY_RESULT') {
+                if (msg.success) {
+                    setSummary(msg.result.summary);
+                    setMode('summary');
+                } else {
+                    setError(msg.error);
+                }
+                setLoading(false);
+            } else if (msg.action === 'ERROR') {
+                setError(msg.error);
+                setLoading(false);
             }
         });
 
         port.postMessage({ action: 'GET_STATUS' });
 
-        // Immediately load cached user and tier to prevent flash
-        chrome.storage.local.get(['promptExtractor_user', 'promptExtractor_tier'], (cached) => {
-            if (cached.promptExtractor_user) {
-                setUser(cached.promptExtractor_user);
-            }
-            if (cached.promptExtractor_tier) {
-                setTier(cached.promptExtractor_tier);
+        initializeAuth().then(state => {
+            setUser(state.user);
+            setTier(state.tier?.toUpperCase() || 'FREE');
+        });
+
+        const unsubscribe = subscribeToAuthChanges(async (newUser) => {
+            setUser(newUser);
+            if (newUser) {
+                const newTier = await getUserTier(newUser);
+                setTier(newTier.toUpperCase());
+            } else {
+                setTier('FREE');
             }
         });
 
-        initializeAuth().then(async (state) => {
-            setUser(state.user);
-            setTier(state.tier);
-            // Cache the tier for next load
-            chrome.storage.local.set({ promptExtractor_tier: state.tier });
+        chrome.storage.local.get(['extractionHistory'], async (res) => {
+            if (res.extractionHistory) setHistory(res.extractionHistory);
 
-            // Initial cloud sync if logged in
-            if (state.user) {
+            // Sync with cloud if user is logged in
+            if (user) {
                 try {
-                    const cloudHistory = await getHistoryFromCloud(state.user.id);
+                    const cloudHistory = await getHistoryFromCloud(user.id);
                     if (cloudHistory.length > 0) {
                         setHistory(prev => {
                             const merged = mergeHistory(prev as CloudHistoryItem[], cloudHistory);
@@ -410,581 +173,287 @@ export default function AshokApp() {
             }
         });
 
-        // Subscribe to auth changes
-        const unsubscribeAuth = subscribeToAuthChanges(async (newUser) => {
-            setUser(newUser);
-            if (newUser) {
-                const newTier = await getUserTier(newUser);
-                setTier(newTier);
-                // Cache tier for next load
-                chrome.storage.local.set({ promptExtractor_tier: newTier });
-
-                // Sync history on login
-                try {
-                    const cloudHistory = await getHistoryFromCloud(newUser.id);
-                    if (cloudHistory.length > 0) {
-                        setHistory(prev => {
-                            const merged = mergeHistory(prev as CloudHistoryItem[], cloudHistory);
-                            chrome.storage.local.set({ extractionHistory: merged });
-                            return merged as HistoryItem[];
-                        });
-                    }
-                } catch (error) {
-                    console.error('Cloud sync on login failed:', error);
-                }
-            } else {
-                setTier('guest');
-                // Clear cached tier on sign out
-                chrome.storage.local.remove(['promptExtractor_tier']);
-            }
-        });
-
-        // Load saved theme, history, and view memory
-        chrome.storage.local.get(['theme', 'extractionHistory', 'last_view', 'last_config_tab', 'last_mode'], (result) => {
-            if (result.theme) setTheme(result.theme);
-            if (result.extractionHistory) setHistory(result.extractionHistory);
-
-            // Restore view memory with fallbacks
-            if (result.last_view === 'config' || result.last_view === 'home') {
-                setView(result.last_view);
-                if (result.last_view === 'config') {
-                    setIsExpanded(true);
-                }
-            }
-
-            if (result.last_config_tab) {
-                setConfigTab(result.last_config_tab);
-            }
-
-            if (result.last_mode) {
-                setMode(result.last_mode);
-            }
-
-            // Small delay to ensure state updates have processed before enabling sync
-            setTimeout(() => {
-                setIsStateLoaded(true);
-            }, 50);
-        });
-
         return () => {
             port.disconnect();
-            unsubscribeAuth();
+            unsubscribe();
         };
     }, []);
 
-    // ═══════════════════════════════════════════════════
-    // SYNC STATE TO STORAGE
-    // ═══════════════════════════════════════════════════
-
-    useEffect(() => {
-        if (isStateLoaded) {
-            chrome.storage.local.set({ last_view: view });
-        }
-    }, [view, isStateLoaded]);
-
-    useEffect(() => {
-        if (isStateLoaded) {
-            chrome.storage.local.set({ last_config_tab: configTab });
-        }
-    }, [configTab, isStateLoaded]);
-
-    useEffect(() => {
-        if (isStateLoaded) {
-            chrome.storage.local.set({ last_mode: mode });
-        }
-    }, [mode, isStateLoaded]);
-
-    // Apply theme to document
-    useEffect(() => {
-        const root = document.documentElement;
-        if (theme === 'dark') {
-            root.setAttribute('data-theme', 'dark');
-        } else if (theme === 'light') {
-            root.setAttribute('data-theme', 'light');
-        } else {
-            root.removeAttribute('data-theme');
-        }
-        // Save theme preference
-        chrome.storage.local.set({ theme });
-    }, [theme]);
-
-    const handleSignIn = async () => {
-        setIsAuthLoading(true);
-        try {
-            const user = await signInWithGoogle();
-            setUser(user);
-            setShowToast({ visible: true, message: 'Signed in successfully' });
-            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
-        } catch (err) {
-            setShowToast({ visible: true, message: 'Sign in failed' });
-            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
-        } finally {
-            setIsAuthLoading(false);
-        }
-    };
-
     const handleSignOut = async () => {
-        setIsAuthLoading(true);
-        try {
-            await signOut();
-            setUser(null);
-            setTier('guest');
-            setShowToast({ visible: true, message: 'Signed out' });
-            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
-        } catch (err) {
-            setShowToast({ visible: true, message: 'Sign out failed' });
-            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
-        } finally {
-            setIsAuthLoading(false);
-        }
+        await signOut();
+        setUser(null);
+        setTier('FREE');
     };
 
-    const autoSaveToHistory = (res: ExtractionResult, saveMode: Mode, sum?: string) => {
-        const preview = res.prompts[0]?.content.slice(0, 60) + (res.prompts[0]?.content.length > 60 ? '...' : '') || 'No prompts';
-        const historyItem: HistoryItem = {
-            id: Date.now().toString(),
-            platform: res.platform,
-            promptCount: res.prompts.length,
-            mode: saveMode,
-            timestamp: Date.now(),
-            prompts: res.prompts,
-            preview,
-            summary: sum,
-        };
-
-        // Save to cloud if logged in
-        if (user) {
-            saveHistoryToCloud(user.id, historyItem as CloudHistoryItem).catch(e => console.error('Cloud save failed:', e));
-        }
-
-        setHistory(prev => {
-            // Avoid duplicate consecutive saves
-            if (prev.length > 0 && prev[0].preview === historyItem.preview && prev[0].platform === historyItem.platform && prev[0].mode === historyItem.mode) {
-                return prev;
-            }
-            const updated = [historyItem, ...prev].slice(0, 50); // Keep last 50
-            chrome.storage.local.set({ extractionHistory: updated });
-            return updated;
-        });
-    };
-
-    const loadHistoryItem = (item: HistoryItem) => {
-        setResult({
-            prompts: item.prompts,
-            platform: item.platform,
-            url: '',
-            title: '',
-            extractedAt: item.timestamp
-        });
-        setMode(item.mode);
-        setSummary(item.summary || null);
-        setViewingHistoryItem(item);
-        // We stay in 'config' view and 'history' tab
-    };
-
-    const handleGenerate = () => {
+    const handleExtraction = () => {
         setLoading(true);
-        setLoadingMessage(mode === 'raw' ? 'Extracting prompts...' : 'Summarizing conversation...');
-        setResult(null);
         setError(null);
-        setIsExpanded(true);
-        setView('home');
-
         if (portRef.current) {
-            portRef.current.postMessage({ action: 'EXTRACT_PROMPTS', mode });
+            portRef.current.postMessage({ action: 'EXTRACT_PROMPTS', mode: 'raw' });
         }
     };
 
-    const handleBack = () => {
-        if (view === 'config') {
-            if (viewingHistoryItem) {
-                setViewingHistoryItem(null);
-            } else {
-                setView('home');
-            }
-        } else {
-            setIsExpanded(false);
-            setResult(null);
-            setSummary(null);
-            setLoading(false);
-            setError(null);
-            setIsEditing(false);
-            setSelectedPrompts(new Set());
-            setViewingHistoryItem(null);
-        }
-    };
-
-    const openConfig = (tab: 'history' | 'settings' | 'profile') => {
-        setIsExpanded(true);
-        setView('config');
-        setConfigTab(tab);
-    };
-
-    const toggleEdit = () => {
-        setIsEditing(!isEditing);
-        setSelectedPrompts(new Set());
-    };
-
-    const toggleSelection = (idx: number) => {
-        const newSet = new Set(selectedPrompts);
-        if (newSet.has(idx)) newSet.delete(idx);
-        else newSet.add(idx);
-        setSelectedPrompts(newSet);
-    };
-
-    const handleDeleteClick = () => {
-        if (!result || selectedPrompts.size === 0) return;
-        setShowDeleteConfirm(true);
-    };
-
-    const handleDeleteConfirm = () => {
-        if (!result) return;
-        const remainingPrompts = result.prompts.filter((_, i) => !selectedPrompts.has(i));
-        setResult({ ...result, prompts: remainingPrompts });
-        setSelectedPrompts(new Set());
-        setShowDeleteConfirm(false);
-        if (remainingPrompts.length === 0) {
-            setIsEditing(false);
-        }
-    };
-
-    const handleClearHistory = () => {
-        if (confirm('Are you sure you want to clear all history? This cannot be undone.')) {
-            setHistory([]);
-            chrome.storage.local.set({ extractionHistory: [] });
-            setShowToast({ visible: true, message: 'History cleared' });
-            setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
+    const handleSummarize = () => {
+        if (!extractionResult) return;
+        setLoading(true);
+        setError(null);
+        if (portRef.current) {
+            portRef.current.postMessage({
+                action: 'SUMMARIZE_PROMPTS',
+                prompts: extractionResult.prompts
+            });
         }
     };
 
     const handleCopy = async () => {
-        if (!result) return;
-        const promptsToCopy = selectedPrompts.size > 0
-            ? result.prompts.filter((_, i) => selectedPrompts.has(i))
-            : result.prompts;
-
-        const text = promptsToCopy.map(p => p.content).join('\n\n');
-        await navigator.clipboard.writeText(text);
-
-        // Show toast notification
-        setShowToast({ visible: true, message: 'Copied to clipboard' });
-        setTimeout(() => setShowToast({ visible: false, message: '' }), 2000);
-
-        if (isEditing) {
-            setIsEditing(false);
-            setSelectedPrompts(new Set());
+        const text = summary || extractionResult?.prompts.map(p => p.content).join('\n\n');
+        if (text) {
+            await navigator.clipboard.writeText(text);
         }
     };
 
-    const renderToggleRow = () => {
-        if (view === 'home') {
-            return (
-                <div className="toggle-row">
+    // Sub-renders
+    const renderTopBar = () => (
+        <div className="top-bar">
+            <button className="icon-btn" onClick={() => setActiveTab('home')}>
+                <IconBack />
+            </button>
+            <div className="user-mini-profile">
+                <div className="mini-avatar">
+                    {user?.picture ? <img src={user.picture} alt="avatar" /> : <IconUser />}
+                </div>
+                <div className="mini-info">
+                    <div className="mini-name">{user?.name?.split(' ')[0] || 'Guest'}</div>
+                    <div className="mini-tier">{tier}</div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderBottomNav = () => (
+        <nav className="bottom-nav">
+            <button className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+                <div className="nav-icon"><IconHome /></div>
+                {activeTab === 'home' && <span>Home</span>}
+            </button>
+            <button className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
+                <div className="nav-icon"><IconHistory /></div>
+                {activeTab === 'history' && <span>History</span>}
+            </button>
+            <button className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+                <div className="nav-icon"><IconSettings /></div>
+                {activeTab === 'settings' && <span>Settings</span>}
+            </button>
+            <button className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+                <div className="nav-icon"><IconUser /></div>
+                {activeTab === 'profile' && <span>Profile</span>}
+            </button>
+        </nav>
+    );
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'profile':
+                return (
+                    <div className="view-animate">
+                        <div className="sevi-card profile-main-card">
+                            <div className="profile-avatar-lg">
+                                {user?.picture ? <img src={user.picture} alt="u" /> : <IconUser />}
+                            </div>
+                            <div className="profile-details">
+                                <h2 className="profile-name">{user?.name || 'Guest User'}</h2>
+                                <span className="profile-tier-badge">{tier}</span>
+                            </div>
+                        </div>
+
+                        <div className="grid-stats" style={{ marginTop: 16 }}>
+                            <div className="stat-box">
+                                <span className="stat-label">Plan</span>
+                                <span className="stat-value">{tier}</span>
+                            </div>
+                            <div className="stat-box">
+                                <span className="stat-label">Since</span>
+                                <span className="stat-value">Jan 2026</span>
+                            </div>
+                        </div>
+
+                        <button className="sign-out-btn" onClick={user ? handleSignOut : signInWithGoogle}>
+                            {user ? 'Sign Out' : 'Sign In'}
+                        </button>
+                    </div>
+                );
+            case 'settings':
+                return (
+                    <div className="view-animate">
+                        <div className="sevi-card">
+                            <h3 style={{ fontSize: 16, marginBottom: 16 }}>Preferences</h3>
+                            <div className="settings-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--outline)' }}>
+                                <span>Theme</span>
+                                <span style={{ fontWeight: 600 }}>System</span>
+                            </div>
+                            <div className="settings-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0' }}>
+                                <span>Auto-Sync</span>
+                                <span style={{ fontWeight: 600, color: 'var(--accent)' }}>Enabled</span>
+                            </div>
+                        </div>
+
+                        <div className="sevi-card" style={{ marginTop: 12 }}>
+                            <h3 style={{ fontSize: 16, marginBottom: 16 }}>Support</h3>
+                            <p style={{ fontSize: 13, opacity: 0.7, marginBottom: 12 }}>Need help or have a suggestion?</p>
+                            <button className="overlay-btn" style={{ width: '100%', background: 'var(--surface-variant)' }}>Contact Support</button>
+                        </div>
+                    </div>
+                );
+            case 'history':
+                const filteredHistory = history.filter(item => {
+                    const matchesSearch = item.preview.toLowerCase().includes(historySearchQuery.toLowerCase()) ||
+                        item.platform.toLowerCase().includes(historySearchQuery.toLowerCase());
+                    const matchesTab = historyFilter === 'all' || (status.platform && item.platform.toLowerCase() === status.platform.toLowerCase());
+                    return matchesSearch && matchesTab;
+                });
+
+                return (
+                    <div className="view-animate">
+                        <div className="search-bar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Search history..."
+                                value={historySearchQuery}
+                                onChange={(e) => setHistorySearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <div className="filter-chips">
+                            <button
+                                className={`chip ${historyFilter === 'all' ? 'active' : ''}`}
+                                onClick={() => setHistoryFilter('all')}
+                            >
+                                All Apps
+                            </button>
+                            <button
+                                className={`chip ${historyFilter === 'tab' ? 'active' : ''}`}
+                                onClick={() => setHistoryFilter('tab')}
+                                disabled={!status.platform}
+                            >
+                                Current Tab
+                            </button>
+                            <button className="chip">All Time</button>
+                        </div>
+                        <div className="history-list" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {filteredHistory.length > 0 ? filteredHistory.map(item => (
+                                <div key={item.id} className="sevi-card" style={{ padding: 16 }} onClick={() => {
+                                    setExtractionResult({ prompts: item.prompts, platform: item.platform, url: '', title: '', extractedAt: item.timestamp });
+                                    setSummary(item.summary || null);
+                                    setMode(item.mode);
+                                    setActiveTab('home');
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 11, fontWeight: 700, opacity: 0.7 }}>
+                                        <span style={{ textTransform: 'uppercase' }}>{item.platform}</span>
+                                        <span>{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <p style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 12 }}>{item.preview}</p>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <span className="profile-tier-badge" style={{ fontSize: 9, padding: '2px 8px' }}>{item.mode}</span>
+                                        <span style={{ fontSize: 11, opacity: 0.6 }}>{item.promptCount} prompts</span>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div style={{ textAlign: 'center', padding: 40, opacity: 0.5 }}>No history found.</div>
+                            )}
+                        </div>
+                    </div>
+                );
+            case 'home':
+            default:
+                if (loading) return (
+                    <div className="view-animate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                        <LoadingState message="Processing content..." />
+                    </div>
+                );
+
+                return (
+                    <div className="view-animate">
+                        {error && (
+                            <div className="sevi-card" style={{ borderColor: '#FCA5A5', background: '#FEF2F2', color: '#B91C1C', fontSize: 13, marginBottom: 16 }}>
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="sevi-card full-height" style={{ background: 'white' }}>
+                            {!extractionResult ? (
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <p style={{ fontWeight: 600 }}>Ready to extract</p>
+                                        <p style={{ fontSize: 12 }}>{status.platform || 'No platform detected'}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--outline)' }}>
+                                        <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', opacity: 0.6 }}>{extractionResult.platform}</span>
+                                        <span style={{ fontSize: 12, opacity: 0.6 }}>{extractionResult.prompts.length} prompts</span>
+                                    </div>
+                                    <div className="prompts-list-container">
+                                        {mode === 'summary' && summary ? (
+                                            <div style={{ padding: 12, background: 'var(--accent-soft)', borderRadius: 12, fontSize: 14, lineHeight: 1.6 }}>
+                                                {summary}
+                                            </div>
+                                        ) : (
+                                            extractionResult.prompts.map((p, i) => (
+                                                <div key={i} className="prompt-box">
+                                                    {p.content}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {extractionResult && (
+                            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                                <button className="overlay-btn" style={{ background: 'white', border: '1px solid var(--outline)' }} onClick={handleExtraction}>Re-extract</button>
+                                <button className="overlay-btn" style={{ background: 'white', border: '1px solid var(--outline)' }} onClick={handleCopy}>Copy All</button>
+                            </div>
+                        )}
+                    </div>
+                );
+        }
+    };
+
+    return (
+        <div className="sevi-app">
+            {renderTopBar()}
+
+            <main className="content-area">
+                {renderContent()}
+            </main>
+
+            {/* Contextual Action Overlay */}
+            {activeTab === 'home' && !loading && (
+                <div className="action-overlay">
                     <button
-                        className={`mode-btn ${mode === 'raw' ? 'active' : ''} ${isEditing ? 'disabled' : ''}`}
-                        onClick={() => { if (!loading && !isEditing) setMode('raw'); }}
-                        disabled={isEditing}
+                        className={`overlay-btn ${mode === 'raw' ? 'active' : ''}`}
+                        onClick={handleExtraction}
                     >
                         Extract
                     </button>
                     <button
-                        className={`mode-btn ${mode === 'summary' ? 'active' : ''} ${isEditing ? 'disabled' : ''}`}
-                        onClick={() => { if (!loading && !isEditing) setMode('summary'); }}
-                        disabled={isEditing}
+                        className={`overlay-btn ${mode === 'summary' ? 'active' : ''}`}
+                        onClick={handleSummarize}
+                        disabled={!extractionResult}
                     >
                         Summarize
                     </button>
-                    <button
-                        className={`toggle-nav-btn ${isEditing ? 'disabled' : ''}`}
-                        onClick={() => {
-                            if (!isEditing) {
-                                setView('config');
-                                setIsExpanded(true);
-                            }
-                        }}
-                        title="Menu"
-                        disabled={isEditing}
-                    >
+                    <button className="overlay-icon-btn">
                         <IconGrid />
                     </button>
                 </div>
-            );
-        } else {
-            return (
-                <div className="toggle-row">
-                    <button
-                        className="toggle-nav-btn"
-                        onClick={() => setView('home')}
-                        title="Go to Home"
-                    >
-                        <IconHome />
-                    </button>
-                    <button
-                        className={`mode-btn ${configTab === 'history' ? 'active' : ''}`}
-                        onClick={() => {
-                            setConfigTab('history');
-                            setViewingHistoryItem(null); // Reset when clicking the tab again
-                        }}
-                    >
-                        History
-                    </button>
-                    <button
-                        className={`mode-btn ${configTab === 'settings' ? 'active' : ''}`}
-                        onClick={() => setConfigTab('settings')}
-                    >
-                        Settings
-                    </button>
-                    <button
-                        className={`mode-btn ${configTab === 'profile' ? 'active' : ''}`}
-                        onClick={() => setConfigTab('profile')}
-                    >
-                        Profile
-                    </button>
-                </div>
-            );
-        }
-    };
+            )}
 
-    const renderContentArea = () => {
-        let content;
-        if (view === 'config') {
-            if (configTab === 'history') {
-                if (viewingHistoryItem) {
-                    content = (
-                        <div className="history-detail-view">
-                            <div className="history-detail-header">
-                                <button className="history-back-btn" onClick={() => setViewingHistoryItem(null)}>
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
-                                        <line x1="19" y1="12" x2="5" y2="12" />
-                                        <polyline points="12 19 5 12 12 5" />
-                                    </svg>
-                                    History
-                                </button>
-                                <div className="history-detail-platform">
-                                    {viewingHistoryItem.platform}
-                                </div>
-                            </div>
-
-                            <div className="history-detail-content prompts-area" style={{ margin: '0 -8px', padding: '12px 8px' }}>
-                                {viewingHistoryItem.mode === 'summary' && viewingHistoryItem.summary ? (
-                                    <div className="summary-content-container">
-                                        {viewingHistoryItem.summary.split('\n').map((line, i) => (
-                                            <p key={i} className="summary-paragraph">{line}</p>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    viewingHistoryItem.prompts.map((p, i) => (
-                                        <div key={i} className="prompt-box">
-                                            {p.content}
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-
-                            <div className="history-detail-actions">
-                                <button
-                                    className="dual-btn primary"
-                                    onClick={handleCopy}
-                                    style={{ width: '100%' }}
-                                >
-                                    Copy Content
-                                </button>
-                            </div>
-                        </div>
-                    );
-                } else {
-                    content = <HistoryView history={history} onSelect={loadHistoryItem} currentPlatform={status.platform} />;
-                }
-            }
-            else if (configTab === 'settings') content = <SettingsView theme={theme} onThemeChange={setTheme} onClearHistory={handleClearHistory} />;
-            else content = <ProfileView user={user} tier={tier} onSignIn={handleSignIn} onSignOut={handleSignOut} isAuthLoading={isAuthLoading} />;
-        } else {
-            content = (
-                <>
-                    {loading ? (
-                        <LoadingState message={loadingMessage} />
-                    ) : error ? (
-                        <ErrorState
-                            error={error}
-                            onRetry={handleGenerate}
-                            onDismiss={() => setError(null)}
-                        />
-                    ) : result ? (
-                        <>
-                            {mode === 'summary' && summary ? (
-                                <div className="summary-content-container">
-                                    {summary.split('\n').map((line, i) => (
-                                        <p key={i} className="summary-paragraph">{line}</p>
-                                    ))}
-                                </div>
-                            ) : (
-                                result.prompts.map((p, i) => (
-                                    <div
-                                        key={i}
-                                        className={`prompt-box 
-                                            ${isEditing ? 'selectable' : ''} 
-                                            ${isEditing && selectedPrompts.has(i) ? 'selected' : ''} 
-                                            ${isEditing && !selectedPrompts.has(i) && selectedPrompts.size > 0 ? 'dimmed' : ''}
-                                        `}
-                                        onClick={() => isEditing && toggleSelection(i)}
-                                    >
-                                        {isEditing && (
-                                            <div className="selection-indicator">
-                                                {selectedPrompts.has(i) ? '✓' : ''}
-                                            </div>
-                                        )}
-                                        {p.content}
-                                    </div>
-                                ))
-                            )}
-                        </>
-                    ) : (
-                        <div className="empty-prompt-text">
-                            {status.platform
-                                ? `Extract prompts from this ${status.platform} conversation`
-                                : 'Navigate to a supported AI chat to extract prompts'}
-                        </div>
-                    )}
-                </>
-            );
-        }
-
-        return (
-            <div className={`view-content-anim 
-                ${view === 'home' ? 'prompts-area' : ''} 
-                ${view === 'home' && isExpanded ? 'visible' : ''}
-            `}>
-                {content}
-            </div>
-        );
-    };
-
-    const islandExpanded = isExpanded || view === 'config';
-    const showUpgradePill = view === 'config' && (configTab === 'profile' || configTab === 'settings');
-
-    return (
-        <div className="app-container">
-            <main className={`main-content ${islandExpanded ? 'expanded-view' : ''}`}>
-                <div className={`action-island ${islandExpanded ? 'expanded' : ''} ${showUpgradePill ? 'with-upgrade' : ''}`}>
-                    {renderToggleRow()}
-                    {view === 'home' && isExpanded && (
-                        <div className="controls-row visible">
-                            <button className="control-btn" onClick={isEditing ? toggleEdit : handleBack}>
-                                {isEditing ? 'Done' : 'Close'}
-                            </button>
-                            {result ? (
-                                isEditing ? (
-                                    <SelectionToolbar
-                                        selectedCount={selectedPrompts.size}
-                                        totalCount={result.prompts.length}
-                                        onSelectAll={() => setSelectedPrompts(new Set(result.prompts.map((_, i) => i)))}
-                                        onClearAll={() => setSelectedPrompts(new Set())}
-                                    />
-                                ) : (
-                                    <button
-                                        className="control-btn"
-                                        onClick={toggleEdit}
-                                    >
-                                        Select prompts
-                                    </button>
-                                )
-                            ) : null}
-                        </div>
-                    )}
-                    {islandExpanded && renderContentArea()}
-                    {view === 'home' && islandExpanded && (
-                        <div className="action-buttons-container">
-                            {isEditing ? (
-                                <>
-                                    <button
-                                        className="dual-btn"
-                                        onClick={handleDeleteClick}
-                                        style={{ color: '#ef4444', borderColor: '#ef4444' }}
-                                        disabled={selectedPrompts.size === 0}
-                                    >
-                                        Delete ({selectedPrompts.size})
-                                    </button>
-                                    <button className="dual-btn" onClick={handleCopy} disabled={selectedPrompts.size === 0}>
-                                        Copy ({selectedPrompts.size})
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button
-                                        className="dual-btn primary"
-                                        onClick={handleGenerate}
-                                        disabled={!status.hasPrompts}
-                                    >
-                                        {mode === 'raw' ? 'Extract Prompts' : 'Summarize'}
-                                    </button>
-                                    <button className="dual-btn" onClick={handleCopy} disabled={!status.hasPrompts}>
-                                        Copy
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    )}
-                    {view === 'home' && !islandExpanded && (
-                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                            <button
-                                className="generate-btn-lg"
-                                onClick={handleGenerate}
-                                disabled={!status.supported || !status.hasPrompts}
-                            >
-                                {mode === 'raw' ? 'Extract' : 'Summarize'}
-                            </button>
-                        </div>
-                    )}
-                </div>
-                <Tooltip content="Unlock unlimited extractions and AI summaries" fullWidth>
-                    <button className={`upgrade-pill ${showUpgradePill ? 'visible' : ''}`}>
-                        Upgrade
-                    </button>
-                </Tooltip>
-            </main>
-
-            <footer className="app-footer">
-                <button className="footer-profile-btn" onClick={() => openConfig('profile')}>
-                    <div className="footer-avatar-sm">
-                        {user?.picture ? <img src={user.picture} alt="u" /> : <IconUser />}
-                    </div>
-                    <div className="footer-user-stack">
-                        <span className="footer-name-min">{user?.name || 'Guest'}</span>
-                        <span className="footer-badge-min">{tier}</span>
-                    </div>
-                </button>
-
-                <div className="footer-status-area">
-                    {result && isExpanded ? (
-                        <div className="footer-prompt-count">
-                            <span className="footer-count-text">
-                                {result.prompts.length} prompt{result.prompts.length !== 1 ? 's' : ''}
-                            </span>
-                            {status.platform && (
-                                <span className="footer-count-platform">from {status.platform}</span>
-                            )}
-                        </div>
-                    ) : status.platform ? (
-                        <Tooltip content={`Connected to ${status.platform}`}>
-                            <div className="status-pill-active">
-                                <span className="status-dot"></span>
-                                <span className="platform-name">{status.platform}</span>
-                            </div>
-                        </Tooltip>
-                    ) : null}
-                </div>
-            </footer>
-
-            <Toast visible={showToast.visible} message={showToast.message} />
-
-            <ConfirmDialog
-                visible={showDeleteConfirm}
-                title="Delete prompts?"
-                message={`Delete ${selectedPrompts.size} prompt${selectedPrompts.size !== 1 ? 's' : ''}? This cannot be undone.`}
-                confirmLabel="Delete"
-                onConfirm={handleDeleteConfirm}
-                onCancel={() => setShowDeleteConfirm(false)}
-            />
-        </div >
+            {renderBottomNav()}
+        </div>
     );
 }
