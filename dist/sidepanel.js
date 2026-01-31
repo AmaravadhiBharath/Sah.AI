@@ -864,10 +864,26 @@ function AshokApp() {
             ")"
           ] })
         ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn primary", onClick: handleGenerate, children: mode === "raw" ? "Extract Prompts" : "Summarize" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn", onClick: handleCopy, children: "Copy" })
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              className: "dual-btn primary",
+              onClick: handleGenerate,
+              disabled: !status.hasPrompts,
+              children: mode === "raw" ? "Extract Prompts" : "Summarize"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "dual-btn", onClick: handleCopy, disabled: !status.hasPrompts, children: "Copy" })
         ] }) }),
-        view === "home" && !islandExpanded && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "generate-btn-lg", onClick: handleGenerate, disabled: !status.supported, children: mode === "raw" ? "Extract" : "Summarize" }) })
+        view === "home" && !islandExpanded && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: "generate-btn-lg",
+            onClick: handleGenerate,
+            disabled: !status.supported || !status.hasPrompts,
+            children: mode === "raw" ? "Extract" : "Summarize"
+          }
+        ) })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { content: "Unlock unlimited extractions and AI summaries", fullWidth: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `upgrade-pill ${showUpgradePill ? "visible" : ""}`, children: "Upgrade" }) })
     ] }),

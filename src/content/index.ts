@@ -1337,6 +1337,8 @@ function initZonedLayout() {
   let lastUrl = location.href;
   let checkScheduled = false;
 
+  let lastHasPrompts = false;
+
   const scheduleCheck = () => {
     if (checkScheduled) return;
     checkScheduled = true;
@@ -1390,6 +1392,18 @@ function initZonedLayout() {
       } else if (document.getElementById('pe-zone1') || document.getElementById('pe-floating-zone')) {
         console.log('[SahAI] Removing buttons: No longer in a valid conversation');
         removeZonedLayout();
+      }
+
+      // Check if prompt presence has changed and notify sidepanel
+      const currentHasPrompts = adapter ? adapter.scrapePrompts().length > 0 : false;
+      if (currentHasPrompts !== lastHasPrompts) {
+        lastHasPrompts = currentHasPrompts;
+        chrome.runtime.sendMessage({
+          action: 'STATUS_RESULT',
+          supported: !!adapter,
+          platform: platformName,
+          hasPrompts: currentHasPrompts,
+        });
       }
     }, { timeout: 2000 });
   };
@@ -1471,6 +1485,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         action: 'STATUS_RESULT',
         supported: !!adapter,
         platform: platformName,
+        hasPrompts: adapter ? adapter.scrapePrompts().length > 0 : false,
       });
       break;
     }
@@ -1508,6 +1523,7 @@ chrome.runtime.sendMessage({
   action: 'STATUS_RESULT',
   supported: !!adapter,
   platform: platformName,
+  hasPrompts: adapter ? adapter.scrapePrompts().length > 0 : false,
 });
 
 initZonedLayout();

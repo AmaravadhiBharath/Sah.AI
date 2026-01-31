@@ -96,6 +96,7 @@ export interface StatusResultMessage {
   action: 'STATUS_RESULT';
   supported: boolean;
   platform: string | null;
+  hasPrompts?: boolean;
 }
 
 export interface ExtractionFromPageMessage {

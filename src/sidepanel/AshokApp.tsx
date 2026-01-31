@@ -58,6 +58,7 @@ const IconUser = () => (
 interface StatusInfo {
     supported: boolean;
     platform: string | null;
+    hasPrompts?: boolean;
 }
 
 type ThemeMode = 'system' | 'light' | 'dark';
@@ -853,10 +854,14 @@ export default function AshokApp() {
                                 </>
                             ) : (
                                 <>
-                                    <button className="dual-btn primary" onClick={handleGenerate}>
+                                    <button
+                                        className="dual-btn primary"
+                                        onClick={handleGenerate}
+                                        disabled={!status.hasPrompts}
+                                    >
                                         {mode === 'raw' ? 'Extract Prompts' : 'Summarize'}
                                     </button>
-                                    <button className="dual-btn" onClick={handleCopy}>
+                                    <button className="dual-btn" onClick={handleCopy} disabled={!status.hasPrompts}>
                                         Copy
                                     </button>
                                 </>
@@ -865,7 +870,11 @@ export default function AshokApp() {
                     )}
                     {view === 'home' && !islandExpanded && (
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                            <button className="generate-btn-lg" onClick={handleGenerate} disabled={!status.supported}>
+                            <button
+                                className="generate-btn-lg"
+                                onClick={handleGenerate}
+                                disabled={!status.supported || !status.hasPrompts}
+                            >
                                 {mode === 'raw' ? 'Extract' : 'Summarize'}
                             </button>
                         </div>
