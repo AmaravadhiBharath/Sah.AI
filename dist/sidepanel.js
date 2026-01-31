@@ -515,13 +515,21 @@ function AshokApp() {
     chrome.storage.local.get(["theme", "extractionHistory", "last_view", "last_config_tab", "last_mode"], (result2) => {
       if (result2.theme) setTheme(result2.theme);
       if (result2.extractionHistory) setHistory(result2.extractionHistory);
-      if (result2.last_view) setView(result2.last_view);
-      if (result2.last_config_tab) setConfigTab(result2.last_config_tab);
-      if (result2.last_mode) setMode(result2.last_mode);
-      if (result2.last_view === "config") {
-        setIsExpanded(true);
+      if (result2.last_view === "config" || result2.last_view === "home") {
+        setView(result2.last_view);
+        if (result2.last_view === "config") {
+          setIsExpanded(true);
+        }
       }
-      setIsStateLoaded(true);
+      if (result2.last_config_tab) {
+        setConfigTab(result2.last_config_tab);
+      }
+      if (result2.last_mode) {
+        setMode(result2.last_mode);
+      }
+      setTimeout(() => {
+        setIsStateLoaded(true);
+      }, 50);
     });
     return () => {
       port.disconnect();
@@ -724,7 +732,10 @@ function AshokApp() {
           {
             className: `toggle-nav-btn ${isEditing ? "disabled" : ""}`,
             onClick: () => {
-              if (!isEditing) openConfig("settings");
+              if (!isEditing) {
+                setView("config");
+                setIsExpanded(true);
+              }
             },
             title: "Menu",
             disabled: isEditing,

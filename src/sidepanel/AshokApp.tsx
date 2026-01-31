@@ -442,17 +442,26 @@ export default function AshokApp() {
             if (result.theme) setTheme(result.theme);
             if (result.extractionHistory) setHistory(result.extractionHistory);
 
-            // Restore view memory
-            if (result.last_view) setView(result.last_view);
-            if (result.last_config_tab) setConfigTab(result.last_config_tab);
-            if (result.last_mode) setMode(result.last_mode);
-
-            // Auto-expand if we are in config view
-            if (result.last_view === 'config') {
-                setIsExpanded(true);
+            // Restore view memory with fallbacks
+            if (result.last_view === 'config' || result.last_view === 'home') {
+                setView(result.last_view);
+                if (result.last_view === 'config') {
+                    setIsExpanded(true);
+                }
             }
 
-            setIsStateLoaded(true);
+            if (result.last_config_tab) {
+                setConfigTab(result.last_config_tab);
+            }
+
+            if (result.last_mode) {
+                setMode(result.last_mode);
+            }
+
+            // Small delay to ensure state updates have processed before enabling sync
+            setTimeout(() => {
+                setIsStateLoaded(true);
+            }, 50);
         });
 
         return () => {
@@ -680,7 +689,12 @@ export default function AshokApp() {
                     </button>
                     <button
                         className={`toggle-nav-btn ${isEditing ? 'disabled' : ''}`}
-                        onClick={() => { if (!isEditing) openConfig('settings'); }}
+                        onClick={() => {
+                            if (!isEditing) {
+                                setView('config');
+                                setIsExpanded(true);
+                            }
+                        }}
                         title="Menu"
                         disabled={isEditing}
                     >
