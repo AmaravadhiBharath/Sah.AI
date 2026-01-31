@@ -180,7 +180,7 @@ body {
 .controls-row.visible {
     opacity: 1;
     height: auto;
-    margin-top: 12px;
+    margin-top: 4px;
     margin-bottom: 0;
     pointer-events: auto;
 }
@@ -192,7 +192,7 @@ body {
     color: var(--m3-on-surface-variant);
     /* Softer for secondary actions */
     cursor: pointer;
-    padding: 6px 0;
+    padding: 4px 0;
     transition: color 0.2s;
 }
 .control-btn:hover {
@@ -208,7 +208,7 @@ body {
 .prompts-area {
     flex: 1;
     overflow-y: auto;
-    margin: 8px -8px 0 -8px;
+    margin: 4px -8px 0 -8px;
     padding: 4px 8px;
     opacity: 1;
     display: flex;
@@ -1099,7 +1099,7 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 8px 0;
+    padding: 4px 0;
 }
 .toolbar-btn {
     background: var(--m3-surface-variant);
