@@ -226,7 +226,7 @@ const IconUser = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "2
   /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" }),
   /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "7", r: "4" })
 ] });
-const APP_VERSION = "3.1.2";
+const APP_VERSION = "3.2.0";
 const SUPPORT_URL = "https://sahai.app/support";
 const HistoryView = ({ history, onSelect, currentPlatform }) => {
   const [filterPlatform, setFilterPlatform] = reactExports.useState("all");
@@ -511,12 +511,14 @@ function AshokApp() {
         chrome.storage.local.remove(["promptExtractor_tier"]);
       }
     });
-    chrome.storage.local.get(["theme", "extractionHistory"], (result2) => {
-      if (result2.theme) {
-        setTheme(result2.theme);
-      }
-      if (result2.extractionHistory) {
-        setHistory(result2.extractionHistory);
+    chrome.storage.local.get(["theme", "extractionHistory", "last_view", "last_config_tab", "last_mode"], (result2) => {
+      if (result2.theme) setTheme(result2.theme);
+      if (result2.extractionHistory) setHistory(result2.extractionHistory);
+      if (result2.last_view) setView(result2.last_view);
+      if (result2.last_config_tab) setConfigTab(result2.last_config_tab);
+      if (result2.last_mode) setMode(result2.last_mode);
+      if (result2.last_view === "config") {
+        setIsExpanded(true);
       }
     });
     return () => {
@@ -524,6 +526,15 @@ function AshokApp() {
       unsubscribeAuth();
     };
   }, []);
+  reactExports.useEffect(() => {
+    chrome.storage.local.set({ last_view: view });
+  }, [view]);
+  reactExports.useEffect(() => {
+    chrome.storage.local.set({ last_config_tab: configTab });
+  }, [configTab]);
+  reactExports.useEffect(() => {
+    chrome.storage.local.set({ last_mode: mode });
+  }, [mode]);
   reactExports.useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {

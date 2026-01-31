@@ -62,8 +62,11 @@ interface StatusInfo {
 
 type ThemeMode = 'system' | 'light' | 'dark';
 
-const APP_VERSION = '3.1.2';
+const APP_VERSION = '3.2.0';
 const SUPPORT_URL = 'https://sahai.app/support';
+
+// ═══════════════════════════════════════════════════
+
 
 // ═══════════════════════════════════════════════════
 // HELPERS
@@ -433,13 +436,19 @@ export default function AshokApp() {
             }
         });
 
-        // Load saved theme and history
-        chrome.storage.local.get(['theme', 'extractionHistory'], (result) => {
-            if (result.theme) {
-                setTheme(result.theme);
-            }
-            if (result.extractionHistory) {
-                setHistory(result.extractionHistory);
+        // Load saved theme, history, and view memory
+        chrome.storage.local.get(['theme', 'extractionHistory', 'last_view', 'last_config_tab', 'last_mode'], (result) => {
+            if (result.theme) setTheme(result.theme);
+            if (result.extractionHistory) setHistory(result.extractionHistory);
+
+            // Restore view memory
+            if (result.last_view) setView(result.last_view);
+            if (result.last_config_tab) setConfigTab(result.last_config_tab);
+            if (result.last_mode) setMode(result.last_mode);
+
+            // Auto-expand if we are in config view
+            if (result.last_view === 'config') {
+                setIsExpanded(true);
             }
         });
 
@@ -448,6 +457,22 @@ export default function AshokApp() {
             unsubscribeAuth();
         };
     }, []);
+
+    // ═══════════════════════════════════════════════════
+    // SYNC STATE TO STORAGE
+    // ═══════════════════════════════════════════════════
+
+    useEffect(() => {
+        chrome.storage.local.set({ last_view: view });
+    }, [view]);
+
+    useEffect(() => {
+        chrome.storage.local.set({ last_config_tab: configTab });
+    }, [configTab]);
+
+    useEffect(() => {
+        chrome.storage.local.set({ last_mode: mode });
+    }, [mode]);
 
     // Apply theme to document
     useEffect(() => {
