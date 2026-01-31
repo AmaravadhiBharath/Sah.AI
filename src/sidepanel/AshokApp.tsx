@@ -302,6 +302,7 @@ export default function AshokApp() {
     const [showToast, setShowToast] = useState<{ visible: boolean; message: string }>({ visible: false, message: '' });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isStateLoaded, setIsStateLoaded] = useState(false);
+    const [viewingHistoryItem, setViewingHistoryItem] = useState<HistoryItem | null>(null);
 
     // Settings State
     const [theme, setTheme] = useState<ThemeMode>('system');
@@ -577,8 +578,8 @@ export default function AshokApp() {
         });
         setMode(item.mode);
         setSummary(item.summary || null);
-        setView('home');
-        setIsExpanded(true);
+        setViewingHistoryItem(item);
+        // We stay in 'config' view and 'history' tab
     };
 
     const handleGenerate = () => {
@@ -596,7 +597,11 @@ export default function AshokApp() {
 
     const handleBack = () => {
         if (view === 'config') {
-            setView('home');
+            if (viewingHistoryItem) {
+                setViewingHistoryItem(null);
+            } else {
+                setView('home');
+            }
         } else {
             setIsExpanded(false);
             setResult(null);
@@ -605,6 +610,7 @@ export default function AshokApp() {
             setError(null);
             setIsEditing(false);
             setSelectedPrompts(new Set());
+            setViewingHistoryItem(null);
         }
     };
 
@@ -715,7 +721,10 @@ export default function AshokApp() {
                     </button>
                     <button
                         className={`mode-btn ${configTab === 'history' ? 'active' : ''}`}
-                        onClick={() => setConfigTab('history')}
+                        onClick={() => {
+                            setConfigTab('history');
+                            setViewingHistoryItem(null); // Reset when clicking the tab again
+                        }}
                     >
                         History
                     </button>
@@ -739,7 +748,54 @@ export default function AshokApp() {
     const renderContentArea = () => {
         let content;
         if (view === 'config') {
-            if (configTab === 'history') content = <HistoryView history={history} onSelect={loadHistoryItem} currentPlatform={status.platform} />;
+            if (configTab === 'history') {
+                if (viewingHistoryItem) {
+                    content = (
+                        <div className="history-detail-view">
+                            <div className="history-detail-header">
+                                <button className="history-back-btn" onClick={() => setViewingHistoryItem(null)}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
+                                        <line x1="19" y1="12" x2="5" y2="12" />
+                                        <polyline points="12 19 5 12 12 5" />
+                                    </svg>
+                                    History
+                                </button>
+                                <div className="history-detail-platform">
+                                    {viewingHistoryItem.platform}
+                                </div>
+                            </div>
+
+                            <div className="history-detail-content prompts-area" style={{ margin: '0 -8px', padding: '12px 8px' }}>
+                                {viewingHistoryItem.mode === 'summary' && viewingHistoryItem.summary ? (
+                                    <div className="summary-content-container">
+                                        {viewingHistoryItem.summary.split('\n').map((line, i) => (
+                                            <p key={i} className="summary-paragraph">{line}</p>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    viewingHistoryItem.prompts.map((p, i) => (
+                                        <div key={i} className="prompt-box">
+                                            {p.content}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            <div className="history-detail-actions">
+                                <button
+                                    className="dual-btn primary"
+                                    onClick={handleCopy}
+                                    style={{ width: '100%' }}
+                                >
+                                    Copy Content
+                                </button>
+                            </div>
+                        </div>
+                    );
+                } else {
+                    content = <HistoryView history={history} onSelect={loadHistoryItem} currentPlatform={status.platform} />;
+                }
+            }
             else if (configTab === 'settings') content = <SettingsView theme={theme} onThemeChange={setTheme} onClearHistory={handleClearHistory} />;
             else content = <ProfileView user={user} tier={tier} onSignIn={handleSignIn} onSignOut={handleSignOut} isAuthLoading={isAuthLoading} />;
         } else {
