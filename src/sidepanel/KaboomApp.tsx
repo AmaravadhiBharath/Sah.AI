@@ -429,34 +429,34 @@ export default function KaboomApp() {
                             />
                             <div className="kb-profile-popup">
                                 {user && (
-                                    <div style={{ padding: '12px 12px 8px 12px', borderBottom: '1px solid #f0f0f0', marginBottom: 4 }}>
+                                    <div style={{ padding: '12px 12px 8px 12px', borderBottom: '1px solid #f0f0f0', marginBottom: 4, textAlign: 'right' }}>
                                         <p style={{ fontSize: 13, fontWeight: 600, color: '#000', marginBottom: 2 }}>{user.name}</p>
                                         <p style={{ fontSize: 11, color: '#666', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</p>
                                     </div>
                                 )}
-                                {!user ? (
-                                    <button className="kb-popup-item" onClick={signInWithGoogle}>
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" />
-                                        </svg>
-                                        Login with Google
-                                    </button>
-                                ) : (
-                                    <button className="kb-popup-item logout" onClick={() => { signOut(); setShowPopup(false); }}>
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-                                        </svg>
-                                        Logout
-                                    </button>
-                                )}
-                                <div className="kb-popup-divider" />
-                                <button className="kb-popup-item" onClick={handleEarlyAccess}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <button className="kb-popup-item" onClick={handleEarlyAccess} style={{ justifyContent: 'flex-end' }}>
+                                    Request Early Access
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 8 }}>
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                                     </svg>
-                                    Request Early Access
                                 </button>
+                                <div className="kb-popup-divider" />
+                                {!user ? (
+                                    <button className="kb-popup-item" onClick={signInWithGoogle} style={{ justifyContent: 'flex-end' }}>
+                                        Login with Google
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 8 }}>
+                                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" />
+                                        </svg>
+                                    </button>
+                                ) : (
+                                    <button className="kb-popup-item logout" onClick={() => { signOut(); setShowPopup(false); }} style={{ justifyContent: 'flex-end' }}>
+                                        Logout
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 8 }}>
+                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
                         </>
                     )}
@@ -517,8 +517,7 @@ export default function KaboomApp() {
                         ) : (summary || extractionResult) ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                 {mode === 'summary' && summary && (
-                                    <div className="kb-prompt-card selected" style={{ background: '#f8f8f8', border: '1px solid #e0e0e0', color: '#000' }}>
-                                        <div style={{ fontSize: 11, fontWeight: 700, color: '#86868b', marginBottom: 8, textTransform: 'uppercase' }}>AI Summary</div>
+                                    <div className="kb-prompt-card selected" style={{ background: '#f8f8f8', border: '1px solid #e0e0e0', color: '#000', marginTop: 8 }}>
                                         <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{summary}</div>
                                     </div>
                                 )}
@@ -603,18 +602,25 @@ export default function KaboomApp() {
                 )}
 
                 {user && (
-                    <div className="kb-card-footer">
-                        <button
-                            className="kb-btn-pill"
-                            onClick={handleCopy}
-                            disabled={!extractionResult || selectedPrompts.length === 0}
-                            style={{ opacity: (!extractionResult || selectedPrompts.length === 0) ? 0.3 : 1 }}
-                        >
-                            {copyStatus === 'copied' ? 'copied!' : 'copy'}
-                        </button>
-                    </div>
+                    <button
+                        className="kb-btn-pill"
+                        onClick={handleCopy}
+                        disabled={!extractionResult || selectedPrompts.length === 0}
+                        style={{
+                            position: 'absolute',
+                            bottom: '18px',
+                            right: '16px',
+                            opacity: (!extractionResult || selectedPrompts.length === 0) ? 0 : 1,
+                            pointerEvents: (!extractionResult || selectedPrompts.length === 0) ? 'none' : 'auto',
+                            zIndex: 100,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            transition: 'opacity 0.2s ease, transform 0.2s ease'
+                        }}
+                    >
+                        {copyStatus === 'copied' ? 'copied!' : 'copy'}
+                    </button>
                 )}
-            </div>
+            </div >
 
             <div className="kb-app-footer">
                 <p className="kb-footer-text">

@@ -628,27 +628,27 @@ function KaboomApp() {
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-profile-popup", children: [
-            user && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "12px 12px 8px 12px", borderBottom: "1px solid #f0f0f0", marginBottom: 4 }, children: [
+            user && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "12px 12px 8px 12px", borderBottom: "1px solid #f0f0f0", marginBottom: 4, textAlign: "right" }, children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, fontWeight: 600, color: "#000", marginBottom: 2 }, children: user.name }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 11, color: "#666", overflow: "hidden", textOverflow: "ellipsis" }, children: user.email })
             ] }),
-            !user ? /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-popup-item", onClick: signInWithGoogle, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" }) }),
-              "Login with Google"
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-popup-item", onClick: handleEarlyAccess, style: { justifyContent: "flex-end" }, children: [
+              "Request Early Access",
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", style: { marginLeft: 8 }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "22 4 12 14.01 9 11.01" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-popup-divider" }),
+            !user ? /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-popup-item", onClick: signInWithGoogle, style: { justifyContent: "flex-end" }, children: [
+              "Login with Google",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", style: { marginLeft: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" }) })
             ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-popup-item logout", onClick: () => {
               signOut();
               setShowPopup(false);
-            }, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" }) }),
-              "Logout"
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-popup-divider" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-popup-item", onClick: handleEarlyAccess, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "22 4 12 14.01 9 11.01" })
-              ] }),
-              "Request Early Access"
+            }, style: { justifyContent: "flex-end" }, children: [
+              "Logout",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", style: { marginLeft: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" }) })
             ] })
           ] })
         ] })
@@ -688,10 +688,7 @@ function KaboomApp() {
           animation: "kb-fade-in 0.3s ease"
         }, children: "Lengthy conversation take bit longer" })
       ] }) : summary || extractionResult ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: [
-        mode === "summary" && summary && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-prompt-card selected", style: { background: "#f8f8f8", border: "1px solid #e0e0e0", color: "#000" }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, fontWeight: 700, color: "#86868b", marginBottom: 8, textTransform: "uppercase" }, children: "AI Summary" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { whiteSpace: "pre-wrap", lineHeight: 1.5 }, children: summary })
-        ] }),
+        mode === "summary" && summary && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-prompt-card selected", style: { background: "#f8f8f8", border: "1px solid #e0e0e0", color: "#000", marginTop: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { whiteSpace: "pre-wrap", lineHeight: 1.5 }, children: summary }) }),
         mode === "summary" && extractionResult && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { marginTop: 16, marginBottom: 8, fontSize: 11, fontWeight: 700, color: "#86868b", textTransform: "uppercase", textAlign: "center" }, children: "Raw Prompts" }),
         extractionResult && extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
           "div",
@@ -733,16 +730,25 @@ function KaboomApp() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-pill", onClick: () => handleExtract("summary"), style: { background: "#fff", color: "#000", border: "1px solid #e0e0e0" }, children: "Summarize" })
         ] })
       ] }) }),
-      user && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-card-footer", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      user && /* @__PURE__ */ jsxRuntimeExports.jsx(
         "button",
         {
           className: "kb-btn-pill",
           onClick: handleCopy,
           disabled: !extractionResult || selectedPrompts.length === 0,
-          style: { opacity: !extractionResult || selectedPrompts.length === 0 ? 0.3 : 1 },
+          style: {
+            position: "absolute",
+            bottom: "18px",
+            right: "16px",
+            opacity: !extractionResult || selectedPrompts.length === 0 ? 0 : 1,
+            pointerEvents: !extractionResult || selectedPrompts.length === 0 ? "none" : "auto",
+            zIndex: 100,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            transition: "opacity 0.2s ease, transform 0.2s ease"
+          },
           children: copyStatus === "copied" ? "copied!" : "copy"
         }
-      ) })
+      )
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-app-footer", children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "kb-footer-text", children: "SahAI extracts and summarizes your conversations. Please double check outputs." }) })
   ] });
