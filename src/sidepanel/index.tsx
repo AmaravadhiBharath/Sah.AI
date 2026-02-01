@@ -1,13 +1,10 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
-import AshokApp from './AshokApp';
 import { ErrorBoundary } from './ErrorBoundary';
-import '../styles/index.css';
+import KaboomApp from './KaboomApp';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <AshokApp />
-    </ErrorBoundary>
-  </React.StrictMode>
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+root.render(
+  <ErrorBoundary>
+    <KaboomApp />
+  </ErrorBoundary>
 );
