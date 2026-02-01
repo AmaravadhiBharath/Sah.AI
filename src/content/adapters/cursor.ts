@@ -2,11 +2,11 @@ import { BaseAdapter } from './base';
 import type { ScrapedPrompt } from '../../types';
 
 export class CursorAdapter extends BaseAdapter {
-  name = 'cursor';
+  name = 'Cursor';
 
   detect(): boolean {
-    return location.hostname.includes('cursor.sh') || 
-           location.hostname.includes('cursor.com');
+    return location.hostname.includes('cursor.sh') ||
+      location.hostname.includes('cursor.com');
   }
 
   scrapePrompts(): ScrapedPrompt[] {

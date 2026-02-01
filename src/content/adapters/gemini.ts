@@ -2,7 +2,7 @@ import { BaseAdapter } from './base';
 import type { ScrapedPrompt } from '../../types';
 
 export class GeminiAdapter extends BaseAdapter {
-  name = 'gemini';
+  name = 'Gemini';
 
   detect(): boolean {
     return location.hostname.includes('gemini.google.com');

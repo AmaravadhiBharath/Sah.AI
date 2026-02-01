@@ -2,7 +2,7 @@ import { BaseAdapter } from './base';
 import type { ScrapedPrompt } from '../../types';
 
 export class ChatGPTAdapter extends BaseAdapter {
-  name = 'chatgpt';
+  name = 'ChatGPT';
 
   detect(): boolean {
     return location.hostname.includes('chatgpt.com') ||

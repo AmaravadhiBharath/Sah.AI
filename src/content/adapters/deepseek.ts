@@ -2,7 +2,7 @@ import { BaseAdapter } from './base';
 import type { ScrapedPrompt } from '../../types';
 
 export class DeepSeekAdapter extends BaseAdapter {
-  name = 'deepseek';
+  name = 'DeepSeek';
 
   detect(): boolean {
     return location.hostname.includes('deepseek.com');

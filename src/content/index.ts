@@ -25,6 +25,17 @@ function updateAdapter() {
     getConversationId,
     findInputContainer
   };
+
+  broadcastStatus();
+}
+
+function broadcastStatus() {
+  chrome.runtime.sendMessage({
+    action: 'STATUS_RESULT',
+    supported: !!adapter,
+    platform: platformName,
+    hasPrompts: adapter ? adapter.scrapePrompts().length > 0 : false,
+  });
 }
 
 // Initialize Remote Config (fire and forget)
@@ -131,6 +142,28 @@ const TEXTAREA_SELECTORS: Record<string, string[]> = {
     'textarea',
   ],
 };
+
+// Find the actual input field (textarea or contenteditable)
+function findChatInput(): HTMLElement | null {
+  const selectors = TEXTAREA_SELECTORS[platformName || ''] || ['textarea', '[contenteditable="true"]'];
+
+  for (const selector of selectors) {
+    const el = document.querySelector(selector);
+    if (el && (el as HTMLElement).offsetParent !== null) {
+      return el as HTMLElement;
+    }
+  }
+
+  // Fallback to any visible textarea
+  const textarea = document.querySelector('textarea') as HTMLElement;
+  if (textarea && textarea.offsetParent !== null) return textarea;
+
+  // Fallback to any visible contenteditable
+  const ce = document.querySelector('[contenteditable="true"]') as HTMLElement;
+  if (ce && ce.offsetParent !== null) return ce;
+
+  return null;
+}
 
 // Get text from input element
 function getInputText(element: HTMLElement | null): string {
@@ -496,7 +529,12 @@ async function scrollConversation(): Promise<void> {
 
   chrome.runtime.sendMessage({
     action: 'PROGRESS',
-    message: 'Loading conversation history (discovering all messages)...'
+    message: 'SahAI is scrolling for extracting your lengthy conversation'
+  });
+
+  chrome.runtime.sendMessage({
+    action: 'PROGRESS',
+    message: 'Discovering all messages...'
   });
 
   console.log(`[SahAI] Phase 1: Scrolling to bottom (${config.bottomAttempts} attempts)...`);
@@ -520,7 +558,7 @@ async function scrollConversation(): Promise<void> {
   console.log(`[SahAI] Phase 2: Scrolling to top (${config.topAttempts} attempts)...`);
   chrome.runtime.sendMessage({
     action: 'PROGRESS',
-    message: 'Loading oldest messages...'
+    message: 'Navigating to oldest messages...'
   });
 
   let topMaxHeight = 0;
@@ -1017,20 +1055,7 @@ function createZone1(): HTMLElement {
   return zone1;
 }
 
-// Inject Figma-style floating pill
-// Handle button click
-async function handleButtonClick(mode: 'raw' | 'summary', button: HTMLButtonElement) {
-  console.log(`[SahAI] Button clicked: ${mode}`);
-  const originalText = button.textContent;
-
-  // 1. Open sidepanel immediately
-  chrome.runtime.sendMessage({ action: 'OPEN_SIDE_PANEL' });
-
-  // 1.5. Notify sidepanel that extraction was triggered
-  setTimeout(() => {
-    chrome.runtime.sendMessage({ action: 'EXTRACT_TRIGERED_FROM_PAGE' });
-  }, 500);
-
+function updateButtonLoading(button: HTMLButtonElement) {
   button.classList.add('loading');
   button.innerHTML = `
     <svg class="pe-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1039,6 +1064,34 @@ async function handleButtonClick(mode: 'raw' | 'summary', button: HTMLButtonElem
     </svg>
     Extracting...
   `;
+}
+
+function updateButtonDone(button: HTMLButtonElement, originalText: string) {
+  button.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:14px; height:14px; margin-right:6px; display:inline-block; vertical-align:middle;">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    Done!
+  `;
+  setTimeout(() => {
+    button.classList.remove('loading');
+    button.textContent = originalText;
+  }, 2000);
+}
+
+// Inject Figma-style floating pill
+// Handle button click
+async function handleButtonClick(mode: 'raw' | 'summary', button: HTMLButtonElement) {
+  console.log(`[SahAI] Button clicked: ${mode}`);
+  const originalText = button.textContent || 'Extract';
+
+  // 1. Open sidepanel immediately
+  chrome.runtime.sendMessage({ action: 'OPEN_SIDE_PANEL' });
+
+  // 1.5. Notify sidepanel that extraction was triggered
+  chrome.runtime.sendMessage({ action: 'EXTRACT_TRIGERED_FROM_PAGE' });
+
+  updateButtonLoading(button);
 
   try {
     console.log('[SahAI] Starting extraction...');
@@ -1054,17 +1107,11 @@ async function handleButtonClick(mode: 'raw' | 'summary', button: HTMLButtonElem
       mode,
     });
 
-    button.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:14px; height:14px; margin-right:6px; display:inline-block; vertical-align:middle;">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
-      Done!
-    `;
+    updateButtonDone(button, originalText);
 
   } catch (error) {
     console.error('[SahAI] Error:', error);
     button.textContent = 'Error';
-  } finally {
     setTimeout(() => {
       button.classList.remove('loading');
       button.textContent = originalText;
@@ -1183,7 +1230,6 @@ function hidePasteButton() {
 }
 
 // Handle paste action
-// Handle paste action
 async function handlePaste() {
   let textToPaste = copiedContent;
 
@@ -1197,23 +1243,38 @@ async function handlePaste() {
 
   if (!textToPaste) return;
 
-  // Find the input field
-  const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
-  const contentEditable = document.querySelector('[contenteditable="true"]') as HTMLElement;
-
-  if (textarea) {
-    const start = textarea.selectionStart || 0;
-    const end = textarea.selectionEnd || 0;
-    const currentVal = textarea.value;
-    textarea.value = currentVal.substring(0, start) + textToPaste + currentVal.substring(end);
-    textarea.selectionStart = textarea.selectionEnd = start + textToPaste.length;
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    textarea.focus();
-  } else if (contentEditable) {
-    contentEditable.focus();
-    document.execCommand('insertText', false, textToPaste);
+  const target = findChatInput();
+  if (!target) {
+    console.error('[SahAI] Could not find input field to paste');
+    return;
   }
 
+  target.focus();
+
+  if (target instanceof HTMLTextAreaElement) {
+    const start = target.selectionStart || 0;
+    const end = target.selectionEnd || 0;
+    const currentVal = target.value;
+    target.value = currentVal.substring(0, start) + textToPaste + currentVal.substring(end);
+    target.selectionStart = target.selectionEnd = start + textToPaste.length;
+
+    // Trigger input events so the site's JS sees the changes
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    target.dispatchEvent(new Event('change', { bubbles: true }));
+  } else {
+    // Content editable
+    try {
+      // Modern way for contenteditables
+      document.execCommand('insertText', false, textToPaste);
+    } catch (e) {
+      console.error('[SahAI] Standard insertText failed, trying direct innerText update', e);
+      // Fallback
+      target.innerText = textToPaste;
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+
+  console.log('[SahAI] Successfully pasted content');
   copiedContent = null;
   hidePasteButton();
 }
@@ -1400,6 +1461,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       const mode = message.mode;
       isExtracting = true;
 
+      const extractBtn = document.getElementById('pe-extract-btn') as HTMLButtonElement;
+      const originalText = extractBtn ? (extractBtn.textContent || 'Extract') : 'Extract';
+      if (extractBtn) updateButtonLoading(extractBtn);
+
       extractPrompts().then(prompts => {
         const result = createExtractionResult(prompts);
 
@@ -1409,9 +1474,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           mode,
         });
 
+        if (extractBtn) updateButtonDone(extractBtn, originalText);
         sendResponse({ success: true, promptCount: prompts.length });
       }).catch(err => {
         console.error('[SahAI] Extraction failed:', err);
+        if (extractBtn) {
+          extractBtn.textContent = 'Error';
+          setTimeout(() => {
+            extractBtn.classList.remove('loading');
+            extractBtn.textContent = originalText;
+          }, 2000);
+        }
         sendResponse({ success: false, error: err.message });
       }).finally(() => {
         isExtracting = false;
@@ -1458,12 +1531,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 // Initialize
 // ============================================
 
-chrome.runtime.sendMessage({
-  action: 'STATUS_RESULT',
-  supported: !!adapter,
-  platform: platformName,
-  hasPrompts: adapter ? adapter.scrapePrompts().length > 0 : false,
-});
+broadcastStatus();
 
 initZonedLayout();
 initRealTimeCapture();

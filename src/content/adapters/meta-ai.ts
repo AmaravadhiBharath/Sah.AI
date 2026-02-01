@@ -2,7 +2,7 @@ import { BaseAdapter } from './base';
 import type { ScrapedPrompt } from '../../types';
 
 export class MetaAIAdapter extends BaseAdapter {
-  name = 'meta-ai';
+  name = 'Meta AI';
 
   detect(): boolean {
     return location.hostname.includes('meta.ai');

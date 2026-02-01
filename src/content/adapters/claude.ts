@@ -2,7 +2,7 @@ import { BaseAdapter } from './base';
 import type { ScrapedPrompt } from '../../types';
 
 export class ClaudeAdapter extends BaseAdapter {
-  name = 'claude';
+  name = 'Claude';
 
   detect(): boolean {
     return location.hostname.includes('claude.ai');

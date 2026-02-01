@@ -4,7 +4,7 @@ var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { en
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import "./modulepreload-polyfill.js";
 import { r as reactExports, j as jsxRuntimeExports, c as client } from "./vendor.js";
-import { _ as __vitePreload, s as setCurrentUser, a as signInToFirebase, b as saveUserProfile, c as signOutFromFirebase, g as getQuotas } from "./firebase.js";
+import { _ as __vitePreload, s as setCurrentUser, a as signInToFirebase, b as saveUserProfile, c as signOutFromFirebase, g as getQuotas, d as getHistoryFromCloud, m as mergeHistory, e as saveHistoryToCloud } from "./firebase.js";
 class TelemetryService {
   constructor() {
     __publicField(this, "queue", []);
@@ -63,7 +63,7 @@ class TelemetryService {
         return { collection: collection2, addDoc: addDoc2 };
       }, true ? [] : void 0, import.meta.url);
       const { getDb } = await __vitePreload(async () => {
-        const { getDb: getDb2 } = await import("./firebase.js").then((n) => n.i);
+        const { getDb: getDb2 } = await import("./firebase.js").then((n) => n.k);
         return { getDb: getDb2 };
       }, true ? __vite__mapDeps([0,1]) : void 0, import.meta.url);
       const db = await getDb();
@@ -274,6 +274,22 @@ async function initializeAuth() {
     isLoading: false
   };
 }
+function formatRelativeTime(timestamp) {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const seconds = Math.floor(diff / 1e3);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  if (seconds < 60) return "Extracted just now";
+  if (minutes < 60) return `Extracted ${minutes}m ago`;
+  if (hours < 24) return `Extracted ${hours}h ago`;
+  const date = new Date(timestamp);
+  const today = /* @__PURE__ */ new Date();
+  const yesterday = /* @__PURE__ */ new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Extracted yesterday";
+  return `Extracted ${date.toLocaleDateString(void 0, { month: "short", day: "numeric" })}`;
+}
 function KaboomApp() {
   const [user, setUser] = reactExports.useState(null);
   const [extractionResult, setExtractionResult] = reactExports.useState(null);
@@ -289,7 +305,9 @@ function KaboomApp() {
   const [currentPlatformIndex, setCurrentPlatformIndex] = reactExports.useState(0);
   const platforms = ["ChatGPT", "Claude", "Gemini", "Perplexity", "DeepSeek", "Lovable", "Bolt.new", "Cursor", "Meta AI"];
   const [viewingHistory, setViewingHistory] = reactExports.useState(false);
+  const [isHistoryDetail, setIsHistoryDetail] = reactExports.useState(false);
   const [historyItems, setHistoryItems] = reactExports.useState([]);
+  const [progressMessage, setProgressMessage] = reactExports.useState(null);
   reactExports.useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPlatformIndex((prev) => (prev + 1) % platforms.length);
@@ -301,19 +319,52 @@ function KaboomApp() {
     initializeAuth().then((state) => {
       setUser(state.user);
     });
-    const unsubscribe = subscribeToAuthChanges((newUser) => {
+    const unsubscribe = subscribeToAuthChanges(async (newUser) => {
       setUser(newUser);
-      if (newUser) setShowPopup(false);
+      if (newUser) {
+        setShowPopup(false);
+        try {
+          const cloudHistory = await getHistoryFromCloud(newUser.id);
+          chrome.storage.local.get(["extractionHistory"], (result) => {
+            const localHistory = result.extractionHistory || [];
+            const merged = mergeHistory(localHistory, cloudHistory);
+            chrome.storage.local.set({ extractionHistory: merged });
+            setHistoryItems(merged);
+          });
+        } catch (e) {
+          console.error("Initial cloud sync failed:", e);
+        }
+      }
+    });
+    chrome.storage.local.get(["extractionHistory"], async (result) => {
+      let localHistory = result.extractionHistory || [];
+      if (result.extractionHistory) {
+        const sorted = result.extractionHistory.sort((a, b) => b.timestamp - a.timestamp);
+        setHistoryItems(sorted);
+      }
+      const authState = await initializeAuth();
+      if (authState.user) {
+        try {
+          const cloudHistory = await getHistoryFromCloud(authState.user.id);
+          const merged = mergeHistory(localHistory, cloudHistory);
+          chrome.storage.local.set({ extractionHistory: merged });
+          setHistoryItems(merged);
+        } catch (e) {
+          console.error("Background cloud sync failed:", e);
+        }
+      }
     });
     const port = chrome.runtime.connect({ name: "sidepanel" });
     portRef.current = port;
     const messageListener = (msg) => {
+      var _a;
       if (msg.action === "STATUS_RESULT") {
         setStatus({ supported: msg.supported, platform: msg.platform });
       } else if (msg.action === "EXTRACTION_RESULT" || msg.action === "EXTRACTION_FROM_PAGE_RESULT") {
         setExtractionResult(msg.result);
         setSelectedPrompts(msg.result.prompts.map((_, i) => i));
         setLoading(false);
+        setProgressMessage(null);
         if (startTimeRef.current) {
           if (timerRef.current) {
             clearInterval(timerRef.current);
@@ -322,8 +373,27 @@ function KaboomApp() {
           const duration = (Date.now() - startTimeRef.current) / 1e3;
           setExtractionTime(parseFloat(duration.toFixed(1)));
         }
+        const newItem = {
+          id: Date.now().toString(),
+          platform: msg.result.platform,
+          promptCount: msg.result.prompts.length,
+          mode: "raw",
+          timestamp: Date.now(),
+          prompts: msg.result.prompts,
+          preview: ((_a = msg.result.prompts[0]) == null ? void 0 : _a.content.slice(0, 100)) || ""
+        };
+        chrome.storage.local.get(["extractionHistory"], (result) => {
+          const existingHistory = result.extractionHistory || [];
+          const updatedHistory = [newItem, ...existingHistory].slice(0, 100);
+          chrome.storage.local.set({ extractionHistory: updatedHistory });
+          setHistoryItems(updatedHistory);
+          if (user) {
+            saveHistoryToCloud(user.id, newItem).catch((e) => console.error("Cloud save failed:", e));
+          }
+        });
       } else if (msg.action === "EXTRACT_TRIGERED_FROM_PAGE") {
         setLoading(true);
+        setProgressMessage(null);
         startTimeRef.current = Date.now();
         setExtractionTime(null);
         setLiveTime(0);
@@ -332,6 +402,8 @@ function KaboomApp() {
           const d = (Date.now() - startTimeRef.current) / 1e3;
           setLiveTime(parseFloat(d.toFixed(1)));
         }, 100);
+      } else if (msg.action === "PROGRESS") {
+        setProgressMessage(msg.message);
       } else if (msg.action === "ERROR") {
         setLoading(false);
         if (timerRef.current) {
@@ -375,7 +447,9 @@ function KaboomApp() {
     var _a;
     if (!status.supported) return;
     setLoading(true);
+    setProgressMessage(null);
     setViewingHistory(false);
+    setIsHistoryDetail(false);
     startTimeRef.current = Date.now();
     setExtractionTime(null);
     setLiveTime(0);
@@ -393,6 +467,7 @@ function KaboomApp() {
         setHistoryItems(sorted);
       }
       setViewingHistory(true);
+      setIsHistoryDetail(false);
       setExtractionResult(null);
     });
   };
@@ -409,6 +484,7 @@ function KaboomApp() {
     setExtractionResult(result);
     setSelectedPrompts(item.prompts.map((_, i) => i));
     setViewingHistory(false);
+    setIsHistoryDetail(true);
   };
   const handleEarlyAccess = () => {
     if (!user) {
@@ -427,20 +503,23 @@ function KaboomApp() {
           {
             className: "kb-back-btn",
             onClick: () => {
-              if (extractionResult && !viewingHistory && historyItems.length > 0) {
+              if (isHistoryDetail) {
+                setViewingHistory(true);
+                setIsHistoryDetail(false);
                 setExtractionResult(null);
                 setExtractionTime(null);
               } else {
                 setViewingHistory(false);
+                setIsHistoryDetail(false);
                 setExtractionResult(null);
                 setExtractionTime(null);
               }
             },
-            title: "Back to Home",
+            title: "Back",
             children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19 12H5M12 19l-7-7 7-7" }) })
           }
         ),
-        extractionTime !== null && !loading && !viewingHistory && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: {
+        extractionTime !== null && !loading && !viewingHistory && !isHistoryDetail && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: {
           marginRight: "auto",
           /* Pushes everything else (profile) to the right */
           fontSize: 11,
@@ -453,6 +532,14 @@ function KaboomApp() {
           extractionTime,
           "s"
         ] }),
+        isHistoryDetail && extractionResult && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+          marginRight: "auto",
+          fontSize: 11,
+          fontWeight: 500,
+          color: "#86868b",
+          display: "flex",
+          alignItems: "center"
+        }, children: formatRelativeTime(extractionResult.extractedAt) }),
         viewingHistory && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
           marginRight: "auto",
           fontSize: 11,
@@ -533,7 +620,26 @@ function KaboomApp() {
           "Extracting..",
           liveTime.toFixed(1),
           " sec"
-        ] })
+        ] }),
+        progressMessage && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: {
+          fontSize: 12,
+          color: "#000",
+          fontWeight: 500,
+          marginTop: 4,
+          maxWidth: 200,
+          textAlign: "center",
+          lineHeight: 1.4,
+          animation: "kb-fade-in 0.3s ease"
+        }, children: progressMessage }),
+        liveTime > 10 && !progressMessage && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: {
+          fontSize: 11,
+          color: "#86868b",
+          marginTop: -4,
+          maxWidth: 180,
+          textAlign: "center",
+          lineHeight: 1.4,
+          animation: "kb-fade-in 0.3s ease"
+        }, children: "Lengthy conversation take bit longer" })
       ] }) : extractionResult ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
         "div",
         {

@@ -3,7 +3,7 @@ var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 var _a;
-import { _ as __vitePreload, d as getCurrentUserId, e as getKeylogsFromCloud, f as getDb, h as saveKeylogsToCloud } from "./firebase.js";
+import { _ as __vitePreload, f as getCurrentUserId, h as getKeylogsFromCloud, i as getDb, j as saveKeylogsToCloud } from "./firebase.js";
 import { d as doc, i as increment } from "./vendor.js";
 class CircuitBreaker {
   constructor(config) {
@@ -668,7 +668,7 @@ async function fetchRemoteConfigUpdates(currentVersion) {
       return { doc: doc3, getDoc: getDoc2 };
     }, true ? [] : void 0, import.meta.url);
     const { getDb: getDb2 } = await __vitePreload(async () => {
-      const { getDb: getDb3 } = await import("./firebase.js").then((n) => n.i);
+      const { getDb: getDb3 } = await import("./firebase.js").then((n) => n.k);
       return { getDb: getDb3 };
     }, true ? __vite__mapDeps([0,1]) : void 0, import.meta.url);
     const db = await getDb2();
@@ -1172,15 +1172,15 @@ function detectPlatformFromUrl(url) {
   try {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname;
-    if (hostname.includes("chatgpt.com") || hostname.includes("openai.com")) return "chatgpt";
-    if (hostname.includes("claude.ai")) return "claude";
-    if (hostname.includes("gemini.google.com")) return "gemini";
-    if (hostname.includes("perplexity.ai")) return "perplexity";
-    if (hostname.includes("deepseek.com")) return "deepseek";
-    if (hostname.includes("lovable.dev")) return "lovable";
-    if (hostname.includes("bolt.new")) return "bolt";
-    if (hostname.includes("cursor.sh") || hostname.includes("cursor.com")) return "cursor";
-    if (hostname.includes("meta.ai")) return "meta-ai";
+    if (hostname.includes("chatgpt.com") || hostname.includes("openai.com")) return "ChatGPT";
+    if (hostname.includes("claude.ai")) return "Claude";
+    if (hostname.includes("gemini.google.com")) return "Gemini";
+    if (hostname.includes("perplexity.ai")) return "Perplexity";
+    if (hostname.includes("deepseek.com")) return "DeepSeek";
+    if (hostname.includes("lovable.dev")) return "Lovable";
+    if (hostname.includes("bolt.new")) return "Bolt";
+    if (hostname.includes("cursor.sh") || hostname.includes("cursor.com")) return "Cursor";
+    if (hostname.includes("meta.ai")) return "Meta AI";
     return null;
   } catch (e) {
     return null;

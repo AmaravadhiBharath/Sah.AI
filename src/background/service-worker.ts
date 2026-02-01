@@ -654,15 +654,15 @@ function detectPlatformFromUrl(url: string): string | null {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname;
 
-    if (hostname.includes('chatgpt.com') || hostname.includes('openai.com')) return 'chatgpt';
-    if (hostname.includes('claude.ai')) return 'claude';
-    if (hostname.includes('gemini.google.com')) return 'gemini';
-    if (hostname.includes('perplexity.ai')) return 'perplexity';
-    if (hostname.includes('deepseek.com')) return 'deepseek';
-    if (hostname.includes('lovable.dev')) return 'lovable';
-    if (hostname.includes('bolt.new')) return 'bolt';
-    if (hostname.includes('cursor.sh') || hostname.includes('cursor.com')) return 'cursor';
-    if (hostname.includes('meta.ai')) return 'meta-ai';
+    if (hostname.includes('chatgpt.com') || hostname.includes('openai.com')) return 'ChatGPT';
+    if (hostname.includes('claude.ai')) return 'Claude';
+    if (hostname.includes('gemini.google.com')) return 'Gemini';
+    if (hostname.includes('perplexity.ai')) return 'Perplexity';
+    if (hostname.includes('deepseek.com')) return 'DeepSeek';
+    if (hostname.includes('lovable.dev')) return 'Lovable';
+    if (hostname.includes('bolt.new')) return 'Bolt';
+    if (hostname.includes('cursor.sh') || hostname.includes('cursor.com')) return 'Cursor';
+    if (hostname.includes('meta.ai')) return 'Meta AI';
 
     return null;
   } catch (e) {

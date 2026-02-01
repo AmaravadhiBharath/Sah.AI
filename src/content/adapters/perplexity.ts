@@ -2,7 +2,7 @@ import { BaseAdapter } from './base';
 import type { ScrapedPrompt } from '../../types';
 
 export class PerplexityAdapter extends BaseAdapter {
-  name = 'perplexity';
+  name = 'Perplexity';
 
   detect(): boolean {
     return location.hostname.includes('perplexity.ai');

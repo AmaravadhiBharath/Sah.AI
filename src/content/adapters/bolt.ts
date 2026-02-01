@@ -2,7 +2,7 @@ import { BaseAdapter } from './base';
 import type { ScrapedPrompt } from '../../types';
 
 export class BoltAdapter extends BaseAdapter {
-  name = 'bolt';
+  name = 'Bolt';
 
   detect(): boolean {
     return location.hostname.includes('bolt.new');

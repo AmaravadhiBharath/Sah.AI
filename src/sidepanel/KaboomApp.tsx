@@ -7,7 +7,34 @@ import {
     subscribeToAuthChanges,
     type ChromeUser
 } from '../services/auth';
+import {
+    saveHistoryToCloud,
+    getHistoryFromCloud,
+    mergeHistory,
+    type CloudHistoryItem
+} from '../services/firebase';
 import './kaboom.css';
+
+function formatRelativeTime(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (seconds < 60) return 'Extracted just now';
+    if (minutes < 60) return `Extracted ${minutes}m ago`;
+    if (hours < 24) return `Extracted ${hours}h ago`;
+
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (date.toDateString() === yesterday.toDateString()) return 'Extracted yesterday';
+
+    return `Extracted ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+}
 
 export default function KaboomApp() {
     const [user, setUser] = useState<ChromeUser | null>(null);
@@ -28,7 +55,9 @@ export default function KaboomApp() {
     const platforms = ['ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'DeepSeek', 'Lovable', 'Bolt.new', 'Cursor', 'Meta AI'];
 
     const [viewingHistory, setViewingHistory] = useState(false);
+    const [isHistoryDetail, setIsHistoryDetail] = useState(false);
     const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+    const [progressMessage, setProgressMessage] = useState<string | null>(null);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -44,9 +73,45 @@ export default function KaboomApp() {
             setUser(state.user);
         });
 
-        const unsubscribe = subscribeToAuthChanges((newUser) => {
+        const unsubscribe = subscribeToAuthChanges(async (newUser) => {
             setUser(newUser);
-            if (newUser) setShowPopup(false); // Close popup on login
+            if (newUser) {
+                setShowPopup(false); // Close popup on login
+                // Sync with cloud on login
+                try {
+                    const cloudHistory = await getHistoryFromCloud(newUser.id);
+                    chrome.storage.local.get(['extractionHistory'], (result) => {
+                        const localHistory = result.extractionHistory || [];
+                        const merged = mergeHistory(localHistory as CloudHistoryItem[], cloudHistory);
+                        chrome.storage.local.set({ extractionHistory: merged });
+                        setHistoryItems(merged as HistoryItem[]);
+                    });
+                } catch (e) {
+                    console.error('Initial cloud sync failed:', e);
+                }
+            }
+        });
+
+        // Load history and sync if user exists
+        chrome.storage.local.get(['extractionHistory'], async (result) => {
+            let localHistory = result.extractionHistory || [];
+            if (result.extractionHistory) {
+                const sorted = (result.extractionHistory as HistoryItem[]).sort((a, b) => b.timestamp - a.timestamp);
+                setHistoryItems(sorted);
+            }
+
+            // If we already have a user from initializeAuth, sync now
+            const authState = await initializeAuth();
+            if (authState.user) {
+                try {
+                    const cloudHistory = await getHistoryFromCloud(authState.user.id);
+                    const merged = mergeHistory(localHistory as CloudHistoryItem[], cloudHistory);
+                    chrome.storage.local.set({ extractionHistory: merged });
+                    setHistoryItems(merged as HistoryItem[]);
+                } catch (e) {
+                    console.error('Background cloud sync failed:', e);
+                }
+            }
         });
 
         const port = chrome.runtime.connect({ name: 'sidepanel' });
@@ -59,6 +124,7 @@ export default function KaboomApp() {
                 setExtractionResult(msg.result);
                 setSelectedPrompts(msg.result.prompts.map((_: any, i: number) => i));
                 setLoading(false);
+                setProgressMessage(null);
                 if (startTimeRef.current) {
                     if (timerRef.current) {
                         clearInterval(timerRef.current);
@@ -67,9 +133,33 @@ export default function KaboomApp() {
                     const duration = (Date.now() - startTimeRef.current) / 1000;
                     setExtractionTime(parseFloat(duration.toFixed(1)));
                 }
+
+                // AUTO-SAVE TO HISTORY
+                const newItem: HistoryItem = {
+                    id: Date.now().toString(),
+                    platform: msg.result.platform,
+                    promptCount: msg.result.prompts.length,
+                    mode: 'raw',
+                    timestamp: Date.now(),
+                    prompts: msg.result.prompts,
+                    preview: msg.result.prompts[0]?.content.slice(0, 100) || '',
+                };
+
+                chrome.storage.local.get(['extractionHistory'], (result) => {
+                    const existingHistory = result.extractionHistory || [];
+                    const updatedHistory = [newItem, ...existingHistory].slice(0, 100);
+                    chrome.storage.local.set({ extractionHistory: updatedHistory });
+                    setHistoryItems(updatedHistory);
+
+                    // Also save to cloud if user is logged in
+                    if (user) {
+                        saveHistoryToCloud(user.id, newItem as CloudHistoryItem).catch(e => console.error('Cloud save failed:', e));
+                    }
+                });
             } else if (msg.action === 'EXTRACT_TRIGERED_FROM_PAGE') {
                 // The page button was clicked, so we set loading to true here
                 setLoading(true);
+                setProgressMessage(null);
                 startTimeRef.current = Date.now();
                 setExtractionTime(null);
                 setLiveTime(0);
@@ -79,6 +169,8 @@ export default function KaboomApp() {
                     setLiveTime(parseFloat(d.toFixed(1)));
                 }, 100) as unknown as number;
 
+            } else if (msg.action === 'PROGRESS') {
+                setProgressMessage(msg.message);
             } else if (msg.action === 'ERROR') {
                 setLoading(false);
                 if (timerRef.current) {
@@ -131,7 +223,9 @@ export default function KaboomApp() {
     const handleExtract = () => {
         if (!status.supported) return;
         setLoading(true);
+        setProgressMessage(null);
         setViewingHistory(false);
+        setIsHistoryDetail(false);
         startTimeRef.current = Date.now();
         setExtractionTime(null);
         setLiveTime(0);
@@ -153,6 +247,7 @@ export default function KaboomApp() {
                 setHistoryItems(sorted);
             }
             setViewingHistory(true);
+            setIsHistoryDetail(false);
             setExtractionResult(null);
         });
     };
@@ -169,6 +264,7 @@ export default function KaboomApp() {
         setExtractionResult(result);
         setSelectedPrompts(item.prompts.map((_, i) => i));
         setViewingHistory(false);
+        setIsHistoryDetail(true);
     };
 
     const handleEarlyAccess = () => {
@@ -191,22 +287,19 @@ export default function KaboomApp() {
                         <button
                             className="kb-back-btn"
                             onClick={() => {
-                                if (extractionResult && !viewingHistory && historyItems.length > 0) {
-                                    // If we are viewing a result but have history functionality, 
-                                    // check if we came from history? 
-                                    // For simplicity, back always goes to Home from result, 
-                                    // unless we want 'Back to History'. 
-                                    // Requirement: "history should show card in the same panel as the result"
-                                    // Let's make Back go to Home always for now, or toggle history if user wants.
+                                if (isHistoryDetail) {
+                                    setViewingHistory(true);
+                                    setIsHistoryDetail(false);
                                     setExtractionResult(null);
                                     setExtractionTime(null);
                                 } else {
                                     setViewingHistory(false);
+                                    setIsHistoryDetail(false);
                                     setExtractionResult(null);
                                     setExtractionTime(null);
                                 }
                             }}
-                            title="Back to Home"
+                            title="Back"
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -214,7 +307,7 @@ export default function KaboomApp() {
                         </button>
                     )}
 
-                    {extractionTime !== null && !loading && !viewingHistory && (
+                    {extractionTime !== null && !loading && !viewingHistory && !isHistoryDetail && (
                         <span style={{
                             marginRight: 'auto',  /* Pushes everything else (profile) to the right */
                             fontSize: 11,
@@ -224,6 +317,18 @@ export default function KaboomApp() {
                             alignItems: 'center'
                         }}>
                             Extracted in {extractionTime}s
+                        </span>
+                    )}
+                    {isHistoryDetail && extractionResult && !loading && (
+                        <span style={{
+                            marginRight: 'auto',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: '#86868b',
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}>
+                            {formatRelativeTime(extractionResult.extractedAt)}
                         </span>
                     )}
                     {viewingHistory && !loading && (
@@ -330,6 +435,33 @@ export default function KaboomApp() {
                                 <p style={{ fontSize: 13, color: '#999', fontVariantNumeric: 'tabular-nums' }}>
                                     Extracting..{liveTime.toFixed(1)} sec
                                 </p>
+                                {progressMessage && (
+                                    <p style={{
+                                        fontSize: 12,
+                                        color: '#000',
+                                        fontWeight: 500,
+                                        marginTop: 4,
+                                        maxWidth: 200,
+                                        textAlign: 'center',
+                                        lineHeight: 1.4,
+                                        animation: 'kb-fade-in 0.3s ease'
+                                    }}>
+                                        {progressMessage}
+                                    </p>
+                                )}
+                                {liveTime > 10 && !progressMessage && (
+                                    <p style={{
+                                        fontSize: 11,
+                                        color: '#86868b',
+                                        marginTop: -4,
+                                        maxWidth: 180,
+                                        textAlign: 'center',
+                                        lineHeight: 1.4,
+                                        animation: 'kb-fade-in 0.3s ease'
+                                    }}>
+                                        Lengthy conversation take bit longer
+                                    </p>
+                                )}
                             </div>
                         ) : extractionResult ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
