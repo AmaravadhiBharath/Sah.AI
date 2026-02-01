@@ -248,14 +248,14 @@ export default function KaboomApp() {
                     {user?.picture ? <img src={user.picture} style={{ width: '100%' }} /> : (user?.name ? user.name.split(' ').map(n => n[0]).join('') : 'JD')}
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 18, fontWeight: 600 }}>{user?.email || 'email@example.com'}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#3A82F6', textTransform: 'uppercase', letterSpacing: 1, marginTop: 8 }}>
+                    <div style={{ fontSize: 16, fontWeight: 600 }}>{user?.email || 'email@example.com'}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#3A82F6', textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>
                         {tier === 'PRO' ? 'PRO MEMBER' : 'PREMIUM MEMBER'}
                     </div>
                 </div>
             </div>
 
-            <div className="kb-group-card" style={{ marginTop: 32 }}>
+            <div className="kb-group-card" style={{ marginTop: 16 }}>
                 <div className="kb-list-item">
                     <span className="kb-list-label">Manage Subscription</span>
                     <div style={{ transform: 'rotate(180deg)', opacity: 0.3 }}><IconBack /></div>
@@ -399,14 +399,15 @@ export default function KaboomApp() {
                 </div>
 
                 {mode === 'raw' && (
-                    <div style={{ padding: '4px 12px 16px', background: 'white', border: '1px solid var(--kb-outline)', borderRadius: 12, marginBottom: 16, display: 'flex', justifyContent: 'center', position: 'relative' }}>
+                    <div style={{ padding: '2px 12px 12px', background: 'white', border: '1px solid var(--kb-outline)', borderRadius: 12, marginBottom: 8, display: 'flex', justifyContent: 'center', position: 'relative' }}>
                         <div style={{ position: 'absolute', top: -10, right: 10, background: '#3A82F6', color: 'white', fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4 }}>PRO</div>
-                        <button onClick={handleSummarize} style={{ background: 'none', border: 'none', color: '#666', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12 }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                        <button onClick={handleSummarize} style={{ background: 'none', border: 'none', color: '#666', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, paddingTop: 10 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                             Summarize Extract
                         </button>
                     </div>
                 )}
+
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {mode === 'summary' && summary ? (
@@ -422,13 +423,14 @@ export default function KaboomApp() {
                     )}
                 </div>
 
-                <div style={{ height: 80 }} /> {/* Spacer for floating button area if needed, but mockup shows it at bottom */}
+                <div style={{ height: 40 }} /> {/* Spacer for floating button area if needed */}
 
                 <button className="kb-btn-primary" onClick={handleCopy}>
                     <IconCopy />
                     Copy
                 </button>
             </div>
+
 
             <div className="kb-footer">
                 <div className="kb-nav-user" onClick={() => setActiveTab('profile')}>
@@ -486,26 +488,26 @@ export default function KaboomApp() {
 
     // Default Home View (Empty state)
     return renderMainLayout(
-        <div className="kb-content kb-animate">
-            <div className="kb-group-card" style={{ padding: 40, textAlign: 'center', background: 'white' }}>
-                <div className="kb-extract-icon" style={{ margin: '0 auto 24px' }}>
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="kb-content kb-animate" style={{ paddingTop: 8 }}>
+            <div className="kb-group-card" style={{ padding: 24, textAlign: 'center', background: 'white' }}>
+                <div className="kb-extract-icon" style={{ margin: '0 auto 16px', width: 60, height: 60 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 2v10m0 0l-3-3m3 3l3-3" />
                         <path d="M3 18v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
                     </svg>
                 </div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Ready to Extract</h2>
-                <p style={{ fontSize: 14, color: '#999', marginBottom: 24 }}>Navigate to a supported AI chat to begin.</p>
+                <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Ready to Extract</h2>
+                <p style={{ fontSize: 13, color: '#999', marginBottom: 16 }}>Navigate to a supported AI chat to begin.</p>
                 <button className="kb-btn-primary" onClick={handleStartExtraction} disabled={!status.supported}>
                     {status.supported ? 'Start Extraction' : 'Unsupported Page'}
                 </button>
                 {!status.supported && (
-                    <p style={{ fontSize: 11, color: '#999', marginTop: 12 }}>Visit ChatGPT, Claude, or Gemini to use SahAI.</p>
+                    <p style={{ fontSize: 10, color: '#999', marginTop: 8 }}>Visit ChatGPT, Claude, or Gemini to use SahAI.</p>
                 )}
             </div>
 
             {history.length > 0 && (
-                <div style={{ marginTop: 8 }}>
+                <div style={{ marginTop: 0 }}>
                     <div className="kb-section-label">Recent Explorations</div>
                     <div className="kb-group-card">
                         {history.slice(0, 3).map(item => (
@@ -516,10 +518,10 @@ export default function KaboomApp() {
                                 setActiveTab('home');
                             }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span className="kb-list-label">{item.platform}</span>
-                                    <span style={{ fontSize: 12, color: '#999', marginTop: 4 }}>{item.preview.slice(0, 40)}...</span>
+                                    <span className="kb-list-label" style={{ fontSize: 14 }}>{item.platform}</span>
+                                    <span style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{item.preview.slice(0, 40)}...</span>
                                 </div>
-                                <span style={{ fontSize: 11, color: '#999' }}>{new Date(item.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                                <span style={{ fontSize: 10, color: '#999' }}>{new Date(item.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
                             </div>
                         ))}
                     </div>

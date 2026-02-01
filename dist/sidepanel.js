@@ -475,11 +475,11 @@ function KaboomApp() {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginTop: 8 }, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 100, height: 100, borderRadius: "50%", background: "#F9F9F9", border: "1px solid #EAEAEA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 500, color: "#999", overflow: "hidden" }, children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, style: { width: "100%" } }) : (user == null ? void 0 : user.name) ? user.name.split(" ").map((n) => n[0]).join("") : "JD" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 18, fontWeight: 600 }, children: (user == null ? void 0 : user.email) || "email@example.com" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, fontWeight: 700, color: "#3A82F6", textTransform: "uppercase", letterSpacing: 1, marginTop: 8 }, children: tier === "PRO" ? "PRO MEMBER" : "PREMIUM MEMBER" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 16, fontWeight: 600 }, children: (user == null ? void 0 : user.email) || "email@example.com" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: "#3A82F6", textTransform: "uppercase", letterSpacing: 1, marginTop: 4 }, children: tier === "PRO" ? "PRO MEMBER" : "PREMIUM MEMBER" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-group-card", style: { marginTop: 32 }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-group-card", style: { marginTop: 16 }, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-list-item", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-list-label", children: "Manage Subscription" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { transform: "rotate(180deg)", opacity: 0.3 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) })
@@ -579,15 +579,15 @@ function KaboomApp() {
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-date-label", children: (extractionResult == null ? void 0 : extractionResult.extractedAt) ? new Date(extractionResult.extractedAt).toLocaleDateString([], { month: "short", day: "numeric" }) : "Today" })
         ] }),
-        mode === "raw" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "4px 12px 16px", background: "white", border: "1px solid var(--kb-outline)", borderRadius: 12, marginBottom: 16, display: "flex", justifyContent: "center", position: "relative" }, children: [
+        mode === "raw" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "2px 12px 12px", background: "white", border: "1px solid var(--kb-outline)", borderRadius: 12, marginBottom: 8, display: "flex", justifyContent: "center", position: "relative" }, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { position: "absolute", top: -10, right: 10, background: "#3A82F6", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }, children: "PRO" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: handleSummarize, style: { background: "none", border: "none", color: "#666", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, paddingTop: 12 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: handleSummarize, style: { background: "none", border: "none", color: "#666", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, paddingTop: 10 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" }) }),
             "Summarize Extract"
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: mode === "summary" && summary ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-prompt-card", style: { borderLeft: "4px solid #3A82F6" }, children: summary }) : extractionResult == null ? void 0 : extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-prompt-card", children: p.content }, i)) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 80 } }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 40 } }),
         " ",
         /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-btn-primary", onClick: handleCopy, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(IconCopy, {}),
@@ -635,18 +635,18 @@ function KaboomApp() {
   if (activeTab === "history") return renderMainLayout(renderHistory());
   if (extractionResult && activeTab === "home") return renderResult();
   return renderMainLayout(
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-group-card", style: { padding: 40, textAlign: "center", background: "white" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-extract-icon", style: { margin: "0 auto 24px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "32", height: "32", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", style: { paddingTop: 8 }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-group-card", style: { padding: 24, textAlign: "center", background: "white" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-extract-icon", style: { margin: "0 auto 16px", width: 60, height: 60 }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 2v10m0 0l-3-3m3 3l3-3" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 18v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" })
         ] }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { fontSize: 20, fontWeight: 700, marginBottom: 8 }, children: "Ready to Extract" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 14, color: "#999", marginBottom: 24 }, children: "Navigate to a supported AI chat to begin." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { fontSize: 18, fontWeight: 700, marginBottom: 4 }, children: "Ready to Extract" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, color: "#999", marginBottom: 16 }, children: "Navigate to a supported AI chat to begin." }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-primary", onClick: handleStartExtraction, disabled: !status.supported, children: status.supported ? "Start Extraction" : "Unsupported Page" }),
-        !status.supported && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 11, color: "#999", marginTop: 12 }, children: "Visit ChatGPT, Claude, or Gemini to use SahAI." })
+        !status.supported && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 10, color: "#999", marginTop: 8 }, children: "Visit ChatGPT, Claude, or Gemini to use SahAI." })
       ] }),
-      history.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 8 }, children: [
+      history.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 0 }, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-section-label", children: "Recent Explorations" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-group-card", children: history.slice(0, 3).map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-list-item", onClick: () => {
           setExtractionResult({ prompts: item.prompts, platform: item.platform, url: "", title: "", extractedAt: item.timestamp });
@@ -655,13 +655,13 @@ function KaboomApp() {
           setActiveTab("home");
         }, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column" }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-list-label", children: item.platform }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 12, color: "#999", marginTop: 4 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-list-label", style: { fontSize: 14 }, children: item.platform }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 11, color: "#999", marginTop: 2 }, children: [
               item.preview.slice(0, 40),
               "..."
             ] })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, color: "#999" }, children: new Date(item.timestamp).toLocaleDateString([], { month: "short", day: "numeric" }) })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, color: "#999" }, children: new Date(item.timestamp).toLocaleDateString([], { month: "short", day: "numeric" }) })
         ] }, item.id)) })
       ] })
     ] })
