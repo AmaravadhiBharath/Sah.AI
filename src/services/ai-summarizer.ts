@@ -87,7 +87,7 @@ D2. NO META-COMMENTARY
 - Just the content.
 
 [END PROTOCOL v5.1]
-\`;
+`;
 
 // ═══════════════════════════════════════════════════════════════════
 // SMART PRE-FILTERING - Reduce API payload without losing context
@@ -95,9 +95,9 @@ D2. NO META-COMMENTARY
 
 // Common filler phrases that don't add unique info
 const FILLER_PATTERNS = [
-  /^(ok|okay|yes|no|sure|thanks|thank you|got it|alright|right|yep|nope|cool|great|perfect|nice|good|fine|understood)\\.?$/i,
+  /^(ok|okay|yes|no|sure|thanks|thank you|got it|alright|right|yep|nope|cool|great|perfect|nice|good|fine|understood)\.?$/i,
   /^(please|pls|plz)$/i,
-  /^(hi|hello|hey|hii)\\.?$/i,
+  /^(hi|hello|hey|hii)\.?$/i,
 ];
 
 // Normalize text for comparison (lowercase, trim, collapse whitespace)
@@ -105,8 +105,8 @@ function normalize(text: string): string {
   return text
     .toLowerCase()
     .trim()
-    .replace(/\\s+/g, ' ')
-    .replace(/[^\\w\\s]/g, ''); // Remove punctuation for comparison
+    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s]/g, ''); // Remove punctuation for comparison
 }
 
 // Calculate simple similarity ratio between two strings
@@ -147,9 +147,9 @@ function isFillerOnly(text: string): boolean {
 function cleanText(text: string): string {
   return text
     .trim()
-    .replace(/\\n{3,}/g, '\\n\\n')  // Max 2 newlines
-    .replace(/[ \\t]+/g, ' ')     // Collapse spaces
-    .replace(/^\\s*\\n/gm, '');    // Remove empty lines
+    .replace(/\n{3,}/g, '\n\n')  // Max 2 newlines
+    .replace(/[ \t]+/g, ' ')     // Collapse spaces
+    .replace(/^\s*\n/gm, '');    // Remove empty lines
 }
 
 interface FilteredPrompt {
@@ -266,7 +266,7 @@ function filterPrompts(prompts: ScrapedPrompt[]): FilteredPrompt[] {
     i = j > i + 1 ? j : i + 1;
   }
 
-  console.log(\`[Filter] \${prompts.length} → \${merged.length} prompts (\${Math.round((1 - merged.length / prompts.length) * 100)}% reduction)\`);
+  console.log(`[Filter] ${prompts.length} → ${merged.length} prompts (${Math.round((1 - merged.length / prompts.length) * 100)}% reduction)`);
 
   return merged;
 }
@@ -278,10 +278,10 @@ export class AISummarizer {
       const filtered = filterPrompts(prompts);
 
       const content = filtered
-        .map((p, i) => \`\${i + 1}. \${p.content}\`)
-        .join('\\n\\n');
+        .map((p, i) => `${i + 1}. ${p.content}`)
+        .join('\n\n');
 
-      console.log(\`[AISummarizer] Sending \${content.length} chars (from \${prompts.length} prompts, filtered to \${filtered.length})\`);
+      console.log(`[AISummarizer] Sending ${content.length} chars (from ${prompts.length} prompts, filtered to ${filtered.length})`);
 
       const response = await resilientFetch(BACKEND_URL, {
         method: 'POST',
@@ -301,7 +301,7 @@ export class AISummarizer {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || \`Worker Error: \${response.status}\`);
+        throw new Error(errorData.error || `Worker Error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -312,7 +312,7 @@ export class AISummarizer {
 
       return {
         original: prompts,  // Keep original for user display
-        summary: data.summary + '\\n\\n- Summarized by Gemini',
+        summary: data.summary + '\n\n- Summarized by Gemini',
         promptCount: {
           before: prompts.length,
           after: filtered.length,
