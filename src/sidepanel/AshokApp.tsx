@@ -21,9 +21,10 @@ import './sevi-design.css';
 // ICONS (Clean & Modern)
 // ═══════════════════════════════════════════════════
 
-const IconHome = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+const IconCopy = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
     </svg>
 );
 
@@ -50,6 +51,12 @@ const IconUser = () => (
 const IconBack = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+);
+
+const IconEdit = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
     </svg>
 );
 
@@ -210,7 +217,7 @@ export default function SeviApp() {
         <div className="app-footer-layout">
             <button className="profile-pill" onClick={() => setActiveTab('profile')}>
                 <div className="profile-pill-avatar">
-                    {user?.picture ? <img src={user.picture} alt="u" /> : <IconUser />}
+                    {user?.picture ? <img src={user.picture} alt="u" /> : <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#eee' }} />}
                 </div>
                 <div className="profile-pill-info">
                     <span className="profile-pill-name">{user?.name?.split(' ')[0] || 'Guest'}</span>
@@ -219,14 +226,14 @@ export default function SeviApp() {
             </button>
 
             <nav className="nav-pill">
-                <button className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
-                    <IconHome />
-                </button>
                 <button className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
                     <IconHistory />
                 </button>
                 <button className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
                     <IconSettings />
+                </button>
+                <button className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+                    <IconUser />
                 </button>
             </nav>
         </div>
@@ -364,11 +371,11 @@ export default function SeviApp() {
 
                 if (!extractionResult) {
                     return (
-                        <div className="view-animate">
-                            <div className="sevi-card full-height" style={{ background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+                        <div className="view-animate" style={{ height: '100%' }}>
+                            <div className="result-screen-container" style={{ opacity: 0.5, justifyContent: 'center', alignItems: 'center' }}>
                                 <div style={{ textAlign: 'center' }}>
-                                    <p style={{ fontWeight: 600 }}>Ready to extract</p>
-                                    <p style={{ fontSize: 12 }}>{status.platform ? `Connected to ${status.platform}` : 'Navigate to a supported AI chat'}</p>
+                                    <p style={{ fontWeight: 600, color: 'var(--on-surface)' }}>Ready to extract</p>
+                                    <p style={{ fontSize: 12, color: 'var(--on-surface-variant)' }}>{status.platform ? `Connected to ${status.platform}` : 'Navigate to a supported AI chat'}</p>
                                 </div>
                             </div>
                         </div>
@@ -376,25 +383,17 @@ export default function SeviApp() {
                 }
 
                 return (
-                    <div className="view-animate">
+                    <div className="view-animate" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                         {error && (
                             <div className="sevi-card" style={{ borderColor: '#FCA5A5', background: '#FEF2F2', color: '#B91C1C', fontSize: 13, marginBottom: 16 }}>
                                 {error}
                             </div>
                         )}
 
-                        <div className="sevi-card full-height" style={{ background: 'white' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--outline)' }}>
-                                <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', opacity: 0.6 }}>{extractionResult.platform}</span>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    <button className="icon-btn-sm" onClick={handleCopy} title="Copy All">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                    </button>
-                                </div>
-                            </div>
+                        <div className="result-screen-container">
                             <div className="prompts-list-container">
                                 {mode === 'summary' && summary ? (
-                                    <div style={{ padding: 12, background: 'var(--accent-soft)', borderRadius: 12, fontSize: 14, lineHeight: 1.6 }}>
+                                    <div className="prompt-box" style={{ background: 'var(--accent-soft)' }}>
                                         {summary}
                                     </div>
                                 ) : (
@@ -405,6 +404,10 @@ export default function SeviApp() {
                                     ))
                                 )}
                             </div>
+
+                            <button className="floating-copy-btn" onClick={handleCopy} title="Copy All">
+                                <IconCopy />
+                            </button>
                         </div>
 
                         {extractionResult && (
@@ -422,16 +425,22 @@ export default function SeviApp() {
 
     return (
         <div className="sevi-app">
-            {activeTab !== 'home' ? (
+            {activeTab === 'home' ? (
+                <div className="top-bar" style={{ padding: '0 4px', height: 48, marginBottom: 4 }}>
+                    <button className="icon-btn" onClick={() => setActiveTab('history')}>
+                        <IconBack />
+                    </button>
+                    <button className="icon-btn">
+                        <IconEdit />
+                    </button>
+                </div>
+            ) : (
                 <div className="top-bar">
                     <button className="icon-btn" onClick={() => setActiveTab('home')}>
                         <IconBack />
                     </button>
                     <span style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{activeTab}</span>
                     <div style={{ width: 24 }}></div>
-                </div>
-            ) : (
-                <div className="top-bar" style={{ display: 'none' }}>
                 </div>
             )}
 

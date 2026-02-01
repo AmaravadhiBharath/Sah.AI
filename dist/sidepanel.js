@@ -160,7 +160,10 @@ function LoadingState({ message }) {
     ] })
   ] });
 }
-const IconHome = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" }) });
+const IconCopy = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
+] });
 const IconHistory = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" }) });
 const IconSettings = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: [
   /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "3" }),
@@ -171,6 +174,7 @@ const IconUser = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "2
   /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "7", r: "4" })
 ] });
 const IconBack = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19 12H5M12 19l-7-7 7-7" }) });
+const IconEdit = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" }) });
 function SeviApp() {
   const [activeTab, setActiveTab] = reactExports.useState("home");
   const [user, setUser] = reactExports.useState(null);
@@ -298,16 +302,16 @@ function SeviApp() {
     var _a;
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app-footer-layout", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "profile-pill", onClick: () => setActiveTab("profile"), children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "profile-pill-avatar", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "profile-pill-avatar", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, alt: "u" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 32, height: 32, borderRadius: "50%", background: "#eee" } }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-pill-info", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "profile-pill-name", children: ((_a = user == null ? void 0 : user.name) == null ? void 0 : _a.split(" ")[0]) || "Guest" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "profile-pill-badge", children: tier })
         ] })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("nav", { className: "nav-pill", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `nav-item ${activeTab === "home" ? "active" : ""}`, onClick: () => setActiveTab("home"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHome, {}) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `nav-item ${activeTab === "history" ? "active" : ""}`, onClick: () => setActiveTab("history"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconHistory, {}) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `nav-item ${activeTab === "settings" ? "active" : ""}`, onClick: () => setActiveTab("settings"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconSettings, {}) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `nav-item ${activeTab === "settings" ? "active" : ""}`, onClick: () => setActiveTab("settings"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconSettings, {}) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `nav-item ${activeTab === "profile" ? "active" : ""}`, onClick: () => setActiveTab("profile"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconUser, {}) })
       ] })
     ] });
   };
@@ -424,22 +428,16 @@ function SeviApp() {
       default:
         if (loading) return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "view-animate", style: { display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoadingState, { message: "Processing content..." }) });
         if (!extractionResult) {
-          return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "view-animate", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sevi-card full-height", style: { background: "white", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: 0.5 }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center" }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontWeight: 600 }, children: "Ready to extract" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 12 }, children: status.platform ? `Connected to ${status.platform}` : "Navigate to a supported AI chat" })
+          return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "view-animate", style: { height: "100%" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "result-screen-container", style: { opacity: 0.5, justifyContent: "center", alignItems: "center" }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontWeight: 600, color: "var(--on-surface)" }, children: "Ready to extract" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 12, color: "var(--on-surface-variant)" }, children: status.platform ? `Connected to ${status.platform}` : "Navigate to a supported AI chat" })
           ] }) }) });
         }
-        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-animate", children: [
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "view-animate", style: { height: "100%", display: "flex", flexDirection: "column" }, children: [
           error && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sevi-card", style: { borderColor: "#FCA5A5", background: "#FEF2F2", color: "#B91C1C", fontSize: 13, marginBottom: 16 }, children: error }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sevi-card full-height", style: { background: "white" }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--outline)" }, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, textTransform: "uppercase", opacity: 0.6 }, children: extractionResult.platform }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn-sm", onClick: handleCopy, title: "Copy All", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
-              ] }) }) })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompts-list-container", children: mode === "summary" && summary ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 12, background: "var(--accent-soft)", borderRadius: 12, fontSize: 14, lineHeight: 1.6 }, children: summary }) : extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-box", children: p.content }, i)) })
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "result-screen-container", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompts-list-container", children: mode === "summary" && summary ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-box", style: { background: "var(--accent-soft)" }, children: summary }) : extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "prompt-box", children: p.content }, i)) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "floating-copy-btn", onClick: handleCopy, title: "Copy All", children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconCopy, {}) })
           ] }),
           extractionResult && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 12, marginTop: 16 }, children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "overlay-btn", style: { background: "white", border: "1px solid var(--outline)" }, onClick: handleExtraction, children: "Re-extract" }),
@@ -449,11 +447,14 @@ function SeviApp() {
     }
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sevi-app", children: [
-    activeTab !== "home" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "top-bar", children: [
+    activeTab === "home" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "top-bar", style: { padding: "0 4px", height: 48, marginBottom: 4 }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: () => setActiveTab("history"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconEdit, {}) })
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "top-bar", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "icon-btn", onClick: () => setActiveTab("home"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 600, fontSize: 14, textTransform: "capitalize" }, children: activeTab }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 24 } })
-    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "top-bar", style: { display: "none" } }),
+    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "content-area", style: { paddingTop: 20 }, children: renderContent() }),
     renderBottomNav()
   ] });
