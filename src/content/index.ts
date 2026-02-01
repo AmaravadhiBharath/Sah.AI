@@ -832,6 +832,12 @@ const BUTTON_STYLES = `
     border: 1px solid #000000 !important;
   }
   
+  .pe-zone1-btn.summarize {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid rgba(0,0,0,0.1) !important;
+  }
+  
   .pe-zone1-btn.paste {
     background: #ffffff !important;
     color: #000000 !important;
@@ -1043,14 +1049,33 @@ function createZone1(): HTMLElement {
   extractBtn.id = 'pe-extract-btn';
   extractBtn.className = 'pe-zone1-btn extract';
   extractBtn.textContent = 'Extract';
-  extractBtn.title = 'Extract prompts to SahAI';
+  extractBtn.title = 'Extract raw prompts to SahAI';
   extractBtn.addEventListener('click', (e) => {
-    // console.log('[SahAI] Extract button clicked');
     e.preventDefault();
     e.stopPropagation();
     handleButtonClick('raw', extractBtn);
-  }, true); // Use capture phase
+  }, true);
   zone1.appendChild(extractBtn);
+
+  // Summarize button (Mode 2)
+  const summarizeBtn = document.createElement('button');
+  summarizeBtn.id = 'pe-summarize-btn';
+  summarizeBtn.className = 'pe-zone1-btn summarize';
+  summarizeBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+    Summarize
+  `;
+  summarizeBtn.title = 'Extract and summarize prompts with AI';
+  summarizeBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleButtonClick('summary', summarizeBtn);
+  }, true);
+  zone1.appendChild(summarizeBtn);
 
   return zone1;
 }
@@ -1083,15 +1108,25 @@ function updateButtonDone(button: HTMLButtonElement, originalText: string) {
 // Handle button click
 async function handleButtonClick(mode: 'raw' | 'summary', button: HTMLButtonElement) {
   console.log(`[SahAI] Button clicked: ${mode}`);
-  const originalText = button.textContent || 'Extract';
+  const isSummarize = mode === 'summary';
+  const originalText = isSummarize ? 'Summarize' : 'Extract';
 
   // 1. Open sidepanel immediately
   chrome.runtime.sendMessage({ action: 'OPEN_SIDE_PANEL' });
 
   // 1.5. Notify sidepanel that extraction was triggered
-  chrome.runtime.sendMessage({ action: 'EXTRACT_TRIGERED_FROM_PAGE' });
+  chrome.runtime.sendMessage({ action: 'EXTRACT_TRIGERED_FROM_PAGE', mode });
 
   updateButtonLoading(button);
+  if (isSummarize) {
+    button.innerHTML = `
+      <svg class="pe-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+        <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+      </svg>
+      Summarizing...
+    `;
+  }
 
   try {
     console.log('[SahAI] Starting extraction...');

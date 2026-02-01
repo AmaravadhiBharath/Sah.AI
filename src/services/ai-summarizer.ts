@@ -14,191 +14,80 @@ export interface SummaryOptions {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ENTERPRISE CONSOLIDATION ENGINE - Intent Compilation Protocol v4.0
 // ═══════════════════════════════════════════════════════════════════════════════
-const CONSOLIDATION_RULES = `[INTENT COMPILATION PROTOCOL v5.0 - ENTERPRISE]
+const CONSOLIDATION_RULES = `[INTENT COMPILATION PROTOCOL v5.1 - ENTERPRISE]
 
-CORE DIRECTIVE: Compile user intent into an actionable specification.
-PHILOSOPHY: SahAI does not summarize conversations. It compiles intent.
+CORE DIRECTIVE: Compile user intent into a single, cohesive paragraph.
+PHILOSOPHY: SahAI does not summarize conversations. It compiles intent into a unified narrative.
 
 ═══════════════════════════════════════════════════════════════════════════════
 SECTION A: OUTPUT FORMAT
 ═══════════════════════════════════════════════════════════════════════════════
 
-A1. FINAL STATE ONLY
+A1. SINGLE PARAGRAPH ONLY
+- Output MUST be a single, justified-style paragraph.
+- No bullet points, no numbered lists, no newlines within the text.
+- Merge all requirements into a continuous flow.
+
+A2. NO CATEGORY HEADERS
+- Do NOT use prefixes like "Story requirement:", "Color elements:", "Output:", "Request:".
+- Start sentences directly with the subject.
+- ✗ "Story requirement: A story about a cat."
+- ✓ "Create a story about a cat..."
+
+A3. FINAL STATE ONLY
 - Output the resolved state of all requirements
 - No temporal language: "initially", "later", "then", "changed to"
 - No conversation narration
-✗ "User first wanted blue, then green"
-✓ "Color: green"
-
-A2. SPECIFICATION FORMAT
-- Output reads as a product specification or final brief
-- Self-contained: executable by another person/AI
-- No conversation references: "as discussed", "user said"
-
-A3. STRUCTURAL COHERENCE
-- Reads as if written once, not stitched
-- Logical grouping by topic
-- Professional, neutral language
+- ✗ "User first wanted blue, then green"
+- ✓ "The design should use green coloring."
 
 A4. PURE INSTRUCTION ONLY (OUTPUT-ONLY)
 - No headers like "Project Specification" or "Summary"
 - No intro sentences like "The project entails..." or "The user wants..."
-- Start directly with the requirements/instructions
-- ✗ "The user wants a login page"
-- ✓ "Login page required"
-
-A5. TEMPORAL IRRELEVANCE
-- Remove all time references from the conversation
-- ✗ "Earlier we said X", "Now do Y", "Later add Z"
-- ✓ "Requirement: X, Y, Z"
+- Start directly with the commands.
 
 ═══════════════════════════════════════════════════════════════════════════════
-SECTION B: ZERO INFORMATION LOSS (CRITICAL)
+SECTION B: ZERO INFORMATION LOSS
 ═══════════════════════════════════════════════════════════════════════════════
 
 B1. INCLUDE EVERYTHING
 - Every noun, constraint, requirement mentioned ONCE must appear
 - Single mentions are equally important as repeated ones
-- When in doubt: INCLUDE
 
-B2. MULTIPLE OPTIONS = INCLUDE ALL
-- "Make it blue" + "also consider green" = BOTH colors
-- Never pick one when multiple are mentioned
-- Never assume which is preferred
-✓ "Colors: blue, green (both mentioned)"
+B2. COHESIVE NARRATIVE
+- Weave distinct requirements into the paragraph naturally.
+- Instead of "Colors: red, blue.", use "The visual elements should incorporate red and blue colors."
 
 B3. DEDUPLICATION WITHOUT LOSS
 - Identical statements → merge into ONE complete version
-- Keep the most complete/specific version
-- Never shorten at cost of meaning or clarity
-
-B4. NEGATIVE CONSTRAINTS
-- Preserve exactly: "no", "don't", "never", "avoid", "without"
-✓ "No gradients", "Avoid localStorage", "Don't use third-party"
-
-B5. PRIORITY INDICATORS
-- Preserve: "critical", "important", "must", "essential", "priority"
-✓ "Performance is critical"
-
-B6. SINGLE-MENTION PRESERVATION
-- Requirements mentioned even once are authoritative
-- Do not omit "one-time" constraints
 
 ═══════════════════════════════════════════════════════════════════════════════
 SECTION C: CONFLICT RESOLUTION
 ═══════════════════════════════════════════════════════════════════════════════
 
-C1. TRUE CONFLICTS ONLY
-- Same attribute, mutually exclusive values = conflict
-- "Make blue" → "Make green" (can't be both) = latest wins
-- "Make blue" → "add green accents" (can coexist) = include both
+C1. LATEST WINS (OVERRIDE SUPREMACY)
+- Latest explicit instruction takes precedence.
+- Remove earlier conflicting instruction completely.
+- Do not reference discarded states.
 
-C2. LATEST WINS (OVERRIDE SUPREMACY)
-- Latest explicit instruction takes precedence
-- Remove earlier conflicting instruction completely
-- Do not reference discarded states
-
-C2a. SILENT REPLACEMENT
-- When X is replaced by Y, do NOT mention X was removed.
-- Output ONLY Y.
-- ✗ "Breakfast plates were replaced by lunch sets"
-- ✓ "Lunch sets"
-
-C3. SPECIFICITY OVERRIDE
-- Specific overrides generic
-- "Make colorful" → "Use blue and white only" = "Blue and white only"
-
-C4. USER OVER AI
-- User instructions always override AI suggestions or interpretations
-
-C5. LATEST SPECIFICITY WINS
-- If a later instruction is more specific than an earlier one, it is the final state
+C2. SPECIFICITY OVERRIDE
+- Specific overrides generic.
+- "Make colorful" → "Use blue and white only" = "Use blue and white only."
 
 ═══════════════════════════════════════════════════════════════════════════════
-SECTION D: INTERPRETATION
+SECTION D: STYLE
 ═══════════════════════════════════════════════════════════════════════════════
 
-D1. IMPLICIT ACCEPTANCE
-- Continued work without rejection = acceptance
-- "yes", "ok", "do that" = confirmation
+D1. PROFESSIONAL & DIRECT
+- Use professional, imperative or descriptive language.
+- "The story requires a mouse..." not "You should write a story about a mouse..."
 
-D2. INFORMAL TO FORMAL
-- Convert casual language to specifications
-✗ "The kid is class 5 I think"
-✓ "Class level: 5"
+D2. NO META-COMMENTARY
+- No "Here is the summary" or "Based on the transcript".
+- Just the content.
 
-D3. FILLER REMOVAL (META-LANGUAGE IGNORING)
-- Remove: "I think", "maybe", "let's try", "just an idea"
-- KEEP the intent within
-✗ "I think we need auth" → remove entirely
-✓ "I think we need auth" → "Authentication required"
-
-D4. NO ASSUMPTION (NO INFERENCE)
-- Never add information not stated
-- If not mentioned, do not include or auto-fill defaults
-- Omit missing attributes (duration, platform, etc.) if not specified
-
-D5. TONE NEUTRALIZATION
-- Remove emotional tone (excitement, frustration, praise)
-- Keep only constraints, decisions, and preferences
-
-D6. INSTRUCTION VS EXPLANATION
-- Instructions always override explanations or informal commentary
-
-═══════════════════════════════════════════════════════════════════════════════
-SECTION E: EDGE CASES
-═══════════════════════════════════════════════════════════════════════════════
-
-E1. HYPOTHETICALS → INCLUDE
-- "What if we add X?" = Include X as requirement
-- User mentioned it = it's relevant
-✓ "What if we add dark mode?" → "Dark mode"
-
-E2. RHETORICAL QUESTIONS → EXCLUDE
-- "Why would anyone need that?" = NOT a requirement
-- Rhetorical = exclude from output
-
-E3. CODE BLOCKS → PRESERVE EXACTLY
-- Content in \`\`\` or \` = preserve verbatim
-- No summarization of code
-- No modification of code
-✓ Keep exactly as written
-
-E4. DOUBLE NEGATIVES → RESOLVE
-- Resolve to clear positive/negative
-- "Don't avoid images" → "Use images"
-- "Not without auth" → "Requires authentication"
-
-E5. EXTERNAL REFERENCES → FLAG
-- "Like that doc I shared" = reference outside context
-- Flag: [EXTERNAL: referenced content not available]
-- Do not infer content
-
-E6. INCOMPLETE INFO → INCLUDE AS-IS
-- "Add payment" (no provider specified)
-✓ "Payment integration"
-✗ "Payment via Stripe" (never mentioned)
-
-E7. ENUMERATED LISTS → PRESERVE ALL
-- Keep list structure
-- Keep ALL items
-- Only dedupe within list
-
-═══════════════════════════════════════════════════════════════════════════════
-SECTION F: VALIDATION
-═══════════════════════════════════════════════════════════════════════════════
-
-□ Every unique requirement preserved?
-□ All negative constraints included?
-□ Multiple options = all included?
-□ Code blocks preserved exactly?
-□ No assumptions made?
-□ Executable by another person/AI?
-
-═══════════════════════════════════════════════════════════════════════════════
-
-[END PROTOCOL v5.0]
-`;
+[END PROTOCOL v5.1]
+\`;
 
 // ═══════════════════════════════════════════════════════════════════
 // SMART PRE-FILTERING - Reduce API payload without losing context
@@ -206,9 +95,9 @@ SECTION F: VALIDATION
 
 // Common filler phrases that don't add unique info
 const FILLER_PATTERNS = [
-  /^(ok|okay|yes|no|sure|thanks|thank you|got it|alright|right|yep|nope|cool|great|perfect|nice|good|fine|understood)\.?$/i,
+  /^(ok|okay|yes|no|sure|thanks|thank you|got it|alright|right|yep|nope|cool|great|perfect|nice|good|fine|understood)\\.?$/i,
   /^(please|pls|plz)$/i,
-  /^(hi|hello|hey|hii)\.?$/i,
+  /^(hi|hello|hey|hii)\\.?$/i,
 ];
 
 // Normalize text for comparison (lowercase, trim, collapse whitespace)
@@ -216,8 +105,8 @@ function normalize(text: string): string {
   return text
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/[^\w\s]/g, ''); // Remove punctuation for comparison
+    .replace(/\\s+/g, ' ')
+    .replace(/[^\\w\\s]/g, ''); // Remove punctuation for comparison
 }
 
 // Calculate simple similarity ratio between two strings
@@ -258,9 +147,9 @@ function isFillerOnly(text: string): boolean {
 function cleanText(text: string): string {
   return text
     .trim()
-    .replace(/\n{3,}/g, '\n\n')  // Max 2 newlines
-    .replace(/[ \t]+/g, ' ')     // Collapse spaces
-    .replace(/^\s*\n/gm, '');    // Remove empty lines
+    .replace(/\\n{3,}/g, '\\n\\n')  // Max 2 newlines
+    .replace(/[ \\t]+/g, ' ')     // Collapse spaces
+    .replace(/^\\s*\\n/gm, '');    // Remove empty lines
 }
 
 interface FilteredPrompt {
@@ -377,7 +266,7 @@ function filterPrompts(prompts: ScrapedPrompt[]): FilteredPrompt[] {
     i = j > i + 1 ? j : i + 1;
   }
 
-  console.log(`[Filter] ${prompts.length} → ${merged.length} prompts (${Math.round((1 - merged.length / prompts.length) * 100)}% reduction)`);
+  console.log(\`[Filter] \${prompts.length} → \${merged.length} prompts (\${Math.round((1 - merged.length / prompts.length) * 100)}% reduction)\`);
 
   return merged;
 }
@@ -389,10 +278,10 @@ export class AISummarizer {
       const filtered = filterPrompts(prompts);
 
       const content = filtered
-        .map((p, i) => `${i + 1}. ${p.content}`)
-        .join('\n\n');
+        .map((p, i) => \`\${i + 1}. \${p.content}\`)
+        .join('\\n\\n');
 
-      console.log(`[AISummarizer] Sending ${content.length} chars (from ${prompts.length} prompts, filtered to ${filtered.length})`);
+      console.log(\`[AISummarizer] Sending \${content.length} chars (from \${prompts.length} prompts, filtered to \${filtered.length})\`);
 
       const response = await resilientFetch(BACKEND_URL, {
         method: 'POST',
@@ -412,7 +301,7 @@ export class AISummarizer {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || `Worker Error: ${response.status}`);
+        throw new Error(errorData.error || \`Worker Error: \${response.status}\`);
       }
 
       const data = await response.json();
@@ -423,7 +312,7 @@ export class AISummarizer {
 
       return {
         original: prompts,  // Keep original for user display
-        summary: data.summary,
+        summary: data.summary + '\\n\\n- Summarized by Gemini',
         promptCount: {
           before: prompts.length,
           after: filtered.length,

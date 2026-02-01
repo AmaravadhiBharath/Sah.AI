@@ -293,6 +293,8 @@ function formatRelativeTime(timestamp) {
 function KaboomApp() {
   const [user, setUser] = reactExports.useState(null);
   const [extractionResult, setExtractionResult] = reactExports.useState(null);
+  const [summary, setSummary] = reactExports.useState(null);
+  const [mode, setMode] = reactExports.useState("raw");
   const [loading, setLoading] = reactExports.useState(false);
   const [status, setStatus] = reactExports.useState({ supported: false, platform: null });
   const [selectedPrompts, setSelectedPrompts] = reactExports.useState([]);
@@ -365,7 +367,17 @@ function KaboomApp() {
         setSelectedPrompts(msg.result.prompts.map((_, i) => i));
         setLoading(false);
         setProgressMessage(null);
-        if (startTimeRef.current) {
+        setMode(msg.mode || "raw");
+        setSummary(null);
+        if (msg.mode === "summary") {
+          setLoading(true);
+          setProgressMessage("Summarizing with AI...");
+          port.postMessage({
+            action: "SUMMARIZE_PROMPTS",
+            prompts: msg.result.prompts
+          });
+        }
+        if (startTimeRef.current && msg.mode !== "summary") {
           if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
@@ -377,7 +389,7 @@ function KaboomApp() {
           id: Date.now().toString(),
           platform: msg.result.platform,
           promptCount: msg.result.prompts.length,
-          mode: "raw",
+          mode: msg.mode || "raw",
           timestamp: Date.now(),
           prompts: msg.result.prompts,
           preview: ((_a = msg.result.prompts[0]) == null ? void 0 : _a.content.slice(0, 100)) || ""
@@ -391,9 +403,39 @@ function KaboomApp() {
             saveHistoryToCloud(user.id, newItem).catch((e) => console.error("Cloud save failed:", e));
           }
         });
+      } else if (msg.action === "SUMMARY_RESULT") {
+        if (msg.success) {
+          if (startTimeRef.current && timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+            const duration = (Date.now() - startTimeRef.current) / 1e3;
+            setExtractionTime(parseFloat(duration.toFixed(1)));
+          }
+          setSummary(msg.result.summary);
+          setMode("summary");
+          chrome.storage.local.get(["extractionHistory"], (result) => {
+            const existingHistory = [...result.extractionHistory || []];
+            if (existingHistory.length > 0) {
+              existingHistory[0].summary = msg.result.summary;
+              existingHistory[0].mode = "summary";
+              chrome.storage.local.set({ extractionHistory: existingHistory });
+              setHistoryItems(existingHistory);
+              if (user) {
+                saveHistoryToCloud(user.id, existingHistory[0]).catch((e) => console.error("Cloud save failed:", e));
+              }
+            }
+          });
+        } else {
+          alert("Summarization failed: " + (msg.error || "Unknown error"));
+          setMode("raw");
+        }
+        setLoading(false);
+        setProgressMessage(null);
       } else if (msg.action === "EXTRACT_TRIGERED_FROM_PAGE") {
         setLoading(true);
         setProgressMessage(null);
+        setMode(msg.mode || "raw");
+        setSummary(null);
         startTimeRef.current = Date.now();
         setExtractionTime(null);
         setLiveTime(0);
@@ -443,13 +485,16 @@ function KaboomApp() {
       (prev) => prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     );
   };
-  const handleExtract = () => {
+  const handleExtract = (m = "raw") => {
     var _a;
     if (!status.supported) return;
     setLoading(true);
     setProgressMessage(null);
     setViewingHistory(false);
     setIsHistoryDetail(false);
+    setMode(m);
+    setSummary(null);
+    setExtractionResult(null);
     startTimeRef.current = Date.now();
     setExtractionTime(null);
     setLiveTime(0);
@@ -458,7 +503,7 @@ function KaboomApp() {
       const d = (Date.now() - startTimeRef.current) / 1e3;
       setLiveTime(parseFloat(d.toFixed(1)));
     }, 100);
-    (_a = portRef.current) == null ? void 0 : _a.postMessage({ action: "EXTRACT_PROMPTS", mode: "raw" });
+    (_a = portRef.current) == null ? void 0 : _a.postMessage({ action: "EXTRACT_PROMPTS", mode: m });
   };
   const loadHistory = () => {
     chrome.storage.local.get(["extractionHistory"], (result) => {
@@ -482,6 +527,8 @@ function KaboomApp() {
       extractedAt: item.timestamp
     };
     setExtractionResult(result);
+    setSummary(null);
+    setMode(item.mode || "raw");
     setSelectedPrompts(item.prompts.map((_, i) => i));
     setViewingHistory(false);
     setIsHistoryDetail(true);
@@ -617,7 +664,7 @@ function KaboomApp() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 2a10 10 0 0 1 10 10", strokeLinecap: "round" })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { fontSize: 13, color: "#999", fontVariantNumeric: "tabular-nums" }, children: [
-          "Extracting..",
+          (progressMessage == null ? void 0 : progressMessage.includes("Summarizing")) ? "Summarizing.." : "Extracting..",
           liveTime.toFixed(1),
           " sec"
         ] }),
@@ -640,26 +687,33 @@ function KaboomApp() {
           lineHeight: 1.4,
           animation: "kb-fade-in 0.3s ease"
         }, children: "Lengthy conversation take bit longer" })
-      ] }) : extractionResult ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        "div",
-        {
-          className: `kb-prompt-card ${selectedPrompts.includes(i) ? "selected" : ""}`,
-          onClick: () => togglePromptSelection(i),
-          children: [
-            p.content,
-            p.source === "keylog" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { marginTop: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
-              fontSize: 9,
-              fontWeight: 800,
-              textTransform: "uppercase",
-              padding: "2px 6px",
-              borderRadius: 4,
-              background: "#FEEED4",
-              color: "#BC6C25"
-            }, children: "Captured" }) })
-          ]
-        },
-        i
-      )) }) : viewingHistory ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-hist-list-container", children: historyItems.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, color: "#999", textAlign: "center", marginTop: 40 }, children: "No history yet." }) : historyItems.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-history-card", onClick: () => openHistoryItem(item), children: [
+      ] }) : summary || extractionResult ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: [
+        mode === "summary" && summary && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-prompt-card selected", style: { background: "#f8f8f8", border: "1px solid #e0e0e0", color: "#000" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, fontWeight: 700, color: "#86868b", marginBottom: 8, textTransform: "uppercase" }, children: "AI Summary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { whiteSpace: "pre-wrap", lineHeight: 1.5 }, children: summary })
+        ] }),
+        mode === "summary" && extractionResult && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { marginTop: 16, marginBottom: 8, fontSize: 11, fontWeight: 700, color: "#86868b", textTransform: "uppercase", textAlign: "center" }, children: "Raw Prompts" }),
+        extractionResult && extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            className: `kb-prompt-card ${selectedPrompts.includes(i) ? "selected" : ""}`,
+            onClick: () => togglePromptSelection(i),
+            children: [
+              p.content,
+              p.source === "keylog" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { marginTop: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+                fontSize: 9,
+                fontWeight: 800,
+                textTransform: "uppercase",
+                padding: "2px 6px",
+                borderRadius: 4,
+                background: "#FEEED4",
+                color: "#BC6C25"
+              }, children: "Captured" }) })
+            ]
+          },
+          i
+        ))
+      ] }) : viewingHistory ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-hist-list-container", style: { marginTop: 1 }, children: historyItems.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, color: "#999", textAlign: "center", marginTop: 40 }, children: "No history yet." }) : historyItems.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-history-card", onClick: () => openHistoryItem(item), children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-h-top", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-h-platform", children: item.platform }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-h-date", children: new Date(item.timestamp).toLocaleDateString(void 0, { month: "short", day: "numeric" }) })
@@ -674,7 +728,10 @@ function KaboomApp() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Navigate to an AI chat like" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-fade-text", style: { color: "#000", fontSize: "1.2em" }, children: platforms[currentPlatformIndex] }, currentPlatformIndex)
         ] }) }),
-        status.supported && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-pill", onClick: handleExtract, children: "Extract" })
+        status.supported && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 8 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-pill", onClick: () => handleExtract("raw"), children: "Extract" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-pill", onClick: () => handleExtract("summary"), style: { background: "#fff", color: "#000", border: "1px solid #e0e0e0" }, children: "Summarize" })
+        ] })
       ] }) }),
       user && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-card-footer", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         "button",

@@ -39,6 +39,8 @@ function formatRelativeTime(timestamp: number): string {
 export default function KaboomApp() {
     const [user, setUser] = useState<ChromeUser | null>(null);
     const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null);
+    const [summary, setSummary] = useState<string | null>(null);
+    const [mode, setMode] = useState<'raw' | 'summary'>('raw');
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState({ supported: false, platform: null as string | null });
     const [selectedPrompts, setSelectedPrompts] = useState<number[]>([]);
@@ -125,7 +127,19 @@ export default function KaboomApp() {
                 setSelectedPrompts(msg.result.prompts.map((_: any, i: number) => i));
                 setLoading(false);
                 setProgressMessage(null);
-                if (startTimeRef.current) {
+                setMode(msg.mode || 'raw');
+                setSummary(null);
+
+                // If mode is summary and we just got the raw prompts, trigger summary
+                if (msg.mode === 'summary') {
+                    setLoading(true);
+                    setProgressMessage('Summarizing with AI...');
+                    port.postMessage({
+                        action: 'SUMMARIZE_PROMPTS',
+                        prompts: msg.result.prompts
+                    });
+                }
+                if (startTimeRef.current && msg.mode !== 'summary') {
                     if (timerRef.current) {
                         clearInterval(timerRef.current);
                         timerRef.current = null;
@@ -139,7 +153,7 @@ export default function KaboomApp() {
                     id: Date.now().toString(),
                     platform: msg.result.platform,
                     promptCount: msg.result.prompts.length,
-                    mode: 'raw',
+                    mode: msg.mode || 'raw',
                     timestamp: Date.now(),
                     prompts: msg.result.prompts,
                     preview: msg.result.prompts[0]?.content.slice(0, 100) || '',
@@ -151,15 +165,47 @@ export default function KaboomApp() {
                     chrome.storage.local.set({ extractionHistory: updatedHistory });
                     setHistoryItems(updatedHistory);
 
-                    // Also save to cloud if user is logged in
                     if (user) {
                         saveHistoryToCloud(user.id, newItem as CloudHistoryItem).catch(e => console.error('Cloud save failed:', e));
                     }
                 });
+            } else if (msg.action === 'SUMMARY_RESULT') {
+                if (msg.success) {
+                    if (startTimeRef.current && timerRef.current) {
+                        clearInterval(timerRef.current);
+                        timerRef.current = null;
+                        const duration = (Date.now() - startTimeRef.current) / 1000;
+                        setExtractionTime(parseFloat(duration.toFixed(1)));
+                    }
+                    setSummary(msg.result.summary);
+                    setMode('summary');
+
+                    // Update last history item with summary
+                    chrome.storage.local.get(['extractionHistory'], (result) => {
+                        const existingHistory = [...(result.extractionHistory || [])];
+                        if (existingHistory.length > 0) {
+                            existingHistory[0].summary = msg.result.summary;
+                            existingHistory[0].mode = 'summary';
+                            chrome.storage.local.set({ extractionHistory: existingHistory });
+                            setHistoryItems(existingHistory);
+
+                            if (user) {
+                                saveHistoryToCloud(user.id, existingHistory[0] as CloudHistoryItem).catch(e => console.error('Cloud save failed:', e));
+                            }
+                        }
+                    });
+                } else {
+                    alert('Summarization failed: ' + (msg.error || 'Unknown error'));
+                    setMode('raw');
+                }
+                setLoading(false);
+                setProgressMessage(null);
             } else if (msg.action === 'EXTRACT_TRIGERED_FROM_PAGE') {
                 // The page button was clicked, so we set loading to true here
                 setLoading(true);
                 setProgressMessage(null);
+                setMode(msg.mode || 'raw');
+                setSummary(null);
                 startTimeRef.current = Date.now();
                 setExtractionTime(null);
                 setLiveTime(0);
@@ -220,12 +266,15 @@ export default function KaboomApp() {
         );
     };
 
-    const handleExtract = () => {
+    const handleExtract = (m: 'raw' | 'summary' = 'raw') => {
         if (!status.supported) return;
         setLoading(true);
         setProgressMessage(null);
         setViewingHistory(false);
         setIsHistoryDetail(false);
+        setMode(m);
+        setSummary(null);
+        setExtractionResult(null);
         startTimeRef.current = Date.now();
         setExtractionTime(null);
         setLiveTime(0);
@@ -236,7 +285,7 @@ export default function KaboomApp() {
             setLiveTime(parseFloat(d.toFixed(1)));
         }, 100) as unknown as number;
 
-        portRef.current?.postMessage({ action: 'EXTRACT_PROMPTS', mode: 'raw' });
+        portRef.current?.postMessage({ action: 'EXTRACT_PROMPTS', mode: m });
     };
 
     const loadHistory = () => {
@@ -262,6 +311,8 @@ export default function KaboomApp() {
             extractedAt: item.timestamp
         };
         setExtractionResult(result);
+        setSummary(null);
+        setMode(item.mode || 'raw');
         setSelectedPrompts(item.prompts.map((_, i) => i));
         setViewingHistory(false);
         setIsHistoryDetail(true);
@@ -433,7 +484,7 @@ export default function KaboomApp() {
                                     <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round"></path>
                                 </svg>
                                 <p style={{ fontSize: 13, color: '#999', fontVariantNumeric: 'tabular-nums' }}>
-                                    Extracting..{liveTime.toFixed(1)} sec
+                                    {progressMessage?.includes('Summarizing') ? 'Summarizing..' : 'Extracting..'}{liveTime.toFixed(1)} sec
                                 </p>
                                 {progressMessage && (
                                     <p style={{
@@ -463,9 +514,22 @@ export default function KaboomApp() {
                                     </p>
                                 )}
                             </div>
-                        ) : extractionResult ? (
+                        ) : (summary || extractionResult) ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                {extractionResult.prompts.map((p, i) => (
+                                {mode === 'summary' && summary && (
+                                    <div className="kb-prompt-card selected" style={{ background: '#f8f8f8', border: '1px solid #e0e0e0', color: '#000' }}>
+                                        <div style={{ fontSize: 11, fontWeight: 700, color: '#86868b', marginBottom: 8, textTransform: 'uppercase' }}>AI Summary</div>
+                                        <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{summary}</div>
+                                    </div>
+                                )}
+
+                                {mode === 'summary' && extractionResult && (
+                                    <div style={{ marginTop: 16, marginBottom: 8, fontSize: 11, fontWeight: 700, color: '#86868b', textTransform: 'uppercase', textAlign: 'center' }}>
+                                        Raw Prompts
+                                    </div>
+                                )}
+
+                                {extractionResult && extractionResult.prompts.map((p, i) => (
                                     <div
                                         key={i}
                                         className={`kb-prompt-card ${selectedPrompts.includes(i) ? 'selected' : ''}`}
@@ -491,7 +555,7 @@ export default function KaboomApp() {
                                 ))}
                             </div>
                         ) : viewingHistory ? (
-                            <div className="kb-hist-list-container">
+                            <div className="kb-hist-list-container" style={{ marginTop: 1 }}>
                                 {historyItems.length === 0 ? (
                                     <p style={{ fontSize: 13, color: '#999', textAlign: 'center', marginTop: 40 }}>No history yet.</p>
                                 ) : (
@@ -524,9 +588,14 @@ export default function KaboomApp() {
                                         )}
                                 </p>
                                 {status.supported && (
-                                    <button className="kb-btn-pill" onClick={handleExtract}>
-                                        Extract
-                                    </button>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <button className="kb-btn-pill" onClick={() => handleExtract('raw')}>
+                                            Extract
+                                        </button>
+                                        <button className="kb-btn-pill" onClick={() => handleExtract('summary')} style={{ background: '#fff', color: '#000', border: '1px solid #e0e0e0' }}>
+                                            Summarize
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         )}

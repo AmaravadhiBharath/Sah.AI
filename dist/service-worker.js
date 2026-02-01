@@ -595,7 +595,7 @@ class AISummarizer {
       return {
         original: prompts,
         // Keep original for user display
-        summary: data.summary,
+        summary: data.summary + "\n\n- Summarized by Gemini",
         promptCount: {
           before: prompts.length,
           after: filtered.length

@@ -1,6 +1,6 @@
 {
   "name": "sahai",
-  "version": "3.2.4",
+  "version": "3.2.5",
   "description": "Extract user prompts from AI chat platforms",
   "type": "module",
   "scripts": {

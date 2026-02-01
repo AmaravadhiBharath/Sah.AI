@@ -137,6 +137,7 @@ export interface OpenSidePanelMessage {
 
 export interface ExtractTriggeredFromPageMessage {
   action: 'EXTRACT_TRIGERED_FROM_PAGE';
+  mode?: Mode;
 }
 
 export type Message =

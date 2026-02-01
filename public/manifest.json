@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SahAI",
-  "version": "3.2.4",
+  "version": "3.2.5",
   "description": "Extract user prompts from AI chat platforms",
   "icons": {
     "16": "icons/icon16.png",
@@ -31,7 +31,10 @@
     "https://cursor.sh/*",
     "https://www.cursor.com/*",
     "https://meta.ai/*",
-    "https://www.meta.ai/*"
+    "https://www.meta.ai/*",
+    "https://tai-backend.amaravadhibharath.workers.dev/*",
+    "https://tiger-superextension-09.firebaseapp.com/*",
+    "https://firestore.googleapis.com/*"
   ],
   "oauth2": {
     "client_id": "624402104634-eq6fthcclafp70pgqfbuohgrdu4mjhpm.apps.googleusercontent.com",
