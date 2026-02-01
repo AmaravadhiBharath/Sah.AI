@@ -73,18 +73,21 @@ export default function KaboomApp() {
 
     const portRef = useRef<chrome.runtime.Port | null>(null);
 
+    const userRef = useRef(user);
+    useEffect(() => { userRef.current = user; }, [user]);
+
     useEffect(() => {
         const port = chrome.runtime.connect({ name: 'sidepanel' });
         portRef.current = port;
 
-        port.onMessage.addListener((msg) => {
+        const messageListener = (msg: any) => {
             if (msg.action === 'STATUS_RESULT') {
                 setStatus({ supported: msg.supported, platform: msg.platform });
             } else if (msg.action === 'EXTRACTION_RESULT') {
                 setExtractionResult(msg.result);
                 setLoading(false);
                 setActiveTab('home');
-                setExtractionStep(3); // Result ready
+                setExtractionStep(3);
 
                 const newItem: HistoryItem = {
                     id: Date.now().toString(),
@@ -96,8 +99,8 @@ export default function KaboomApp() {
                     preview: msg.result.prompts[0]?.content.slice(0, 100) || '',
                 };
 
-                if (user) {
-                    saveHistoryToCloud(user.id, newItem as CloudHistoryItem).catch(e => console.error('Cloud save failed:', e));
+                if (userRef.current) {
+                    saveHistoryToCloud(userRef.current.id, newItem as CloudHistoryItem).catch(e => console.error('Cloud save failed:', e));
                 }
                 setHistory(prev => [newItem, ...prev].slice(0, 50));
             } else if (msg.action === 'SUMMARY_RESULT') {
@@ -111,10 +114,10 @@ export default function KaboomApp() {
             } else if (msg.action === 'ERROR') {
                 setError(msg.error);
                 setLoading(false);
-                setActiveTab('home');
             }
-        });
+        };
 
+        port.onMessage.addListener(messageListener);
         port.postMessage({ action: 'GET_STATUS' });
 
         initializeAuth().then(state => {
@@ -134,9 +137,9 @@ export default function KaboomApp() {
 
         chrome.storage.local.get(['extractionHistory'], async (res) => {
             if (res.extractionHistory) setHistory(res.extractionHistory);
-            if (user) {
+            if (userRef.current) { // Use userRef.current here
                 try {
-                    const cloudHistory = await getHistoryFromCloud(user.id);
+                    const cloudHistory = await getHistoryFromCloud(userRef.current.id);
                     if (cloudHistory.length > 0) {
                         setHistory(prev => {
                             const merged = mergeHistory(prev as CloudHistoryItem[], cloudHistory);
@@ -151,10 +154,11 @@ export default function KaboomApp() {
         });
 
         return () => {
+            port.onMessage.removeListener(messageListener);
             port.disconnect();
             unsubscribe();
         };
-    }, [user, extractionResult, activeTab]); // Include activeTab to avoid stale closure
+    }, []); // Only run once on mount
 
     const handleStartExtraction = () => {
         setActiveTab('processing');
@@ -368,7 +372,7 @@ export default function KaboomApp() {
     };
 
     const renderResult = () => (
-        <div className="kb-app kb-animate">
+        <>
             <div className="kb-top-bar" style={{ borderBottom: '1px solid #F5F5F5' }}>
                 <button className="kb-back-btn" onClick={() => { setExtractionResult(null); setActiveTab('home'); setSummary(null); setMode('raw'); }}>
                     <IconBack />
@@ -443,7 +447,7 @@ export default function KaboomApp() {
                     <div onClick={() => setActiveTab('settings')}><IconSettings active={activeTab === 'settings'} /></div>
                 </div>
             </div>
-        </div>
+        </>
     );
 
     const renderMainLayout = (content: React.ReactNode) => (

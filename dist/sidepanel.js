@@ -4,7 +4,7 @@ var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { en
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import "./modulepreload-polyfill.js";
 import { r as reactExports, j as jsxRuntimeExports, c as client } from "./vendor.js";
-import { _ as __vitePreload, s as setCurrentUser, a as signOutFromFirebase, b as signInToFirebase, c as saveUserProfile, g as getQuotas, d as saveHistoryToCloud, e as getHistoryFromCloud, m as mergeHistory } from "./firebase.js";
+import { _ as __vitePreload, s as setCurrentUser, a as signOutFromFirebase, b as signInToFirebase, c as saveUserProfile, g as getQuotas, d as getHistoryFromCloud, m as mergeHistory, e as saveHistoryToCloud } from "./firebase.js";
 class TelemetryService {
   constructor() {
     __publicField(this, "queue", []);
@@ -319,10 +319,14 @@ function KaboomApp() {
   const [historySearchQuery, setHistorySearchQuery] = reactExports.useState("");
   const [extractionStep, setExtractionStep] = reactExports.useState(1);
   const portRef = reactExports.useRef(null);
+  const userRef = reactExports.useRef(user);
+  reactExports.useEffect(() => {
+    userRef.current = user;
+  }, [user]);
   reactExports.useEffect(() => {
     const port = chrome.runtime.connect({ name: "sidepanel" });
     portRef.current = port;
-    port.onMessage.addListener((msg) => {
+    const messageListener = (msg) => {
       var _a;
       if (msg.action === "STATUS_RESULT") {
         setStatus({ supported: msg.supported, platform: msg.platform });
@@ -340,8 +344,8 @@ function KaboomApp() {
           prompts: msg.result.prompts,
           preview: ((_a = msg.result.prompts[0]) == null ? void 0 : _a.content.slice(0, 100)) || ""
         };
-        if (user) {
-          saveHistoryToCloud(user.id, newItem).catch((e) => console.error("Cloud save failed:", e));
+        if (userRef.current) {
+          saveHistoryToCloud(userRef.current.id, newItem).catch((e) => console.error("Cloud save failed:", e));
         }
         setHistory((prev) => [newItem, ...prev].slice(0, 50));
       } else if (msg.action === "SUMMARY_RESULT") {
@@ -355,9 +359,9 @@ function KaboomApp() {
       } else if (msg.action === "ERROR") {
         setError(msg.error);
         setLoading(false);
-        setActiveTab("home");
       }
-    });
+    };
+    port.onMessage.addListener(messageListener);
     port.postMessage({ action: "GET_STATUS" });
     initializeAuth().then((state) => {
       var _a;
@@ -375,9 +379,9 @@ function KaboomApp() {
     });
     chrome.storage.local.get(["extractionHistory"], async (res) => {
       if (res.extractionHistory) setHistory(res.extractionHistory);
-      if (user) {
+      if (userRef.current) {
         try {
-          const cloudHistory = await getHistoryFromCloud(user.id);
+          const cloudHistory = await getHistoryFromCloud(userRef.current.id);
           if (cloudHistory.length > 0) {
             setHistory((prev) => {
               const merged = mergeHistory(prev, cloudHistory);
@@ -391,10 +395,11 @@ function KaboomApp() {
       }
     });
     return () => {
+      port.onMessage.removeListener(messageListener);
       port.disconnect();
       unsubscribe();
     };
-  }, [user, extractionResult, activeTab]);
+  }, []);
   const handleStartExtraction = () => {
     setActiveTab("processing");
     setExtractionStep(1);
@@ -560,7 +565,7 @@ function KaboomApp() {
   };
   const renderResult = () => {
     var _a;
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-app kb-animate", children: [
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-top-bar", style: { borderBottom: "1px solid #F5F5F5" }, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-back-btn", onClick: () => {
           setExtractionResult(null);
