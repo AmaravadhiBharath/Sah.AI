@@ -80,10 +80,6 @@ export default function KaboomApp() {
         port.onMessage.addListener((msg) => {
             if (msg.action === 'STATUS_RESULT') {
                 setStatus({ supported: msg.supported, platform: msg.platform });
-                if (msg.supported && !extractionResult && activeTab === 'home') {
-                    // Auto-start if supported and on home tab
-                    handleStartExtraction();
-                }
             } else if (msg.action === 'EXTRACTION_RESULT') {
                 setExtractionResult(msg.result);
                 setLoading(false);
@@ -158,7 +154,7 @@ export default function KaboomApp() {
             port.disconnect();
             unsubscribe();
         };
-    }, [user, extractionResult]); // Optimized dependencies
+    }, [user, extractionResult, activeTab]); // Include activeTab to avoid stale closure
 
     const handleStartExtraction = () => {
         setActiveTab('processing');

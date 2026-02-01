@@ -326,9 +326,6 @@ function KaboomApp() {
       var _a;
       if (msg.action === "STATUS_RESULT") {
         setStatus({ supported: msg.supported, platform: msg.platform });
-        if (msg.supported && !extractionResult && activeTab === "home") {
-          handleStartExtraction();
-        }
       } else if (msg.action === "EXTRACTION_RESULT") {
         setExtractionResult(msg.result);
         setLoading(false);
@@ -397,7 +394,7 @@ function KaboomApp() {
       port.disconnect();
       unsubscribe();
     };
-  }, [user, extractionResult]);
+  }, [user, extractionResult, activeTab]);
   const handleStartExtraction = () => {
     setActiveTab("processing");
     setExtractionStep(1);
