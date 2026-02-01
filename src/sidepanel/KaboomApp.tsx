@@ -243,8 +243,7 @@ export default function KaboomApp() {
 
     const renderAccount = () => (
         <div className="kb-content kb-animate">
-            <h1 className="kb-view-title">Account</h1>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginTop: 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginTop: 8 }}>
                 <div style={{ width: 100, height: 100, borderRadius: '50%', background: '#F9F9F9', border: '1px solid #EAEAEA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 500, color: '#999', overflow: 'hidden' }}>
                     {user?.picture ? <img src={user.picture} style={{ width: '100%' }} /> : (user?.name ? user.name.split(' ').map(n => n[0]).join('') : 'JD')}
                 </div>
@@ -278,8 +277,7 @@ export default function KaboomApp() {
 
     const renderSettings = () => (
         <div className="kb-content kb-animate">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <h1 className="kb-view-title">Settings</h1>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline', marginBottom: 8 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#3A82F6', cursor: 'pointer' }}>UPGRADE</span>
             </div>
             <div className="kb-section-label">Preferences</div>
@@ -330,8 +328,7 @@ export default function KaboomApp() {
         });
 
         return (
-            <div className="kb-content kb-animate">
-                <h1 className="kb-view-title">History</h1>
+            <div className="kb-content kb-animate" style={{ paddingTop: 16 }}>
                 <div className="kb-search-container">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />

@@ -472,8 +472,7 @@ function KaboomApp() {
     }, children: "Stop Processing" })
   ] });
   const renderAccount = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "kb-view-title", children: "Account" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginTop: 24 }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginTop: 8 }, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 100, height: 100, borderRadius: "50%", background: "#F9F9F9", border: "1px solid #EAEAEA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 500, color: "#999", overflow: "hidden" }, children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, style: { width: "100%" } }) : (user == null ? void 0 : user.name) ? user.name.split(" ").map((n) => n[0]).join("") : "JD" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center" }, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 18, fontWeight: 600 }, children: (user == null ? void 0 : user.email) || "email@example.com" }),
@@ -494,10 +493,7 @@ function KaboomApp() {
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { textAlign: "center", fontSize: 11, color: "#999", textTransform: "uppercase", letterSpacing: 1, marginTop: 16 }, children: "Version 3.1.0" })
   ] });
   const renderSettings = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "kb-view-title", children: "Settings" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, color: "#3A82F6", cursor: "pointer" }, children: "UPGRADE" })
-    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", justifyContent: "flex-end", alignItems: "baseline", marginBottom: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, color: "#3A82F6", cursor: "pointer" }, children: "UPGRADE" }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-section-label", children: "Preferences" }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-section-label", style: { marginBottom: 8 }, children: "Theme" }),
@@ -524,8 +520,7 @@ function KaboomApp() {
       const matchesSearch = item.preview.toLowerCase().includes(historySearchQuery.toLowerCase()) || item.platform.toLowerCase().includes(historySearchQuery.toLowerCase());
       return matchesSearch;
     });
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "kb-view-title", children: "History" }),
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", style: { paddingTop: 16 }, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-search-container", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "#999", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "11", cy: "11", r: "8" }),
