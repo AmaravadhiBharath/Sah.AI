@@ -3,6 +3,9 @@ import { RemoteConfigService } from '../services/remote-config';
 import { getScrollConfig, getConfigTier } from './scroll-config';
 import type { ExtractionResult, ScrapedPrompt } from '../types';
 
+// Global lock to prevent concurrent extractions
+let isExtracting = false;
+
 // Get the current adapter
 // Get the current adapter
 let adapter = getAdapter();
@@ -259,6 +262,7 @@ function addToSession(text: string) {
     index: sessionPrompts.length,
     timestamp: Date.now(),
     conversationId,
+    source: 'keylog',
   };
 
   sessionPrompts.push(prompt);
@@ -596,6 +600,7 @@ async function extractFromMultiplePositions(adapter: any): Promise<ScrapedPrompt
       if (!globalSeen.has(prompt.content)) {
         globalSeen.add(prompt.content);
         prompt.index = nextIndex++;
+        prompt.source = 'dom';
         allPrompts.push(prompt);
         console.log(`[SahAI] [${point.name}] Added: ${prompt.content.slice(0, 40)}...`);
       } else {
@@ -784,40 +789,35 @@ const BUTTON_STYLES = `
   }
   
   .pe-zone1-btn.extract {
-    background: #ffffff !important;
-    color: #1a1a1a !important;
-    border: 1px solid rgba(0,0,0,0.12) !important;
-  }
-  
-  .pe-zone1-btn.summarize {
-    background: #1a1a1a !important;
+    background: #000000 !important;
     color: #ffffff !important;
-    border: 1px solid #1a1a1a !important;
+    border: 1px solid #000000 !important;
   }
   
   .pe-zone1-btn.paste {
-    background: #f0f0f0 !important;
-    color: #1a1a1a !important;
-    border: 1px solid #d0d0d0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid rgba(0,0,0,0.1) !important;
   }
   
   .pe-zone1-btn svg {
-    width: 14px !important;
-    height: 14px !important;
+    width: 12px !important;
+    height: 12px !important;
     margin-right: 6px !important;
     display: inline-block !important;
     vertical-align: middle !important;
-    margin-top: -1px !important;
     flex-shrink: 0 !important;
+    stroke-width: 2.5 !important;
   }
-  
-  .pe-spinner {
-    animation: pe-spin 0.8s linear infinite !important;
-  }
-  
+
   @keyframes pe-spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+  }
+
+  .pe-spinner {
+    animation: pe-spin 1s linear infinite !important;
+    transform-origin: center !important;
   }
 `;
 
@@ -884,7 +884,7 @@ function findInputContainer(): HTMLElement | null {
     if (element && element.offsetParent !== null) {
       // CRITICAL: Never inject inside a contenteditable area or textarea
       if (element.getAttribute('contenteditable') === 'true' || element.tagName === 'TEXTAREA') {
-        console.log('[SahAI] Skipping selector match because it is a text input area:', selector);
+        // console.log('[SahAI] Skipping selector match because it is a text input area:', selector);
         continue;
       }
 
@@ -896,7 +896,7 @@ function findInputContainer(): HTMLElement | null {
 
       const rect = element.getBoundingClientRect();
       if (rect.height > 450 || rect.height < 20) continue;
-      console.log('[SahAI] Found input via platform selector:', selector);
+      // console.log('[SahAI] Found input via platform selector:', selector);
       return element;
     }
   }
@@ -911,7 +911,7 @@ function findInputContainer(): HTMLElement | null {
         const rect = container.getBoundingClientRect();
         // The chat box is usually between 40px and 400px
         if (rect.height > 30 && rect.height < 450) {
-          console.log('[SahAI] Found Claude input container via closest()');
+          // console.log('[SahAI] Found Claude input container via closest()');
           return container as HTMLElement;
         }
       }
@@ -926,7 +926,7 @@ function findInputContainer(): HTMLElement | null {
         const isVisible = style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
 
         if (rect.height > 30 && rect.height < 400 && !isEditable && isVisible) {
-          console.log('[SahAI] Found Claude input container via heuristic at depth', depth);
+          // console.log('[SahAI] Found Claude input container via heuristic at depth', depth);
           return parent as HTMLElement;
         }
         parent = parent.parentElement;
@@ -961,7 +961,7 @@ function findInputContainer(): HTMLElement | null {
         if (hasRadius || hasBg) {
           const rect = parent.getBoundingClientRect();
           if (rect.height < 450) {
-            console.log('[SahAI] Found container via textarea parent heuristic');
+            // console.log('[SahAI] Found container via textarea parent heuristic');
             return parent;
           }
         }
@@ -990,12 +990,12 @@ function injectStyles() {
   const style = document.createElement('style');
   style.id = 'pe-styles';
   style.textContent = BUTTON_STYLES;
-  document.head.appendChild(style);
+  (document.head || document.documentElement).appendChild(style);
 }
 
 // Create Zone 1 button row
 function createZone1(): HTMLElement {
-  console.log('[SahAI] Creating Zone 1 buttons...');
+  // console.log('[SahAI] Creating Zone 1 buttons...');
   const zone1 = document.createElement('div');
   zone1.id = 'pe-zone1';
   zone1.className = 'pe-zone1';
@@ -1005,151 +1005,71 @@ function createZone1(): HTMLElement {
   extractBtn.id = 'pe-extract-btn';
   extractBtn.className = 'pe-zone1-btn extract';
   extractBtn.textContent = 'Extract';
-  extractBtn.title = 'Extract raw prompts';
+  extractBtn.title = 'Extract prompts to SahAI';
   extractBtn.addEventListener('click', (e) => {
-    console.log('[SahAI] Extract button clicked');
+    // console.log('[SahAI] Extract button clicked');
     e.preventDefault();
     e.stopPropagation();
     handleButtonClick('raw', extractBtn);
   }, true); // Use capture phase
   zone1.appendChild(extractBtn);
 
-  // Summarize button
-  const summarizeBtn = document.createElement('button');
-  summarizeBtn.id = 'pe-summarize-btn';
-  summarizeBtn.className = 'pe-zone1-btn summarize';
-  summarizeBtn.textContent = 'Summarize';
-  summarizeBtn.title = 'AI-powered summary';
-  summarizeBtn.addEventListener('click', (e) => {
-    console.log('[SahAI] Summarize button clicked');
-    e.preventDefault();
-    e.stopPropagation();
-    handleButtonClick('summary', summarizeBtn);
-  }, true); // Use capture phase
-  zone1.appendChild(summarizeBtn);
-
   return zone1;
 }
 
-// Inject floating buttons at bottom right (fallback when input container not found)
-function injectFloatingButtons() {
-  if (document.getElementById('pe-floating-zone')) return;
+// Inject Figma-style floating pill
+// Handle button click
+async function handleButtonClick(mode: 'raw' | 'summary', button: HTMLButtonElement) {
+  console.log(`[SahAI] Button clicked: ${mode}`);
+  const originalText = button.textContent;
 
-  const floatingZone = document.createElement('div');
-  floatingZone.id = 'pe-floating-zone';
-  floatingZone.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 10000;
-    display: flex;
-    gap: 8px;
-    flex-direction: column;
+  // 1. Open sidepanel immediately
+  chrome.runtime.sendMessage({ action: 'OPEN_SIDE_PANEL' });
+
+  // 1.5. Notify sidepanel that extraction was triggered
+  setTimeout(() => {
+    chrome.runtime.sendMessage({ action: 'EXTRACT_TRIGERED_FROM_PAGE' });
+  }, 500);
+
+  button.classList.add('loading');
+  button.innerHTML = `
+    <svg class="pe-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+      <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+    </svg>
+    Extracting...
   `;
 
-  // Extract button
-  const extractBtn = document.createElement('button');
-  extractBtn.id = 'pe-extract-btn-floating';
-  extractBtn.className = 'pe-zone1-btn extract';
-  extractBtn.textContent = 'Extract';
-  extractBtn.title = 'Extract raw prompts';
-  extractBtn.style.cssText = `
-    padding: 8px 12px;
-    background: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-  `;
-  extractBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleButtonClick('raw', extractBtn);
-  });
-  floatingZone.appendChild(extractBtn);
+  try {
+    console.log('[SahAI] Starting extraction...');
+    const prompts = await extractPrompts();
+    console.log(`[SahAI] Extracted ${prompts.length} prompts`);
 
-  // Summarize button
-  const summarizeBtn = document.createElement('button');
-  summarizeBtn.id = 'pe-summarize-btn-floating';
-  summarizeBtn.className = 'pe-zone1-btn summarize';
-  summarizeBtn.textContent = 'Summarize';
-  summarizeBtn.title = 'AI-powered summary';
-  summarizeBtn.style.cssText = `
-    padding: 8px 12px;
-    background: #059669;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-  `;
-  summarizeBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleButtonClick('summary', summarizeBtn);
-  });
-  floatingZone.appendChild(summarizeBtn);
+    const result = createExtractionResult(prompts);
 
-  // Add to page
-  document.body.appendChild(floatingZone);
-  console.log('[SahAI] Injected floating buttons at bottom right');
-}
+    console.log('[SahAI] Sending EXTRACTION_FROM_PAGE to background...');
+    chrome.runtime.sendMessage({
+      action: 'EXTRACTION_FROM_PAGE',
+      result,
+      mode,
+    });
 
-// Show paste button
-function showPasteButton() {
-  const zone1 = document.getElementById('pe-zone1');
-  if (!zone1 || document.getElementById('pe-paste-btn')) return;
+    button.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:14px; height:14px; margin-right:6px; display:inline-block; vertical-align:middle;">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      Done!
+    `;
 
-  const pasteBtn = document.createElement('button');
-  pasteBtn.id = 'pe-paste-btn';
-  pasteBtn.className = 'pe-zone1-btn paste';
-  pasteBtn.textContent = 'Paste';
-  pasteBtn.title = 'Paste copied prompts';
-  pasteBtn.onclick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handlePaste();
-  };
-  zone1.appendChild(pasteBtn);
-}
-
-// Hide paste button
-function hidePasteButton() {
-  const pasteBtn = document.getElementById('pe-paste-btn');
-  if (pasteBtn) pasteBtn.remove();
-}
-
-// Handle paste action
-function handlePaste() {
-  if (!copiedContent) return;
-
-  // Find the input field
-  const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
-  const contentEditable = document.querySelector('[contenteditable="true"]') as HTMLElement;
-
-  if (textarea) {
-    // For textarea elements
-    const start = textarea.selectionStart || 0;
-    const end = textarea.selectionEnd || 0;
-    const text = textarea.value;
-    textarea.value = text.substring(0, start) + copiedContent + text.substring(end);
-    textarea.selectionStart = textarea.selectionEnd = start + copiedContent.length;
-
-    // Trigger input event for React/Vue/etc.
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    textarea.focus();
-  } else if (contentEditable) {
-    // For contenteditable elements (like Claude)
-    contentEditable.focus();
-    document.execCommand('insertText', false, copiedContent);
+  } catch (error) {
+    console.error('[SahAI] Error:', error);
+    button.textContent = 'Error';
+  } finally {
+    setTimeout(() => {
+      button.classList.remove('loading');
+      button.textContent = originalText;
+    }, 2000);
   }
-
-  // Clear and hide after use
-  copiedContent = null;
-  hidePasteButton();
 }
 
 // Create the two-zone layout
@@ -1202,7 +1122,6 @@ function createZonedLayout() {
       const floating = document.getElementById('pe-floating-zone');
       if (floating) floating.remove();
 
-      // CLAUDE SPECIAL: Sticky Injection
       // If we are on Claude, watch the container to re-inject if buttons are removed
       if (platformName === 'claude') {
         const stickyObserver = new MutationObserver(() => {
@@ -1230,67 +1149,73 @@ function createZonedLayout() {
     }
 
     console.log('[SahAI] Zoned layout initialized (Input Container Mode)');
-  } else {
-    // Fallback mode: inject at bottom right of page
-    if (!document.getElementById('pe-floating-zone')) {
-      console.warn('[SahAI] Could not find input container, using fallback floating buttons');
-      injectFloatingButtons();
-    }
   }
 }
 
-// Handle button click
-async function handleButtonClick(mode: 'raw' | 'summary', button: HTMLButtonElement) {
-  console.log(`[SahAI] Button clicked: ${mode}`);
-  const originalText = button.textContent;
+// Show paste button
+function showPasteButton() {
+  const zone1 = document.getElementById('pe-zone1');
+  if (!zone1 || document.getElementById('pe-paste-btn')) return;
 
-  // 1. Open sidepanel IMMEDIATELY to preserve user gesture
-  try {
-    chrome.runtime.sendMessage({ action: 'OPEN_SIDE_PANEL' });
-  } catch (e) {
-    console.warn('[SahAI] Could not open side panel:', e);
-  }
-
-  button.classList.add('loading');
-  button.innerHTML = `
-    <svg class="pe-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
-      <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+  const pasteBtn = document.createElement('button');
+  pasteBtn.id = 'pe-paste-btn';
+  pasteBtn.className = 'pe-zone1-btn paste';
+  pasteBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+       <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+       <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
     </svg>
-    ${mode === 'raw' ? 'Extracting...' : 'Summarising...'}
+    Paste
   `;
+  pasteBtn.title = 'Paste copied prompts into Chat';
+  pasteBtn.onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handlePaste();
+  };
+  zone1.appendChild(pasteBtn);
+}
 
-  try {
-    console.log('[SahAI] Starting extraction...');
-    const prompts = await extractPrompts();
-    console.log(`[SahAI] Extracted ${prompts.length} prompts`);
+// Hide paste button
+function hidePasteButton() {
+  const pasteBtn = document.getElementById('pe-paste-btn');
+  if (pasteBtn) pasteBtn.remove();
+}
 
-    const result = createExtractionResult(prompts);
+// Handle paste action
+// Handle paste action
+async function handlePaste() {
+  let textToPaste = copiedContent;
 
-    console.log('[SahAI] Sending EXTRACTION_FROM_PAGE to background...');
-    chrome.runtime.sendMessage({
-      action: 'EXTRACTION_FROM_PAGE',
-      result,
-      mode,
-    });
-
-    // Show success state
-    button.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:14px; height:14px; margin-right:6px; display:inline-block; vertical-align:middle;">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
-      Done!
-    `;
-
-  } catch (error) {
-    console.error('[SahAI] Error:', error);
-    button.textContent = 'Error';
-  } finally {
-    setTimeout(() => {
-      button.classList.remove('loading');
-      button.textContent = originalText;
-    }, 2000); // Keep "Done!" for 2 seconds
+  if (!textToPaste) {
+    try {
+      textToPaste = await navigator.clipboard.readText();
+    } catch (e) {
+      console.error('Failed to read clipboard:', e);
+    }
   }
+
+  if (!textToPaste) return;
+
+  // Find the input field
+  const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+  const contentEditable = document.querySelector('[contenteditable="true"]') as HTMLElement;
+
+  if (textarea) {
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const currentVal = textarea.value;
+    textarea.value = currentVal.substring(0, start) + textToPaste + currentVal.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + textToPaste.length;
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    textarea.focus();
+  } else if (contentEditable) {
+    contentEditable.focus();
+    document.execCommand('insertText', false, textToPaste);
+  }
+
+  copiedContent = null;
+  hidePasteButton();
 }
 
 // Remove Zone 1
@@ -1311,6 +1236,8 @@ function removeZonedLayout() {
 }
 
 // Initialize with retry - optimized to avoid polling
+let scheduleCheckGlobal: () => void = () => { };
+
 function initZonedLayout() {
   let attempts = 0;
   const maxAttempts = 10;
@@ -1360,38 +1287,40 @@ function initZonedLayout() {
       const isRootPath = (urlObj.hostname.includes('chatgpt.com') || urlObj.hostname.includes('openai.com')) &&
         (urlObj.pathname === '/' || urlObj.pathname === '');
 
-      // Show buttons if:
-      // - Claude: on /chat pages
-      // - ChatGPT: has conversation ID or on root path
-      // - Others: all show buttons (all are chat platforms)
-      let shouldShow = false;
+      const isOnSupportedPlatform = !!platformName && platformName !== 'generic';
+
+      // Show buttons more greedily for the pill
+      let shouldShow = isOnSupportedPlatform;
+
+      // But keep Zone 1 (input-top buttons) restricted to active chats
+      let shouldShowZone1 = false;
       if (platformName === 'claude') {
-        shouldShow = window.location.pathname.includes('/chat');
+        shouldShowZone1 = window.location.pathname.includes('/chat');
       } else if (platformName === 'chatgpt') {
-        shouldShow = hasConversationId || isRootPath;
+        shouldShowZone1 = hasConversationId || isRootPath;
       } else {
-        shouldShow = true;  // Show on all other supported platforms
+        shouldShowZone1 = true;
       }
 
       if (shouldShow) {
         const hasZone1 = !!document.getElementById('pe-zone1');
-        const hasFloating = !!document.getElementById('pe-floating-zone');
+        const hasFigmaPill = !!document.getElementById('pe-figma-pill-container');
 
-        // If we don't have ANY buttons, try to create them
-        if (!hasZone1 && !hasFloating && adapter) {
+        // Always ensure pill is gone
+        if (hasFigmaPill) {
+          document.getElementById('pe-figma-pill-container')?.remove();
+        }
+
+        // Try to create Zone 1 if in an active chat
+        if (!hasZone1 && shouldShowZone1 && adapter) {
           createZonedLayout();
         }
-        // If we only have floating buttons, try to "upgrade" to zoned layout if input container is now available
-        else if (!hasZone1 && hasFloating && adapter) {
-          const container = findInputContainer();
-          if (container) {
-            console.log('[SahAI] Input container found, upgrading from floating to zoned layout');
-            createZonedLayout();
-          }
+      } else {
+        if (document.getElementById('pe-zone1') || document.getElementById('pe-figma-pill-container')) {
+          console.log('[SahAI] Removing buttons: No longer on supported platform');
+          removeZonedLayout();
+          document.getElementById('pe-figma-pill-container')?.remove();
         }
-      } else if (document.getElementById('pe-zone1') || document.getElementById('pe-floating-zone')) {
-        console.log('[SahAI] Removing buttons: No longer in a valid conversation');
-        removeZonedLayout();
       }
 
       // Check if prompt presence has changed and notify sidepanel
@@ -1408,8 +1337,10 @@ function initZonedLayout() {
     }, { timeout: 2000 });
   };
 
-  // Observe the body for changes to catch the input container
-  const targetNode = document.body;
+  // Initial check setup
+  scheduleCheckGlobal = scheduleCheck;
+
+  // Observe the document element (more stable than body for SPA navigation)
   const layoutObserver = new MutationObserver((mutations) => {
     const hasRelevantChange = mutations.some(m =>
       m.type === 'childList' && m.addedNodes.length > 0
@@ -1419,11 +1350,9 @@ function initZonedLayout() {
     }
   });
 
-  layoutObserver.observe(targetNode, {
+  layoutObserver.observe(document.documentElement, {
     childList: true,
-    subtree: true,
-    attributes: false,
-    characterData: false
+    subtree: true
   });
 
   // Initial check
@@ -1450,9 +1379,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (zone1) {
         removeZonedLayout();
       }
-      // Let the normal interval re-create buttons if needed
+      // Re-check EVERYTHING (pill + zone1)
       setTimeout(() => {
-        createZonedLayout();
+        scheduleCheckGlobal();
         hookSendButton();
         hookKeyboardSubmit();
       }, 500);
@@ -1462,7 +1391,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
 
     case 'EXTRACT_PROMPTS': {
+      if (isExtracting) {
+        console.warn('[SahAI] Extraction already in progress, ignoring request');
+        sendResponse({ success: false, error: 'Extraction already in progress. Please wait.' });
+        return true;
+      }
+
       const mode = message.mode;
+      isExtracting = true;
+
       extractPrompts().then(prompts => {
         const result = createExtractionResult(prompts);
 
@@ -1476,6 +1413,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       }).catch(err => {
         console.error('[SahAI] Extraction failed:', err);
         sendResponse({ success: false, error: err.message });
+      }).finally(() => {
+        isExtracting = false;
       });
       return true; // Keep channel open for async response
     }

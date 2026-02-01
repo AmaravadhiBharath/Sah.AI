@@ -51,6 +51,7 @@ const sidePanelPorts = new Set<chrome.runtime.Port>();
 
 // Cache for extraction results
 let lastExtractionResult: ExtractionResult | null = null;
+let pendingTrigger: { timestamp: number } | null = null;
 
 // Open side panel on extension icon click
 if (chrome.sidePanel) {
@@ -73,6 +74,12 @@ chrome.runtime.onConnect.addListener((port) => {
         action: 'EXTRACTION_RESULT',
         result: lastExtractionResult,
       });
+    }
+
+    // Check for pending trigger
+    if (pendingTrigger && (Date.now() - pendingTrigger.timestamp < 3000)) {
+      console.log('[SahAI] Replaying pending trigger to new sidepanel');
+      port.postMessage({ action: 'EXTRACT_TRIGERED_FROM_PAGE' });
     }
 
     // Handle messages from side panel
@@ -155,12 +162,24 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
 
   switch (message.action) {
     case 'OPEN_SIDE_PANEL': {
-      const windowId = sender.tab?.windowId;
-      if (windowId) {
-        chrome.sidePanel.open({ windowId }).catch(err => {
+      (async () => {
+        try {
+          let windowId = sender.tab?.windowId;
+          if (!windowId) {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            windowId = tab?.windowId;
+          }
+
+          if (windowId) {
+            await chrome.sidePanel.open({ windowId });
+            console.log('[SahAI] Side panel opened successfully');
+          } else {
+            console.error('[SahAI] Could not find windowId to open side panel');
+          }
+        } catch (err) {
           console.error('[SahAI] Failed to open side panel:', err);
-        });
-      }
+        }
+      })();
       sendResponse({ success: true });
       break;
     }
@@ -224,6 +243,14 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
 
     case 'STATUS_RESULT': {
       // Content script reporting its status
+      broadcastToSidePanels(message);
+      sendResponse({ success: true });
+      break;
+    }
+
+    case 'EXTRACT_TRIGERED_FROM_PAGE': {
+      console.log('[SahAI] Broadcasting page extraction trigger to sidepanel');
+      pendingTrigger = { timestamp: Date.now() }; // Cache it
       broadcastToSidePanels(message);
       sendResponse({ success: true });
       break;
@@ -444,7 +471,7 @@ async function handleSidePanelMessage(message: Message) {
                 error: 'Content script not responding. Please refresh the page and try again.'
               });
             }
-          }, 15000); // 15 second timeout per attempt, total 45 seconds
+          }, 60000); // 60 second timeout per attempt, total 180 seconds
 
           chrome.tabs.sendMessage(tab.id!, { action: 'EXTRACT_PROMPTS', mode }, (response) => {
             if (messageTimeout !== null) {

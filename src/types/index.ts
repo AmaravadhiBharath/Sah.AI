@@ -5,6 +5,7 @@ export interface ScrapedPrompt {
   index: number;
   timestamp?: number;
   conversationId?: string;
+  source?: 'dom' | 'keylog';
 }
 
 export interface ExtractionResult {
@@ -14,6 +15,7 @@ export interface ExtractionResult {
   prompts: ScrapedPrompt[];
   extractedAt: number;
   conversationId?: string;
+  summary?: string;
 }
 
 export interface SummaryResult {
@@ -60,6 +62,7 @@ export type MessageAction =
   | 'SAVE_SESSION_PROMPTS'
   | 'GET_CONVERSATION_LOGS'
   | 'OPEN_SIDE_PANEL'
+  | 'EXTRACT_TRIGERED_FROM_PAGE'
   | 'ERROR';
 
 export interface ExtractMessage {
@@ -132,6 +135,10 @@ export interface OpenSidePanelMessage {
   action: 'OPEN_SIDE_PANEL';
 }
 
+export interface ExtractTriggeredFromPageMessage {
+  action: 'EXTRACT_TRIGERED_FROM_PAGE';
+}
+
 export type Message =
   | ExtractMessage
   | ExtractionResultMessage
@@ -145,4 +152,5 @@ export type Message =
   | ToggleButtonsMessage
   | SaveSessionPromptsMessage
   | GetConversationLogsMessage
-  | OpenSidePanelMessage;
+  | OpenSidePanelMessage
+  | ExtractTriggeredFromPageMessage;

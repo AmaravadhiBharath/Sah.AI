@@ -3,7 +3,7 @@ var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 var _a;
-import { _ as __vitePreload, f as getCurrentUserId, h as getKeylogsFromCloud, i as getDb, j as saveKeylogsToCloud } from "./firebase.js";
+import { _ as __vitePreload, d as getCurrentUserId, e as getKeylogsFromCloud, f as getDb, h as saveKeylogsToCloud } from "./firebase.js";
 import { d as doc, i as increment } from "./vendor.js";
 class CircuitBreaker {
   constructor(config) {
@@ -668,7 +668,7 @@ async function fetchRemoteConfigUpdates(currentVersion) {
       return { doc: doc3, getDoc: getDoc2 };
     }, true ? [] : void 0, import.meta.url);
     const { getDb: getDb2 } = await __vitePreload(async () => {
-      const { getDb: getDb3 } = await import("./firebase.js").then((n) => n.k);
+      const { getDb: getDb3 } = await import("./firebase.js").then((n) => n.i);
       return { getDb: getDb3 };
     }, true ? __vite__mapDeps([0,1]) : void 0, import.meta.url);
     const db = await getDb2();
@@ -717,6 +717,7 @@ self.addEventListener("unhandledrejection", (event) => {
 });
 const sidePanelPorts = /* @__PURE__ */ new Set();
 let lastExtractionResult = null;
+let pendingTrigger = null;
 if (chrome.sidePanel) {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((err) => console.warn("[SahAI] SidePanel setup failed:", err));
 } else {
@@ -732,6 +733,10 @@ chrome.runtime.onConnect.addListener((port) => {
         action: "EXTRACTION_RESULT",
         result: lastExtractionResult
       });
+    }
+    if (pendingTrigger && Date.now() - pendingTrigger.timestamp < 3e3) {
+      console.log("[SahAI] Replaying pending trigger to new sidepanel");
+      port.postMessage({ action: "EXTRACT_TRIGERED_FROM_PAGE" });
     }
     port.onMessage.addListener((message) => {
       handleSidePanelMessage(message);
@@ -790,16 +795,28 @@ async function trackDailyMetrics(promptCount) {
   }
 }
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  var _a2, _b;
+  var _a2;
   console.log("[SahAI] Received message:", message.action);
   switch (message.action) {
     case "OPEN_SIDE_PANEL": {
-      const windowId = (_a2 = sender.tab) == null ? void 0 : _a2.windowId;
-      if (windowId) {
-        chrome.sidePanel.open({ windowId }).catch((err) => {
+      (async () => {
+        var _a3;
+        try {
+          let windowId = (_a3 = sender.tab) == null ? void 0 : _a3.windowId;
+          if (!windowId) {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            windowId = tab == null ? void 0 : tab.windowId;
+          }
+          if (windowId) {
+            await chrome.sidePanel.open({ windowId });
+            console.log("[SahAI] Side panel opened successfully");
+          } else {
+            console.error("[SahAI] Could not find windowId to open side panel");
+          }
+        } catch (err) {
           console.error("[SahAI] Failed to open side panel:", err);
-        });
-      }
+        }
+      })();
       sendResponse({ success: true });
       break;
     }
@@ -807,7 +824,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const { result, mode } = message;
       lastExtractionResult = result;
       pendingExtraction = { result, mode };
-      const windowId = (_b = sender.tab) == null ? void 0 : _b.windowId;
+      const windowId = (_a2 = sender.tab) == null ? void 0 : _a2.windowId;
       if (windowId) {
         chrome.sidePanel.open({ windowId }).catch(() => {
         });
@@ -846,6 +863,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
     }
     case "STATUS_RESULT": {
+      broadcastToSidePanels(message);
+      sendResponse({ success: true });
+      break;
+    }
+    case "EXTRACT_TRIGERED_FROM_PAGE": {
+      console.log("[SahAI] Broadcasting page extraction trigger to sidepanel");
+      pendingTrigger = { timestamp: Date.now() };
       broadcastToSidePanels(message);
       sendResponse({ success: true });
       break;
@@ -1001,7 +1025,7 @@ async function handleSidePanelMessage(message) {
                 error: "Content script not responding. Please refresh the page and try again."
               });
             }
-          }, 15e3);
+          }, 6e4);
           chrome.tabs.sendMessage(tab.id, { action: "EXTRACT_PROMPTS", mode }, (response) => {
             if (messageTimeout !== null) {
               clearTimeout(messageTimeout);

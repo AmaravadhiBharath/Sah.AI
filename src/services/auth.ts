@@ -217,19 +217,23 @@ export function subscribeToAuthChanges(callback: (user: ChromeUser | null) => vo
 }
 
 // Initialize auth state
+// Initialize auth state
 export async function initializeAuth(): Promise<UserState> {
-  // Load quotas from Firebase
-  await loadQuotas();
-
+  // 1. Get stored user IMMEDIATELY for instant UI
   const user = await getStoredUser();
-  const tier = await getUserTier(user);
   const used = await getUsageCount();
-  const limit = getTierLimit(tier);
 
+  // 2. Load background data (don't block UI if possible, but for first render we return what we have)
+  // We trigger these but return the user state immediately
+  loadQuotas().catch(console.error);
+
+  // Minimal return for instant render. 
+  // Detailed tier info will come in subsequent updates if needed, 
+  // or we rely on defaults/cached values.
   return {
     user,
-    tier,
-    usage: { used, limit },
+    tier: 'free', // Default safe tier until verified
+    usage: { used, limit: 10 },
     isLoading: false,
   };
 }

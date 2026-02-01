@@ -4,7 +4,7 @@ var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { en
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import "./modulepreload-polyfill.js";
 import { r as reactExports, j as jsxRuntimeExports, c as client } from "./vendor.js";
-import { _ as __vitePreload, s as setCurrentUser, a as signOutFromFirebase, b as signInToFirebase, c as saveUserProfile, g as getQuotas, d as getHistoryFromCloud, m as mergeHistory, e as saveHistoryToCloud } from "./firebase.js";
+import { _ as __vitePreload, s as setCurrentUser, a as signInToFirebase, b as saveUserProfile, c as signOutFromFirebase, g as getQuotas } from "./firebase.js";
 class TelemetryService {
   constructor() {
     __publicField(this, "queue", []);
@@ -63,7 +63,7 @@ class TelemetryService {
         return { collection: collection2, addDoc: addDoc2 };
       }, true ? [] : void 0, import.meta.url);
       const { getDb } = await __vitePreload(async () => {
-        const { getDb: getDb2 } = await import("./firebase.js").then((n) => n.k);
+        const { getDb: getDb2 } = await import("./firebase.js").then((n) => n.i);
         return { getDb: getDb2 };
       }, true ? __vite__mapDeps([0,1]) : void 0, import.meta.url);
       const db = await getDb();
@@ -201,23 +201,6 @@ async function getUsageCount() {
     });
   });
 }
-async function getUserTier(user) {
-  if (!user) return "guest";
-  try {
-    const { checkUserTier } = await __vitePreload(async () => {
-      const { checkUserTier: checkUserTier2 } = await import("./firebase.js").then((n) => n.k);
-      return { checkUserTier: checkUserTier2 };
-    }, true ? __vite__mapDeps([0,1]) : void 0, import.meta.url);
-    const tier = await checkUserTier(user.email);
-    if (tier) return tier;
-  } catch (error) {
-    console.log("[Auth] Could not check tier, defaulting to free");
-  }
-  return "free";
-}
-function getTierLimit(tier) {
-  return TIER_LIMITS[tier];
-}
 async function signInWithGoogle() {
   return new Promise((resolve, reject) => {
     chrome.identity.getAuthToken({ interactive: true }, async (token) => {
@@ -280,392 +263,326 @@ function subscribeToAuthChanges(callback) {
   };
 }
 async function initializeAuth() {
-  await loadQuotas();
   const user = await getStoredUser();
-  const tier = await getUserTier(user);
   const used = await getUsageCount();
-  const limit = getTierLimit(tier);
+  loadQuotas().catch(console.error);
   return {
     user,
-    tier,
-    usage: { used, limit },
+    tier: "free",
+    // Default safe tier until verified
+    usage: { used, limit: 10 },
     isLoading: false
   };
 }
-const IconClock = ({ active }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className: `kb-nav-icon ${active ? "active" : ""}`, children: [
-  /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "10" }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "12 6 12 12 16 14" })
-] });
-const IconSettings = ({ active }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className: `kb-nav-icon ${active ? "active" : ""}`, children: [
-  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "3" })
-] });
-const IconBack = () => /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19 12H5M12 19l-7-7 7-7" }) });
-const IconCopy = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-  /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
-] });
 function KaboomApp() {
-  const [activeTab, setActiveTab] = reactExports.useState("home");
   const [user, setUser] = reactExports.useState(null);
-  const [tier, setTier] = reactExports.useState("FREE");
-  const [history, setHistory] = reactExports.useState([]);
-  const [mode, setMode] = reactExports.useState("raw");
   const [extractionResult, setExtractionResult] = reactExports.useState(null);
-  const [summary, setSummary] = reactExports.useState(null);
-  const [, setLoading] = reactExports.useState(false);
-  const [error, setError] = reactExports.useState(null);
+  const [loading, setLoading] = reactExports.useState(false);
   const [status, setStatus] = reactExports.useState({ supported: false, platform: null });
-  const [historySearchQuery, setHistorySearchQuery] = reactExports.useState("");
-  const [extractionStep, setExtractionStep] = reactExports.useState(1);
+  const [selectedPrompts, setSelectedPrompts] = reactExports.useState([]);
+  const [copyStatus, setCopyStatus] = reactExports.useState("idle");
   const portRef = reactExports.useRef(null);
-  const userRef = reactExports.useRef(user);
+  const [extractionTime, setExtractionTime] = reactExports.useState(null);
+  const [liveTime, setLiveTime] = reactExports.useState(0);
+  const startTimeRef = reactExports.useRef(0);
+  const timerRef = reactExports.useRef(null);
+  const [currentPlatformIndex, setCurrentPlatformIndex] = reactExports.useState(0);
+  const platforms = ["ChatGPT", "Claude", "Gemini", "Perplexity", "DeepSeek", "Lovable", "Bolt.new", "Cursor", "Meta AI"];
+  const [viewingHistory, setViewingHistory] = reactExports.useState(false);
+  const [historyItems, setHistoryItems] = reactExports.useState([]);
   reactExports.useEffect(() => {
-    userRef.current = user;
-  }, [user]);
+    const interval = setInterval(() => {
+      setCurrentPlatformIndex((prev) => (prev + 1) % platforms.length);
+    }, 1e3);
+    return () => clearInterval(interval);
+  }, []);
+  const [showPopup, setShowPopup] = reactExports.useState(false);
   reactExports.useEffect(() => {
+    initializeAuth().then((state) => {
+      setUser(state.user);
+    });
+    const unsubscribe = subscribeToAuthChanges((newUser) => {
+      setUser(newUser);
+      if (newUser) setShowPopup(false);
+    });
     const port = chrome.runtime.connect({ name: "sidepanel" });
     portRef.current = port;
     const messageListener = (msg) => {
-      var _a;
       if (msg.action === "STATUS_RESULT") {
         setStatus({ supported: msg.supported, platform: msg.platform });
-      } else if (msg.action === "EXTRACTION_RESULT") {
+      } else if (msg.action === "EXTRACTION_RESULT" || msg.action === "EXTRACTION_FROM_PAGE_RESULT") {
         setExtractionResult(msg.result);
+        setSelectedPrompts(msg.result.prompts.map((_, i) => i));
         setLoading(false);
-        setActiveTab("home");
-        setExtractionStep(3);
-        const newItem = {
-          id: Date.now().toString(),
-          platform: msg.result.platform,
-          promptCount: msg.result.prompts.length,
-          mode: "raw",
-          timestamp: Date.now(),
-          prompts: msg.result.prompts,
-          preview: ((_a = msg.result.prompts[0]) == null ? void 0 : _a.content.slice(0, 100)) || ""
-        };
-        if (userRef.current) {
-          saveHistoryToCloud(userRef.current.id, newItem).catch((e) => console.error("Cloud save failed:", e));
+        if (startTimeRef.current) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          const duration = (Date.now() - startTimeRef.current) / 1e3;
+          setExtractionTime(parseFloat(duration.toFixed(1)));
         }
-        setHistory((prev) => [newItem, ...prev].slice(0, 50));
-      } else if (msg.action === "SUMMARY_RESULT") {
-        if (msg.success) {
-          setSummary(msg.result.summary);
-          setMode("summary");
-        } else {
-          setError(msg.error);
-        }
-        setLoading(false);
+      } else if (msg.action === "EXTRACT_TRIGERED_FROM_PAGE") {
+        setLoading(true);
+        startTimeRef.current = Date.now();
+        setExtractionTime(null);
+        setLiveTime(0);
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          const d = (Date.now() - startTimeRef.current) / 1e3;
+          setLiveTime(parseFloat(d.toFixed(1)));
+        }, 100);
       } else if (msg.action === "ERROR") {
-        setError(msg.error);
         setLoading(false);
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        alert(msg.error || "Extraction failed");
       }
     };
     port.onMessage.addListener(messageListener);
     port.postMessage({ action: "GET_STATUS" });
-    initializeAuth().then((state) => {
-      var _a;
-      setUser(state.user);
-      setTier(((_a = state.tier) == null ? void 0 : _a.toUpperCase()) || "FREE");
-    });
-    const unsubscribe = subscribeToAuthChanges(async (newUser) => {
-      setUser(newUser);
-      if (newUser) {
-        const newTier = await getUserTier(newUser);
-        setTier(newTier.toUpperCase());
-      } else {
-        setTier("FREE");
-      }
-    });
-    chrome.storage.local.get(["extractionHistory"], async (res) => {
-      if (res.extractionHistory) setHistory(res.extractionHistory);
-      if (userRef.current) {
-        try {
-          const cloudHistory = await getHistoryFromCloud(userRef.current.id);
-          if (cloudHistory.length > 0) {
-            setHistory((prev) => {
-              const merged = mergeHistory(prev, cloudHistory);
-              chrome.storage.local.set({ extractionHistory: merged });
-              return merged;
-            });
-          }
-        } catch (error2) {
-          console.error("Cloud sync failed:", error2);
-        }
-      }
-    });
     return () => {
       port.onMessage.removeListener(messageListener);
       port.disconnect();
       unsubscribe();
     };
   }, []);
-  const handleStartExtraction = () => {
-    setActiveTab("processing");
-    setExtractionStep(1);
-    setLoading(true);
-    setError(null);
-    setTimeout(() => setExtractionStep(2), 800);
-    setTimeout(() => setExtractionStep(3), 1600);
-    if (portRef.current) {
-      portRef.current.postMessage({ action: "EXTRACT_PROMPTS", mode: "raw" });
-    }
-  };
-  const handleSummarize = () => {
-    if (!extractionResult) return;
-    setLoading(true);
-    if (portRef.current) {
-      portRef.current.postMessage({
-        action: "SUMMARIZE_PROMPTS",
-        prompts: extractionResult.prompts
-      });
-    }
-  };
   const handleCopy = async () => {
-    const text = summary || (extractionResult == null ? void 0 : extractionResult.prompts.map((p) => p.content).join("\n\n"));
-    if (text) await navigator.clipboard.writeText(text);
+    const text = extractionResult == null ? void 0 : extractionResult.prompts.filter((_, i) => selectedPrompts.includes(i)).map((p) => p.content).join("\n\n");
+    if (text) {
+      await navigator.clipboard.writeText(text);
+      setCopyStatus("copied");
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeTab = tabs[0];
+        if (activeTab == null ? void 0 : activeTab.id) {
+          chrome.tabs.sendMessage(activeTab.id, {
+            action: "CONTENT_COPIED",
+            content: text
+          });
+        }
+      });
+      setTimeout(() => setCopyStatus("idle"), 2e3);
+    }
   };
-  const renderProcessing = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate kb-extract-container", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-extract-icon", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "32", height: "32", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "16 18 22 12 16 6" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "8 6 2 12 8 18" })
-    ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "kb-extract-title", children: "Extracting prompts" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "kb-extract-sub", children: "Analyzing conversation structure and tokenizing content." }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-stats-row", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-stat-col", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-stat-label", children: "Elapsed" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-stat-value", children: [
-          "0.8",
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 14, fontWeight: 500 }, children: "s" })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-stat-col", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-stat-label", children: "Source" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-stat-value", children: status.platform || "Auto" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-stat-col", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-stat-label", children: "Found" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-stat-value", style: { color: "#3A82F6" }, children: "--" })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-step-list", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `kb-step-item ${extractionStep >= 1 ? "active" : ""} ${extractionStep > 1 ? "done" : ""}`, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-step-dot", children: extractionStep === 1 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-step-dot-inner" }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Detecting page" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `kb-step-item ${extractionStep >= 2 ? "active" : ""} ${extractionStep > 2 ? "done" : ""}`, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-step-dot", children: extractionStep === 2 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-step-dot-inner" }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Reading conversation" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `kb-step-item ${extractionStep >= 3 ? "active" : ""}`, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-step-dot", children: extractionStep === 3 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-step-dot-inner" }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-start" }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Processing content" }),
-          extractionStep === 3 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, color: "#3A82F6", fontWeight: 700 }, children: "IN PROGRESS" })
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-secondary", style: { marginTop: "auto" }, onClick: () => {
-      setActiveTab("home");
-      setLoading(false);
-    }, children: "Stop Processing" })
-  ] });
-  const renderAccount = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginTop: 8 }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 100, height: 100, borderRadius: "50%", background: "#F9F9F9", border: "1px solid #EAEAEA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 500, color: "#999", overflow: "hidden" }, children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, style: { width: "100%" } }) : (user == null ? void 0 : user.name) ? user.name.split(" ").map((n) => n[0]).join("") : "JD" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 16, fontWeight: 600 }, children: (user == null ? void 0 : user.email) || "email@example.com" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: "#3A82F6", textTransform: "uppercase", letterSpacing: 1, marginTop: 4 }, children: tier === "PRO" ? "PRO MEMBER" : "PREMIUM MEMBER" })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-group-card", style: { marginTop: 16 }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-list-item", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-list-label", children: "Manage Subscription" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { transform: "rotate(180deg)", opacity: 0.3 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-list-item", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-list-label", children: "Billing History" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { transform: "rotate(180deg)", opacity: 0.3 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-primary", style: { marginTop: "auto" }, onClick: user ? signOut : signInWithGoogle, children: user ? "Log Out" : "Sign In" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { textAlign: "center", fontSize: 11, color: "#999", textTransform: "uppercase", letterSpacing: 1, marginTop: 16 }, children: "Version 3.1.0" })
-  ] });
-  const renderSettings = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", justifyContent: "flex-end", alignItems: "baseline", marginBottom: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, color: "#3A82F6", cursor: "pointer" }, children: "UPGRADE" }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-section-label", children: "Preferences" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-section-label", style: { marginBottom: 8 }, children: "Theme" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-group-card", children: ["Light", "Dark", "System Default"].map((t) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-list-item", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-list-label", children: t }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 20, height: 20, borderRadius: "50%", border: "2px solid #EAEAEA", position: "relative" }, children: t === "Light" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 10, height: 10, borderRadius: "50%", background: "#3A82F6", position: "absolute", top: 3, left: 3 } }) })
-      ] }, t)) })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-section-label", style: { marginBottom: 8 }, children: "Automation" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-group-card", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-list-item", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column" }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-list-label", children: "Auto-extract" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, color: "#999" }, children: "On page load" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 40, height: 22, borderRadius: 100, background: "#EAEAEA", position: "relative" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 18, height: 18, borderRadius: "50%", background: "white", position: "absolute", top: 2, left: 2, boxShadow: "0 2px 4px rgba(0,0,0,0.1)" } }) })
-      ] }) })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-secondary", style: { marginTop: "auto" }, onClick: user ? signOut : void 0, children: "Sign Out" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { textAlign: "center", fontSize: 11, color: "#999", textTransform: "uppercase", letterSpacing: 1, marginTop: 16 }, children: "Version 3.1.0" })
-  ] });
-  const renderHistory = () => {
-    const filteredHistory = history.filter((item) => {
-      const matchesSearch = item.preview.toLowerCase().includes(historySearchQuery.toLowerCase()) || item.platform.toLowerCase().includes(historySearchQuery.toLowerCase());
-      return matchesSearch;
+  const togglePromptSelection = (index) => {
+    setSelectedPrompts(
+      (prev) => prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
+  };
+  const handleExtract = () => {
+    var _a;
+    if (!status.supported) return;
+    setLoading(true);
+    setViewingHistory(false);
+    startTimeRef.current = Date.now();
+    setExtractionTime(null);
+    setLiveTime(0);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      const d = (Date.now() - startTimeRef.current) / 1e3;
+      setLiveTime(parseFloat(d.toFixed(1)));
+    }, 100);
+    (_a = portRef.current) == null ? void 0 : _a.postMessage({ action: "EXTRACT_PROMPTS", mode: "raw" });
+  };
+  const loadHistory = () => {
+    chrome.storage.local.get(["extractionHistory"], (result) => {
+      if (result.extractionHistory) {
+        const sorted = result.extractionHistory.sort((a, b) => b.timestamp - a.timestamp);
+        setHistoryItems(sorted);
+      }
+      setViewingHistory(true);
+      setExtractionResult(null);
     });
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", style: { paddingTop: 16 }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-search-container", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "#999", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "11", cy: "11", r: "8" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 21l-4.35-4.35" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "input",
+  };
+  const openHistoryItem = (item) => {
+    const result = {
+      platform: item.platform,
+      url: "",
+      // Not stored in history item usually, or retrieval needed
+      title: item.preview,
+      // Using preview as title fallback
+      prompts: item.prompts,
+      extractedAt: item.timestamp
+    };
+    setExtractionResult(result);
+    setSelectedPrompts(item.prompts.map((_, i) => i));
+    setViewingHistory(false);
+  };
+  const handleEarlyAccess = () => {
+    if (!user) {
+      alert("Please login with Google to request early access.");
+      setShowPopup(false);
+      return;
+    }
+    alert("Your request for early access has been recorded!");
+    setShowPopup(false);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-app", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-main-card kb-animate", onClick: () => showPopup && setShowPopup(false), children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-top-actions", onClick: (e) => e.stopPropagation(), children: [
+        (extractionResult || viewingHistory) && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
           {
-            type: "text",
-            placeholder: "Search history...",
-            className: "kb-search-input",
-            value: historySearchQuery,
-            onChange: (e) => setHistorySearchQuery(e.target.value)
+            className: "kb-back-btn",
+            onClick: () => {
+              if (extractionResult && !viewingHistory && historyItems.length > 0) {
+                setExtractionResult(null);
+                setExtractionTime(null);
+              } else {
+                setViewingHistory(false);
+                setExtractionResult(null);
+                setExtractionTime(null);
+              }
+            },
+            title: "Back to Home",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M19 12H5M12 19l-7-7 7-7" }) })
           }
-        )
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-section-label", children: "Recent Explorations" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-group-card", children: filteredHistory.length > 0 ? filteredHistory.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-list-item", onClick: () => {
-        setExtractionResult({ prompts: item.prompts, platform: item.platform, url: "", title: "", extractedAt: item.timestamp });
-        setMode(item.mode);
-        setSummary(item.summary || null);
-        setActiveTab("home");
-      }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column" }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-list-label", children: item.platform }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 12, color: "#999", marginTop: 4 }, children: [
-            item.preview.slice(0, 50),
-            "..."
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, color: "#999" }, children: new Date(item.timestamp).toLocaleDateString() }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-badge", style: { fontSize: 8, padding: "2px 6px" }, children: item.mode })
-        ] })
-      ] }, item.id)) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 40, textAlign: "center", color: "#999" }, children: "No history items found." }) })
-    ] });
-  };
-  const renderResult = () => {
-    var _a;
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-top-bar", style: { borderBottom: "1px solid #F5F5F5" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-back-btn", onClick: () => {
-          setExtractionResult(null);
-          setActiveTab("home");
-          setSummary(null);
-          setMode("raw");
-        }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-top-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "180px" }, children: (extractionResult == null ? void 0 : extractionResult.title) || `Analysis of ${extractionResult == null ? void 0 : extractionResult.platform}...` })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content", style: { background: "#F9F9F9" }, children: [
-        error && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 12, background: "#FEE2E2", color: "#B91C1C", borderRadius: 8, fontSize: 13, marginBottom: 16 }, children: error }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-result-meta", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-badge-row", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-badge", style: { background: mode === "summary" ? "#FEEED4" : "white" }, children: mode === "summary" ? "Summary" : "Extract" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-badge", style: { color: "black" }, children: (extractionResult == null ? void 0 : extractionResult.platform) || "ChatGPT" })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-date-label", children: (extractionResult == null ? void 0 : extractionResult.extractedAt) ? new Date(extractionResult.extractedAt).toLocaleDateString([], { month: "short", day: "numeric" }) : "Today" })
-        ] }),
-        mode === "raw" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "2px 12px 12px", background: "white", border: "1px solid var(--kb-outline)", borderRadius: 12, marginBottom: 8, display: "flex", justifyContent: "center", position: "relative" }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { position: "absolute", top: -10, right: 10, background: "#3A82F6", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }, children: "PRO" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: handleSummarize, style: { background: "none", border: "none", color: "#666", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, paddingTop: 10 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" }) }),
-            "Summarize Extract"
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: 12 }, children: mode === "summary" && summary ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-prompt-card", style: { borderLeft: "4px solid #3A82F6" }, children: summary }) : extractionResult == null ? void 0 : extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-prompt-card", children: p.content }, i)) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 40 } }),
-        " ",
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-btn-primary", onClick: handleCopy, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(IconCopy, {}),
-          "Copy"
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-footer", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-nav-user", onClick: () => setActiveTab("profile"), children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-nav-avatar", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, style: { width: "100%" } }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700 }, children: (user == null ? void 0 : user.name) ? user.name[0] : "AD" }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-nav-name", children: ((_a = user == null ? void 0 : user.name) == null ? void 0 : _a.split(" ")[0]) || "Alex D." })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-nav-links", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { onClick: () => setActiveTab("history"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconClock, { active: activeTab === "history" }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { onClick: () => setActiveTab("settings"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconSettings, { active: activeTab === "settings" }) })
-        ] })
-      ] })
-    ] });
-  };
-  const renderMainLayout = (content) => {
-    var _a;
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-app", children: [
-      activeTab !== "home" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-top-bar", style: { height: 48 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-back-btn", onClick: () => setActiveTab("home"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 14, fontWeight: 700, textTransform: "capitalize" }, children: activeTab })
-      ] }),
-      content,
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-footer", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-nav-user", onClick: () => setActiveTab("profile"), children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-nav-avatar", children: (user == null ? void 0 : user.picture) ? /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.picture, style: { width: "100%" } }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700 }, children: (user == null ? void 0 : user.name) ? user.name[0] : "AD" }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column" }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-nav-name", children: ((_a = user == null ? void 0 : user.name) == null ? void 0 : _a.split(" ")[0]) || "Alex D." }),
-            tier === "PRO" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, fontWeight: 700, color: "#3A82F6" }, children: "PREMIUM" })
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-nav-links", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { onClick: () => setActiveTab("history"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconClock, { active: activeTab === "history" }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { onClick: () => setActiveTab("settings"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconSettings, { active: activeTab === "settings" }) })
-        ] })
-      ] })
-    ] });
-  };
-  if (activeTab === "processing") return renderProcessing();
-  if (activeTab === "profile") return renderMainLayout(renderAccount());
-  if (activeTab === "settings") return renderMainLayout(renderSettings());
-  if (activeTab === "history") return renderMainLayout(renderHistory());
-  if (extractionResult && activeTab === "home") return renderResult();
-  return renderMainLayout(
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", style: { paddingTop: 8 }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-group-card", style: { padding: 24, textAlign: "center", background: "white" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-extract-icon", style: { margin: "0 auto 16px", width: 60, height: 60 }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 2v10m0 0l-3-3m3 3l3-3" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 18v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" })
-        ] }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { fontSize: 18, fontWeight: 700, marginBottom: 4 }, children: "Ready to Extract" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, color: "#999", marginBottom: 16 }, children: "Navigate to a supported AI chat to begin." }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-primary", onClick: handleStartExtraction, disabled: !status.supported, children: status.supported ? "Start Extraction" : "Unsupported Page" }),
-        !status.supported && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 10, color: "#999", marginTop: 8 }, children: "Visit ChatGPT, Claude, or Gemini to use SahAI." })
-      ] }),
-      history.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 0 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-section-label", children: "Recent Explorations" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-group-card", children: history.slice(0, 3).map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-list-item", onClick: () => {
-          setExtractionResult({ prompts: item.prompts, platform: item.platform, url: "", title: "", extractedAt: item.timestamp });
-          setMode(item.mode);
-          setSummary(item.summary || null);
-          setActiveTab("home");
+        ),
+        extractionTime !== null && !loading && !viewingHistory && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: {
+          marginRight: "auto",
+          /* Pushes everything else (profile) to the right */
+          fontSize: 11,
+          fontWeight: 500,
+          color: "#86868b",
+          display: "flex",
+          alignItems: "center"
         }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column" }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-list-label", style: { fontSize: 14 }, children: item.platform }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 11, color: "#999", marginTop: 2 }, children: [
-              item.preview.slice(0, 40),
-              "..."
+          "Extracted in ",
+          extractionTime,
+          "s"
+        ] }),
+        viewingHistory && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+          marginRight: "auto",
+          fontSize: 11,
+          fontWeight: 500,
+          color: "#86868b",
+          display: "flex",
+          alignItems: "center"
+        }, children: "History" }),
+        user && !viewingHistory && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: "kb-profile-btn",
+            style: { marginRight: 8 },
+            onClick: loadHistory,
+            title: "History",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "10" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "12 6 12 12 16 14" })
             ] })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, color: "#999" }, children: new Date(item.timestamp).toLocaleDateString([], { month: "short", day: "numeric" }) })
-        ] }, item.id)) })
-      ] })
-    ] })
-  );
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-profile-btn", onClick: () => setShowPopup(!showPopup), children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "7", r: "4" })
+        ] }) }),
+        showPopup && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              style: {
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 999
+              },
+              onClick: () => setShowPopup(false)
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-profile-popup", children: [
+            user && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "12px 12px 8px 12px", borderBottom: "1px solid #f0f0f0", marginBottom: 4 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, fontWeight: 600, color: "#000", marginBottom: 2 }, children: user.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 11, color: "#666", overflow: "hidden", textOverflow: "ellipsis" }, children: user.email })
+            ] }),
+            !user ? /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-popup-item", onClick: signInWithGoogle, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" }) }),
+              "Login with Google"
+            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-popup-item logout", onClick: () => {
+              signOut();
+              setShowPopup(false);
+            }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" }) }),
+              "Logout"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-popup-divider" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "kb-popup-item", onClick: handleEarlyAccess, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("polyline", { points: "22 4 12 14.01 9 11.01" })
+              ] }),
+              "Request Early Access"
+            ] })
+          ] })
+        ] })
+      ] }),
+      !user ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-login-container", style: { flex: 1 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-login-logo", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "32", height: "32", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" }) }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "kb-login-title", children: "SahAI v1" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "kb-login-sub", children: "Extract prompts from AI tools instantly." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-pill", onClick: signInWithGoogle, style: { padding: "10px 32px" }, children: "Continue with Google" })
+      ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-content", children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", height: "100%", flexDirection: "column", gap: 12 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "kb-spinner", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", style: { color: "#000" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "10", strokeOpacity: "0.1" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 2a10 10 0 0 1 10 10", strokeLinecap: "round" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { fontSize: 13, color: "#999", fontVariantNumeric: "tabular-nums" }, children: [
+          "Extracting..",
+          liveTime.toFixed(1),
+          " sec"
+        ] })
+      ] }) : extractionResult ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: 8 }, children: extractionResult.prompts.map((p, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: `kb-prompt-card ${selectedPrompts.includes(i) ? "selected" : ""}`,
+          onClick: () => togglePromptSelection(i),
+          children: [
+            p.content,
+            p.source === "keylog" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { marginTop: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+              fontSize: 9,
+              fontWeight: 800,
+              textTransform: "uppercase",
+              padding: "2px 6px",
+              borderRadius: 4,
+              background: "#FEEED4",
+              color: "#BC6C25"
+            }, children: "Captured" }) })
+          ]
+        },
+        i
+      )) }) : viewingHistory ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-hist-list-container", children: historyItems.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, color: "#999", textAlign: "center", marginTop: 40 }, children: "No history yet." }) : historyItems.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-history-card", onClick: () => openHistoryItem(item), children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-h-top", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-h-platform", children: item.platform }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-h-date", children: new Date(item.timestamp).toLocaleDateString(void 0, { month: "short", day: "numeric" }) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-h-preview", children: item.preview }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "kb-h-count", children: [
+          item.promptCount,
+          " prompts"
+        ] })
+      ] }, item.id)) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", textAlign: "center", gap: 20 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: 13, color: "#999", lineHeight: 1.5, maxWidth: 220 }, children: status.supported ? `SahAI is connected to ${status.platform}.` : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: 4 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Navigate to an AI chat like" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "kb-fade-text", style: { color: "#000", fontSize: "1.2em" }, children: platforms[currentPlatformIndex] }, currentPlatformIndex)
+        ] }) }),
+        status.supported && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-btn-pill", onClick: handleExtract, children: "Extract" })
+      ] }) }),
+      user && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-card-footer", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          className: "kb-btn-pill",
+          onClick: handleCopy,
+          disabled: !extractionResult || selectedPrompts.length === 0,
+          style: { opacity: !extractionResult || selectedPrompts.length === 0 ? 0.3 : 1 },
+          children: copyStatus === "copied" ? "copied!" : "copy"
+        }
+      ) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "kb-app-footer", children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "kb-footer-text", children: "SahAI extracts and summarizes your conversations. Please double check outputs." }) })
+  ] });
 }
 const root = client.createRoot(document.getElementById("root"));
 root.render(
