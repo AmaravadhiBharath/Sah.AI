@@ -328,14 +328,14 @@ export default function KaboomApp() {
         return (
             <div className="kb-content kb-animate">
                 <h1 className="kb-view-title">History</h1>
-                <div className="kb-group-card" style={{ display: 'flex', alignItems: 'center', padding: '0 12px' }}>
+                <div className="kb-search-container">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                     </svg>
                     <input
                         type="text"
                         placeholder="Search history..."
-                        style={{ flex: 1, border: 'none', padding: '16px 12px', fontSize: 15, outline: 'none' }}
+                        className="kb-search-input"
                         value={historySearchQuery}
                         onChange={(e) => setHistorySearchQuery(e.target.value)}
                     />
@@ -448,6 +448,14 @@ export default function KaboomApp() {
 
     const renderMainLayout = (content: React.ReactNode) => (
         <div className="kb-app">
+            {activeTab !== 'home' && (
+                <div className="kb-top-bar" style={{ height: 48 }}>
+                    <button className="kb-back-btn" onClick={() => setActiveTab('home')}>
+                        <IconBack />
+                    </button>
+                    <span style={{ fontSize: 14, fontWeight: 700, textTransform: 'capitalize' }}>{activeTab}</span>
+                </div>
+            )}
             {content}
             <div className="kb-footer">
                 <div className="kb-nav-user" onClick={() => setActiveTab('profile')}>

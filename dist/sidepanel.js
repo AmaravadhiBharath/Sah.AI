@@ -521,7 +521,7 @@ function KaboomApp() {
     });
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-content kb-animate", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "kb-view-title", children: "History" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-group-card", style: { display: "flex", alignItems: "center", padding: "0 12px" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-search-container", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "#999", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "11", cy: "11", r: "8" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 21l-4.35-4.35" })
@@ -531,7 +531,7 @@ function KaboomApp() {
           {
             type: "text",
             placeholder: "Search history...",
-            style: { flex: 1, border: "none", padding: "16px 12px", fontSize: 15, outline: "none" },
+            className: "kb-search-input",
             value: historySearchQuery,
             onChange: (e) => setHistorySearchQuery(e.target.value)
           }
@@ -609,6 +609,10 @@ function KaboomApp() {
   const renderMainLayout = (content) => {
     var _a;
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-app", children: [
+      activeTab !== "home" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-top-bar", style: { height: 48 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "kb-back-btn", onClick: () => setActiveTab("home"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconBack, {}) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 14, fontWeight: 700, textTransform: "capitalize" }, children: activeTab })
+      ] }),
       content,
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-footer", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "kb-nav-user", onClick: () => setActiveTab("profile"), children: [
